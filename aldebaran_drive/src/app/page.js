@@ -3,38 +3,56 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { CalendarDaysIcon, MapPinIcon, UsersIcon } from "lucide-react";
+import React from "react";
+import jsPDF from "jspdf";
 
 const eventi = [
   {
-    titolo: "Raduno Vintage Cars",
+    titolo: "Evento A",
+    tipo: "AUTO",
+    data: "01 Gennaio 2024",
+    luogo: "Luogo A",
+    posti: 30,
+    descrizione: "Descrizione evento A.",
+  },
+  {
+    titolo: "Evento B",
+    tipo: "MOTO",
+    data: "10 Febbraio 2024",
+    luogo: "Luogo B",
+    posti: 45,
+    descrizione: "Descrizione evento B.",
+  },
+  {
+    titolo: "Evento C",
     tipo: "AUTO",
     data: "15 Marzo 2024",
-    luogo: "Piazza del Popolo, Roma",
-    posti: 50,
-    descrizione:
-      "Un evento dedicato alle auto d'epoca con esposizione e sfilata nel centro storico di Roma.",
-  },
-  {
-    titolo: "Moto Raduno Primavera",
-    tipo: "MOTO",
-    data: "22 Marzo 2024",
-    luogo: "Lago di Garda",
-    posti: 80,
-    descrizione:
-      "Tour motociclistico panoramico di circa 150km tra le colline e i paesaggi del Garda.",
-  },
-  {
-    titolo: "Classic Car Show",
-    tipo: "AUTO",
-    data: "5 Aprile 2024",
-    luogo: "Autodromo di Monza",
-    posti: 100,
-    descrizione:
-      "Esposizione e dimostrazioni su pista di auto classiche e sportive storiche.",
+    luogo: "Luogo C",
+    posti: 60,
+    descrizione: "Descrizione evento C.",
   },
 ];
 
 export default function Home() {
+  const generaPDF = () => {
+    const doc = new jsPDF();
+
+    const dati = {
+      nome: "Mario Rossi",
+      email: "mario.rossi@example.com",
+      messaggio: "Questo è un messaggio di prova generato da codice.",
+    };
+
+    doc.setFontSize(16);
+    doc.text("Anteprima PDF con dati finti", 10, 10);
+    doc.setFontSize(12);
+    doc.text(`Nome: ${dati.nome}`, 10, 20);
+    doc.text(`Email: ${dati.email}`, 10, 30);
+    doc.text(`Messaggio: ${dati.messaggio}`, 10, 40);
+
+    doc.save("test-dati.pdf");
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 text-black">
       {/* HEADER */}
@@ -97,6 +115,62 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* GALLERIA GENERALE */}
+      <section id="galleria-foto" className="px-6 py-20 bg-gray-100">
+        <h2 className="text-3xl font-bold text-center mb-6">Galleria Generale</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="aspect-square rounded-xl overflow-hidden bg-gray-200">
+              <Image
+                src="/img.jpg"
+                alt={`Foto Generale ${i + 1}`}
+                width={600}
+                height={600}
+                className="object-cover w-full h-full"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* GALLERIA EVENTI PASSATI */}
+      <section id="galleria-eventi" className="px-6 py-20 bg-white">
+        <h2 className="text-3xl font-bold text-center mb-6">Galleria Eventi Passati</h2>
+        <div className="space-y-16">
+          {eventi.map((evento, idx) => (
+            <div key={idx}>
+              <h3 className="text-xl font-semibold mb-4">{evento.titolo}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                {[...Array(5)].map((_, j) => (
+                  <div
+                    key={j}
+                    className="aspect-square overflow-hidden rounded-xl bg-gray-200"
+                  >
+                    <Image
+                      src="/img.jpg"
+                      alt={`Evento ${idx + 1} - Foto ${j + 1}`}
+                      width={600}
+                      height={600}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* PDF BUTTON */}
+      <div className="p-6 text-center">
+        <button
+          onClick={generaPDF}
+          className="bg-indigo-600 text-white py-2 px-4 rounded hover:opacity-80 transition"
+        >
+          Genera PDF di Test
+        </button>
+      </div>
     </main>
   );
 }
