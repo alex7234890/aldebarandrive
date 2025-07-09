@@ -34,24 +34,111 @@ const eventi = [
 ];
 
 export default function Home() {
-  const generaPDF = () => {
-    const doc = new jsPDF();
+  
+    const generaPDF = () => {
+  const doc = new jsPDF({ format: "a4" });
+  let y = 10;
 
-    const dati = {
-      nome: "Mario Rossi",
-      email: "mario.rossi@example.com",
-      messaggio: "Questo è un messaggio di prova generato da codice.",
-    };
+  doc.setFontSize(16);
+  doc.text("MODULO D’ISCRIZIONE", 10, y);
+  y += 10;
+  doc.setFontSize(14);
+  doc.text('EVENTO: “SUPERCAR FOR PASSION”', 10, y);
+  y += 15;
 
-    doc.setFontSize(16);
-    doc.text("Anteprima PDF con dati finti", 10, 10);
-    doc.setFontSize(12);
-    doc.text(`Nome: ${dati.nome}`, 10, 20);
-    doc.text(`Email: ${dati.email}`, 10, 30);
-    doc.text(`Messaggio: ${dati.messaggio}`, 10, 40);
+  doc.setFontSize(12);
+  doc.text("DATI ANAGRAFICI DEL GUIDATORE", 10, y);
+  y += 10;
+  doc.text("Cognome: _______________________ Nome: _______________________", 10, y); y += 8;
+  doc.text("Codice Fiscale: ____________________________________________", 10, y); y += 8;
+  doc.text("Patente: __________________ Scadenza: ______________________", 10, y); y += 8;
+  doc.text("Cellulare: ___________________ Email: _______________________", 10, y); y += 12;
 
-    doc.save("test-dati.pdf");
-  };
+  doc.text("DATI ANAGRAFICI DEL PASSEGGERO", 10, y);
+  y += 10;
+  doc.text("Cognome: _______________________ Nome: _______________________", 10, y); y += 8;
+  doc.text("Codice Fiscale: ____________________________________________", 10, y); y += 8;
+  doc.text("Cellulare: ___________________ Email: _______________________", 10, y); y += 12;
+
+  doc.text("DATI AUTOVETTURA", 10, y);
+  y += 10;
+  doc.text("Modello: __________ Anno: ______ Colore: ______ Targa: ______", 10, y); y += 12;
+
+  doc.text("PACCHETTO/SOLUZIONE:", 10, y);
+  y += 8;
+  doc.text("□ QUOTA 1   □ QUOTA 2   □ QUOTA 3   □ QUOTA 4   □ QUOTA 5   □ QUOTA 6", 10, y); y += 10;
+
+  doc.text("ESIGENZE ALIMENTARI GUIDATORE: SI □   NO □", 10, y); y += 8;
+  doc.text("Se sì, indicare: ___________________________________________", 10, y); y += 10;
+
+  doc.text("ESIGENZE ALIMENTARI PASSEGGERO: SI □   NO □", 10, y); y += 8;
+  doc.text("Se sì, indicare: ___________________________________________", 10, y); y += 12;
+
+  doc.text("DICHIARA/DICHIARANO", 10, y); y += 8;
+  const dichiarazioni = [
+    "1) di aver preso visione della brochure e accettare il programma;",
+    "2) di voler partecipare esclusivamente a scopo turistico, non competitivo;",
+    "3) di utilizzare un mezzo conforme e in efficienza;",
+    "4) che il mezzo è in regola con bollo, revisione e assicurazione;",
+    "5) di esonerare gli organizzatori nei limiti di legge da responsabilità civili;",
+    "6) di mantenere copertura RCA e assumersi responsabilità verso terzi;",
+    "7) di sollevare gli organizzatori da danni e furti non causati da dolo;",
+    "8) di trovarsi in perfetta salute fisica e psichica;",
+    "9) di accettare che l'iscrizione è valida solo con esonero firmato;",
+    "10) di essere consapevole dei rischi dell’abuso di alcol;",
+    "11) che gli organizzatori possono escludere partecipanti per motivi gravi;",
+    "12) che la quota d’iscrizione non è rimborsabile;",
+    "13) che gli organizzatori possono intraprendere azioni legali se necessario;",
+    "14) di rispettare sempre il Codice della Strada e norme di sicurezza."
+  ];
+
+  for (const line of dichiarazioni) {
+    if (y > 270) { doc.addPage(); y = 10; }
+    doc.text(line, 10, y);
+    y += 6;
+  }
+
+  doc.addPage(); y = 10;
+  doc.text("Firme e approvazioni", 10, y); y += 8;
+  doc.text("GUIDATORE: ____________________________________", 10, y); y += 7;
+  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 10;
+
+  doc.text("Dichiaro di aver preso visione e approvo le clausole 5, 6, 7, 9, 11, 13.", 10, y); y += 8;
+  doc.text("Firma: ____________________", 10, y); y += 12;
+
+  doc.text("PASSEGGERO: ____________________________________", 10, y); y += 7;
+  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 10;
+
+  doc.text("Dichiaro di aver preso visione e approvo le clausole 5, 6, 7, 9, 11, 13.", 10, y); y += 8;
+  doc.text("Firma: ____________________", 10, y); y += 12;
+
+  doc.addPage(); y = 10;
+  doc.setFontSize(11);
+  doc.text("LIBERATORIA USO IMMAGINI", 10, y); y += 8;
+  doc.text("Autorizzo l’utilizzo di foto/video durante l’evento da parte degli organizzatori", 10, y); y += 6;
+  doc.text("per fini promozionali e informativi, senza limiti di tempo o mezzi.", 10, y); y += 10;
+
+  doc.text("GUIDATORE: ____________________  ◯ Acconsento  ◯ Non acconsento", 10, y); y += 7;
+  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 10;
+
+  doc.text("PASSEGGERO: ____________________  ◯ Acconsento  ◯ Non acconsento", 10, y); y += 7;
+  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 12;
+
+  doc.text("INFORMATIVA PRIVACY", 10, y); y += 8;
+  doc.setFontSize(10);
+  doc.text("Ai sensi del D.Lgs. 196/2003 i dati saranno trattati con correttezza e trasparenza,", 10, y); y += 5;
+  doc.text("per finalità statistiche interne e gestione della card. Il titolare è Marlan S.R.L.", 10, y); y += 5;
+  doc.text("I dati non saranno diffusi a terzi. È possibile richiedere rettifica o cancellazione.", 10, y); y += 7;
+
+  doc.setFontSize(11);
+  doc.text("GUIDATORE: ____________________  ◯ Acconsento  ◯ Non acconsento", 10, y); y += 7;
+  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 10;
+
+  doc.text("PASSEGGERO: ____________________  ◯ Acconsento  ◯ Non acconsento", 10, y); y += 7;
+  doc.text("Luogo e data: __________________     Firma: __________________", 10, y);
+
+  doc.save("Modulo_Iscrizione_Compilato.pdf");
+};
 
   return (
     <main className="min-h-screen bg-gray-50 text-black">
