@@ -1,114 +1,102 @@
+'use client';
+
 import Image from "next/image";
-import { MailIcon, PhoneIcon, MapPinIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { CalendarDaysIcon, MapPinIcon, UsersIcon } from "lucide-react";
+
+const eventi = [
+  {
+    titolo: "Raduno Vintage Cars",
+    tipo: "AUTO",
+    data: "15 Marzo 2024",
+    luogo: "Piazza del Popolo, Roma",
+    posti: 50,
+    descrizione:
+      "Un evento dedicato alle auto d'epoca con esposizione e sfilata nel centro storico di Roma.",
+  },
+  {
+    titolo: "Moto Raduno Primavera",
+    tipo: "MOTO",
+    data: "22 Marzo 2024",
+    luogo: "Lago di Garda",
+    posti: 80,
+    descrizione:
+      "Tour motociclistico panoramico di circa 150km tra le colline e i paesaggi del Garda.",
+  },
+  {
+    titolo: "Classic Car Show",
+    tipo: "AUTO",
+    data: "5 Aprile 2024",
+    luogo: "Autodromo di Monza",
+    posti: 100,
+    descrizione:
+      "Esposizione e dimostrazioni su pista di auto classiche e sportive storiche.",
+  },
+];
 
 export default function Home() {
   return (
-    <main className="bg-black text-white min-h-screen">
-      {/* Header */}
-      <header className="p-4 flex justify-between items-center border-b border-gray-800">
-        <div className="text-2xl font-bold">LOGO</div>
-        <nav className="space-x-6 text-sm">
-          <a href="#galleria" className="hover:underline">Galleria</a>
-          <a href="#chi-siamo" className="hover:underline">Chi siamo</a>
-          <a href="#eventi" className="hover:underline">Eventi</a>
-          <a href="#contatti" className="hover:underline">Contatti</a>
+    <main className="min-h-screen bg-gray-50 text-black">
+      {/* HEADER */}
+      <header className="flex justify-between items-center px-6 py-4 border-b">
+        <div className="flex items-center gap-2 font-bold text-xl">
+          <span className="bg-black text-white p-2 rounded">🚗</span> MotorEvents Pro
+        </div>
+        <nav className="hidden md:flex gap-6 text-sm">
+          <a href="#chi-siamo">Chi Siamo</a>
+          <a href="#prossimi-eventi">Prossimi Eventi</a>
+          <a href="#galleria-eventi">Galleria Eventi</a>
+          <a href="#galleria-foto">Galleria Foto</a>
         </nav>
       </header>
 
-      {/* Hero */}
-      <section className="text-center py-20 px-4">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">Passione su Due e Quattro Ruote</h1>
-        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-          Organizziamo raduni ed eventi per gli amanti di auto e moto d'epoca, sportive e custom.
+      {/* HERO */}
+      <section className="text-center px-4 py-20 bg-gray-100">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">Vivi la Passione</h1>
+        <p className="text-gray-600 max-w-2xl mx-auto mb-6">
+          Raduni esclusivi per auto e moto d'epoca. Unisciti alla nostra community di appassionati.
         </p>
+        <Button className="bg-black text-white hover:bg-gray-800">
+          Scopri i Prossimi Eventi
+        </Button>
       </section>
 
-      {/* Galleria */}
-      <section id="galleria" className="py-16 px-4">
-        <h2 className="text-3xl font-semibold mb-8 text-center">Galleria Espositiva</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {/* Placeholder immagini */}
-          <div className="bg-gray-800 h-64 flex items-center justify-center">Spazio immagine</div>
-          <div className="bg-gray-800 h-64 flex items-center justify-center">Spazio immagine</div>
-          <div className="bg-gray-800 h-64 flex items-center justify-center">Spazio immagine</div>
-        </div>
-      </section>
-
-      {/* Chi Siamo */}
-      <section id="chi-siamo" className="py-16 px-4 bg-gray-900">
-        <h2 className="text-3xl font-semibold mb-4 text-center">Chi Siamo</h2>
-        <p className="text-gray-400 max-w-3xl mx-auto text-center">
-          {/* Testo da inserire */}
-          [Inserisci qui la descrizione dell'associazione]
+      {/* PROSSIMI EVENTI */}
+      <section id="prossimi-eventi" className="px-6 py-20 bg-white">
+        <h2 className="text-3xl font-bold text-center mb-2">Prossimi Eventi</h2>
+        <p className="text-center text-gray-600 mb-12">
+          Scopri i nostri eventi esclusivi e iscriviti per vivere esperienze indimenticabili
         </p>
-      </section>
 
-      {/* Eventi */}
-      <section id="eventi" className="py-16 px-4">
-        <h2 className="text-3xl font-semibold mb-8 text-center">Prossimi Eventi</h2>
-        <div className="space-y-6 max-w-3xl mx-auto">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden shadow-lg max-w-sm">
-            <img
-              src="/path/to/image.jpg"
-              alt="Copertina Evento"
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-5">
-              <h3 className="text-2xl font-bold text-white">[Nome Evento]</h3>
-              <p className="text-gray-400 mt-1">📍 [Data e Luogo Evento]</p>
-              <p className="text-gray-300 mt-3 text-sm">[Descrizione breve dell'evento]</p>
-              <button
-                className="mt-5 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-300"
-              >
-                Iscriviti
-              </button>
+        <div className="grid gap-6 md:grid-cols-3">
+          {eventi.map((evento, idx) => (
+            <div
+              key={idx}
+              className="bg-gray-50 border rounded-xl shadow-sm hover:shadow-lg transition p-6 flex flex-col"
+            >
+              <div className="text-xs font-semibold bg-black text-white px-2 py-1 rounded-full w-fit mb-3">
+                {evento.tipo}
+              </div>
+              <h3 className="text-xl font-bold mb-2">{evento.titolo}</h3>
+              <p className="text-sm text-gray-600 mb-4">{evento.descrizione}</p>
+              <div className="flex flex-col gap-2 text-sm text-gray-700 mb-4">
+                <p className="flex items-center gap-2">
+                  <CalendarDaysIcon className="w-4 h-4" /> {evento.data}
+                </p>
+                <p className="flex items-center gap-2">
+                  <MapPinIcon className="w-4 h-4" /> {evento.luogo}
+                </p>
+                <p className="flex items-center gap-2">
+                  <UsersIcon className="w-4 h-4" /> {evento.posti} posti disponibili
+                </p>
+              </div>
+              <Button className="mt-auto bg-black text-white hover:bg-gray-800">
+                Iscriviti Ora
+              </Button>
             </div>
-          </div>
-          <div className="border border-gray-700 p-4 rounded-xl">
-            <h3 className="text-xl font-semibold">[Nome Evento]</h3>
-            <p className="text-gray-400">[Data e Luogo Evento]</p>
-            <p className="text-gray-500 mt-2">[Descrizione breve dell'evento]</p>
-          </div>
+          ))}
         </div>
       </section>
-
-      {/* Newsletter */}
-      <section className="py-16 px-4 bg-gray-900">
-        <h2 className="text-3xl font-semibold mb-4 text-center">Iscriviti alla Newsletter</h2>
-        <p className="text-gray-400 text-center mb-6">Rimani aggiornato su eventi e raduni esclusivi.</p>
-        <form className="max-w-md mx-auto flex flex-col sm:flex-row gap-4">
-          <Input type="email" placeholder="La tua email" className="bg-black border border-gray-700 text-white" />
-          <Button type="submit" className="bg-white text-black">Iscriviti</Button>
-        </form>
-      </section>
-
-      {/* Footer */}
-      <footer id="contatti" className="bg-black border-t border-gray-800 py-8 px-4 text-sm text-gray-500">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h4 className="text-white text-lg font-semibold mb-2">Contatti</h4>
-            <p><PhoneIcon className="inline w-4 h-4 mr-2" /> +39 123 456 7890</p>
-            <p><MailIcon className="inline w-4 h-4 mr-2" /> info@tuosito.it</p>
-            <p><MapPinIcon className="inline w-4 h-4 mr-2" /> Via Esempio 123, Città</p>
-          </div>
-          <div>
-            <h4 className="text-white text-lg font-semibold mb-2">Navigazione</h4>
-            <ul className="space-y-1">
-              <li><a href="#galleria" className="hover:underline">Galleria</a></li>
-              <li><a href="#chi-siamo" className="hover:underline">Chi siamo</a></li>
-              <li><a href="#eventi" className="hover:underline">Eventi</a></li>
-              <li><a href="#contatti" className="hover:underline">Contatti</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white text-lg font-semibold mb-2">Info Legali</h4>
-            <p>P.IVA: 12345678901</p>
-            <p>&copy; {new Date().getFullYear()} Associazione Auto & Moto. Tutti i diritti riservati.</p>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
