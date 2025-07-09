@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarDaysIcon, MapPinIcon, UsersIcon } from "lucide-react";
 import React from "react";
 import jsPDF from "jspdf";
+import { useState } from 'react';
 
 const eventi = [
   {
@@ -35,110 +36,263 @@ const eventi = [
 
 export default function Home() {
   
-    const generaPDF = () => {
-  const doc = new jsPDF({ format: "a4" });
-  let y = 10;
+   const [formData, setFormData] = useState({
+    // Dati guidatore
+    guidatoreCognome: '',
+    guidatoreNome: '',
+    guidatoreCodiceFiscale: '',
+    guidatorePatente: '',
+    guidatoreScadenzaPatente: '',
+    guidatoreCellulare: '',
+    guidatoreEmail: '',
+    
+    // Dati passeggero
+    passeggieroCognome: '',
+    passeggeroNome: '',
+    passeggeroCodiceFiscale: '',
+    passeggieroCellulare: '',
+    passeggeroEmail: '',
+    
+    // Dati auto
+    autoModello: '',
+    autoAnno: '',
+    autoColore: '',
+    autoTarga: '',
+    
+    // Pacchetto
+    quotaSelezionata: 'QUOTA 1',
+    
+    // Esigenze alimentari
+    guidatoreEsigenzeAlimentari: false,
+    guidatoreIntolleranze: '',
+    passeggeroEsigenzeAlimentari: false,
+    passeggeroIntolleranze: '',
+    
+    // Autorizzazioni
+    guidatoreAutorizzaFoto: true,
+    passeggeroAutorizzaFoto: true,
+    guidatoreAutorizzaTrattamento: true,
+    passeggeroAutorizzaTrattamento: true,
+    
+    // Luogo e data
+    luogo: '',
+    data: new Date().toLocaleDateString('it-IT')
+  });
 
-  doc.setFontSize(16);
-  doc.text("MODULO D’ISCRIZIONE", 10, y);
-  y += 10;
-  doc.setFontSize(14);
-  doc.text('EVENTO: “SUPERCAR FOR PASSION”', 10, y);
-  y += 15;
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
 
-  doc.setFontSize(12);
-  doc.text("DATI ANAGRAFICI DEL GUIDATORE", 10, y);
-  y += 10;
-  doc.text("Cognome: _______________________ Nome: _______________________", 10, y); y += 8;
-  doc.text("Codice Fiscale: ____________________________________________", 10, y); y += 8;
-  doc.text("Patente: __________________ Scadenza: ______________________", 10, y); y += 8;
-  doc.text("Cellulare: ___________________ Email: _______________________", 10, y); y += 12;
-
-  doc.text("DATI ANAGRAFICI DEL PASSEGGERO", 10, y);
-  y += 10;
-  doc.text("Cognome: _______________________ Nome: _______________________", 10, y); y += 8;
-  doc.text("Codice Fiscale: ____________________________________________", 10, y); y += 8;
-  doc.text("Cellulare: ___________________ Email: _______________________", 10, y); y += 12;
-
-  doc.text("DATI AUTOVETTURA", 10, y);
-  y += 10;
-  doc.text("Modello: __________ Anno: ______ Colore: ______ Targa: ______", 10, y); y += 12;
-
-  doc.text("PACCHETTO/SOLUZIONE:", 10, y);
-  y += 8;
-  doc.text("□ QUOTA 1   □ QUOTA 2   □ QUOTA 3   □ QUOTA 4   □ QUOTA 5   □ QUOTA 6", 10, y); y += 10;
-
-  doc.text("ESIGENZE ALIMENTARI GUIDATORE: SI □   NO □", 10, y); y += 8;
-  doc.text("Se sì, indicare: ___________________________________________", 10, y); y += 10;
-
-  doc.text("ESIGENZE ALIMENTARI PASSEGGERO: SI □   NO □", 10, y); y += 8;
-  doc.text("Se sì, indicare: ___________________________________________", 10, y); y += 12;
-
-  doc.text("DICHIARA/DICHIARANO", 10, y); y += 8;
-  const dichiarazioni = [
-    "1) di aver preso visione della brochure e accettare il programma;",
-    "2) di voler partecipare esclusivamente a scopo turistico, non competitivo;",
-    "3) di utilizzare un mezzo conforme e in efficienza;",
-    "4) che il mezzo è in regola con bollo, revisione e assicurazione;",
-    "5) di esonerare gli organizzatori nei limiti di legge da responsabilità civili;",
-    "6) di mantenere copertura RCA e assumersi responsabilità verso terzi;",
-    "7) di sollevare gli organizzatori da danni e furti non causati da dolo;",
-    "8) di trovarsi in perfetta salute fisica e psichica;",
-    "9) di accettare che l'iscrizione è valida solo con esonero firmato;",
-    "10) di essere consapevole dei rischi dell’abuso di alcol;",
-    "11) che gli organizzatori possono escludere partecipanti per motivi gravi;",
-    "12) che la quota d’iscrizione non è rimborsabile;",
-    "13) che gli organizzatori possono intraprendere azioni legali se necessario;",
-    "14) di rispettare sempre il Codice della Strada e norme di sicurezza."
-  ];
-
-  for (const line of dichiarazioni) {
-    if (y > 270) { doc.addPage(); y = 10; }
-    doc.text(line, 10, y);
-    y += 6;
-  }
-
-  doc.addPage(); y = 10;
-  doc.text("Firme e approvazioni", 10, y); y += 8;
-  doc.text("GUIDATORE: ____________________________________", 10, y); y += 7;
-  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 10;
-
-  doc.text("Dichiaro di aver preso visione e approvo le clausole 5, 6, 7, 9, 11, 13.", 10, y); y += 8;
-  doc.text("Firma: ____________________", 10, y); y += 12;
-
-  doc.text("PASSEGGERO: ____________________________________", 10, y); y += 7;
-  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 10;
-
-  doc.text("Dichiaro di aver preso visione e approvo le clausole 5, 6, 7, 9, 11, 13.", 10, y); y += 8;
-  doc.text("Firma: ____________________", 10, y); y += 12;
-
-  doc.addPage(); y = 10;
-  doc.setFontSize(11);
-  doc.text("LIBERATORIA USO IMMAGINI", 10, y); y += 8;
-  doc.text("Autorizzo l’utilizzo di foto/video durante l’evento da parte degli organizzatori", 10, y); y += 6;
-  doc.text("per fini promozionali e informativi, senza limiti di tempo o mezzi.", 10, y); y += 10;
-
-  doc.text("GUIDATORE: ____________________  ◯ Acconsento  ◯ Non acconsento", 10, y); y += 7;
-  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 10;
-
-  doc.text("PASSEGGERO: ____________________  ◯ Acconsento  ◯ Non acconsento", 10, y); y += 7;
-  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 12;
-
-  doc.text("INFORMATIVA PRIVACY", 10, y); y += 8;
-  doc.setFontSize(10);
-  doc.text("Ai sensi del D.Lgs. 196/2003 i dati saranno trattati con correttezza e trasparenza,", 10, y); y += 5;
-  doc.text("per finalità statistiche interne e gestione della card. Il titolare è Marlan S.R.L.", 10, y); y += 5;
-  doc.text("I dati non saranno diffusi a terzi. È possibile richiedere rettifica o cancellazione.", 10, y); y += 7;
-
-  doc.setFontSize(11);
-  doc.text("GUIDATORE: ____________________  ◯ Acconsento  ◯ Non acconsento", 10, y); y += 7;
-  doc.text("Luogo e data: __________________     Firma: __________________", 10, y); y += 10;
-
-  doc.text("PASSEGGERO: ____________________  ◯ Acconsento  ◯ Non acconsento", 10, y); y += 7;
-  doc.text("Luogo e data: __________________     Firma: __________________", 10, y);
-
-  doc.save("Modulo_Iscrizione_Compilato.pdf");
-};
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    
+    // Impostazioni generali
+    doc.setFont('helvetica');
+    let yPos = 20;
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    const lineHeight = 6;
+    
+    // Funzione per aggiungere testo centrato
+    const addCenteredText = (text, fontSize = 12, isBold = false) => {
+      if (isBold) doc.setFont('helvetica', 'bold');
+      doc.setFontSize(fontSize);
+      const textWidth = doc.getTextWidth(text);
+      doc.text(text, (pageWidth - textWidth) / 2, yPos);
+      if (isBold) doc.setFont('helvetica', 'normal');
+      yPos += lineHeight + 2;
+    };
+    
+    // Funzione per aggiungere una linea
+    const addLine = (text, value = '', fontSize = 10) => {
+      doc.setFontSize(fontSize);
+      if (value) {
+        doc.text(text, margin, yPos);
+        doc.text(value, margin + doc.getTextWidth(text) + 5, yPos);
+      } else {
+        doc.text(text, margin, yPos);
+      }
+      yPos += lineHeight;
+    };
+    
+    // Funzione per aggiungere checkbox
+    const addCheckbox = (text, isChecked = false) => {
+      doc.setFontSize(10);
+      doc.rect(margin, yPos - 3, 3, 3);
+      if (isChecked) {
+        doc.text('X', margin + 0.5, yPos - 0.5);
+      }
+      doc.text(text, margin + 6, yPos);
+      yPos += lineHeight;
+    };
+    
+    // Funzione per nuova pagina se necessario
+    const checkNewPage = () => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+    };
+    
+    // HEADER
+    addCenteredText('MODULO D\'ISCRIZIONE', 14, true);
+    addCenteredText('EVENTO: "SUPERCAR FOR PASSION"', 12, true);
+    yPos += 10;
+    
+    // DATI GUIDATORE
+    addLine('DATI ANAGRAFICI DEL GUIDATORE', '', 12);
+    yPos += 5;
+    addLine(`Cognome: ${formData.guidatoreCognome}`, '', 10);
+    addLine(`Nome: ${formData.guidatoreNome}`, '', 10);
+    addLine(`Codice Fiscale: ${formData.guidatoreCodiceFiscale}`, '', 10);
+    addLine(`Patente di guida n. ${formData.guidatorePatente}`, '', 10);
+    addLine(`Scadenza: ${formData.guidatoreScadenzaPatente}`, '', 10);
+    addLine(`Cellulare: ${formData.guidatoreCellulare}`, '', 10);
+    addLine(`e-mail: ${formData.guidatoreEmail}`, '', 10);
+    yPos += 10;
+    
+    // DATI PASSEGGERO
+    addLine('DATI ANAGRAFICI DEL PASSEGGERO', '', 12);
+    yPos += 5;
+    addLine(`Cognome: ${formData.passeggieroCognome}`, '', 10);
+    addLine(`Nome: ${formData.passeggeroNome}`, '', 10);
+    addLine(`Codice Fiscale: ${formData.passeggeroCodiceFiscale}`, '', 10);
+    addLine(`Cellulare: ${formData.passeggieroCellulare}`, '', 10);
+    addLine(`e-mail: ${formData.passeggeroEmail}`, '', 10);
+    yPos += 10;
+    
+    // DATI AUTO
+    addLine('DATI AUTOVETTURA UTILIZZATA PER L\'EVENTO', '', 12);
+    yPos += 5;
+    addLine(`Modello: ${formData.autoModello}`, '', 10);
+    addLine(`Anno immatricolazione: ${formData.autoAnno}`, '', 10);
+    addLine(`Colore: ${formData.autoColore}`, '', 10);
+    addLine(`Targa: ${formData.autoTarga}`, '', 10);
+    yPos += 10;
+    
+    // RICHIESTA PARTECIPAZIONE
+    addLine('CHIEDE/CHIEDONO', '', 12);
+    yPos += 5;
+    doc.setFontSize(10);
+    const richiesta = 'di poter partecipare all\'evento in epigrafe a proprio rischio e pericolo, senza esclusiva, con l\'autovettura sopra identificata, coperta da assicurazione RCA in corso di validità.';
+    const splitRichiesta = doc.splitTextToSize(richiesta, pageWidth - 2 * margin);
+    doc.text(splitRichiesta, margin, yPos);
+    yPos += splitRichiesta.length * lineHeight + 10;
+    
+    // PACCHETTO
+    addLine('PACCHETTO/SOLUZIONE DI PARTECIPAZIONE', '', 12);
+    yPos += 5;
+    const quote = ['QUOTA 1', 'QUOTA 2', 'QUOTA 3', 'QUOTA 4', 'QUOTA 5', 'QUOTA 6'];
+    quote.forEach(quota => {
+      addCheckbox(quota, formData.quotaSelezionata === quota);
+    });
+    yPos += 10;
+    
+    // ESIGENZE ALIMENTARI
+    addLine('ESIGENZE ALIMENTARI GUIDATORE:', '', 10);
+    addCheckbox('SI', formData.guidatoreEsigenzeAlimentari);
+    addCheckbox('NO', !formData.guidatoreEsigenzeAlimentari);
+    if (formData.guidatoreEsigenzeAlimentari) {
+      addLine(`Intolleranze/Allergie: ${formData.guidatoreIntolleranze}`, '', 10);
+    }
+    yPos += 5;
+    
+    addLine('ESIGENZE ALIMENTARI PASSEGGERO:', '', 10);
+    addCheckbox('SI', formData.passeggeroEsigenzeAlimentari);
+    addCheckbox('NO', !formData.passeggeroEsigenzeAlimentari);
+    if (formData.passeggeroEsigenzeAlimentari) {
+      addLine(`Intolleranze/Allergie: ${formData.passeggeroIntolleranze}`, '', 10);
+    }
+    yPos += 10;
+    
+    checkNewPage();
+    
+    // DICHIARAZIONI
+    addLine('DICHIARA/DICHIARANO', '', 12);
+    yPos += 5;
+    
+    const dichiarazioni = [
+      "1) d'aver preso visione della brochure relativa all'evento e di accettarne incondizionatamente il programma e le finalità;",
+      "2) di voler partecipare esclusivamente a scopo turistico, senza alcun fine di gara o competizione, di essere a conoscenza che è assolutamente proibito gareggiare e che lo spirito della giornata è quello di far sì che i partecipanti possano trascorrere una o più giornate in compagnia, effettuando un giro turistico in macchina, nel pieno rispetto del vigente Codice della Strada;",
+      "3) di utilizzare un mezzo di proprietà (od esserne autorizzato all'uso dal legittimo proprietario che, pertanto, non potrà vantare alcun diritto) del quale si conferma piena efficienza, affidabilità e conformità al Codice della Strada;",
+      "4) che il suddetto mezzo guidato durante l'evento è in regola con pagamento bollo, RC Auto, revisione e tutto quanto è necessario per la circolazione;",
+      "5) di ESONERARE, NEI LIMITI DI LEGGE, GLI ORGANIZZATORI E LA DITTA MARLAN S.R.L. da ogni responsabilità civile per danni a persone o cose che dovessero derivare dalla partecipazione all'evento, esclusivamente nei casi di colpa lieve, restando espressamente escluso ogni esonero per i danni causati da dolo, colpa grave o da violazione di norme di ordine pubblico e di sicurezza.",
+      "6) di ASSUMERSI OGNI RESPONSABILITÀ VERSO TERZI E DI MANTENERE COPERTURA RCA OBBLIGATORIA per danni eventualmente arrecati a terzi, inclusi altri partecipanti, mezzi e passeggeri, durante l'evento.",
+      "7) di SOLLEVARE ED ESONERARE GLI ORGANIZZATORI (ALDEBARANDRIVE – MARLAN S.R.L.) da responsabilità per eventuali perdite, sottrazioni, danni, furti e/o danneggiamenti, e relative spese, subiti durante l'evento, salvo che tali eventi derivino da dolo, colpa grave degli organizzatori o da violazione di norme imperative;",
+      "8) di trovarsi in perfetta salute fisica e psichica;",
+      "9) di PRENDERE ATTO CHE L'ISCRIZIONE È ACCETTATA SOLO IN PRESENZA DI ESONERO NEI LIMITI DI LEGGE e che, in difetto, non sarebbe stata accettata l'iscrizione.",
+      "10) d'essere consapevole che l'abuso di bevande alcoliche compromette la propria sicurezza e quella delle altre persone;",
+      "11) di essere a conoscenza che gli Organizzatori, presenti all'evento, potranno arbitrariamente decidere, per motivi di sicurezza o per comportamenti che ledono il decoro e il buon nome ALDEBARANDRIVE – MARLAN S.R.L., l'allontanamento insindacabile dal gruppo;",
+      "12) che la quota di iscrizione versata a favore dell'Organizzazione non sarà restituibile, neppure parzialmente;",
+      "13) di essere a conoscenza che gli Organizzatori potranno, nel caso lo ritenessero opportuno, intraprendere le adeguate azioni legali a tutela degli stessi e di terzi;",
+      "14) di impegnarsi, per tutta la durata dell'evento, a rispettare scrupolosamente il vigente Codice della Strada e tutte le ulteriori norme di sicurezza applicabili, mantenendo sempre una condotta prudente e diligente."
+    ];
+    
+    doc.setFontSize(9);
+    dichiarazioni.forEach(dichiarazione => {
+      checkNewPage();
+      const splitText = doc.splitTextToSize(dichiarazione, pageWidth - 2 * margin);
+      doc.text(splitText, margin, yPos);
+      yPos += splitText.length * lineHeight + 3;
+    });
+    
+    checkNewPage();
+    
+    // FIRME
+    yPos += 10;
+    addLine(`IL GUIDATORE: ${formData.guidatoreNome} ${formData.guidatoreCognome}`, '', 10);
+    addLine(`Lì ${formData.luogo}, ${formData.data}`, '', 10);
+    addLine('Firma: _______________________________', '', 10);
+    yPos += 10;
+    
+    addLine(`IL PASSEGGERO: ${formData.passeggeroNome} ${formData.passeggieroCognome}`, '', 10);
+    addLine(`Lì ${formData.luogo}, ${formData.data}`, '', 10);
+    addLine('Firma: _______________________________', '', 10);
+    yPos += 20;
+    
+    // AUTORIZZAZIONI FOTO
+    checkNewPage();
+    addLine('AUTORIZZA/AUTORIZZANO', '', 12);
+    yPos += 5;
+    
+    const autorizzazioneFoto = 'a titolo gratuito, senza limiti di tempo, anche ai sensi degli artt. 10 e 320 cod. civ. e degli artt. 96 e 97 legge 22.4.1941, n. 633, Legge sul diritto d\'autore, l\'utilizzo delle foto o video ripresi durante le iniziative e gli eventi organizzati dall\'ALDEBARANDRIVE – MARLAN S.R.L.';
+    const splitAutorizzazione = doc.splitTextToSize(autorizzazioneFoto, pageWidth - 2 * margin);
+    doc.text(splitAutorizzazione, margin, yPos);
+    yPos += splitAutorizzazione.length * lineHeight + 10;
+    
+    addLine(`IL GUIDATORE: ${formData.guidatoreNome} ${formData.guidatoreCognome}`, '', 10);
+    addCheckbox('Acconsento', formData.guidatoreAutorizzaFoto);
+    addCheckbox('Non acconsento', !formData.guidatoreAutorizzaFoto);
+    yPos += 10;
+    
+    addLine(`IL PASSEGGERO: ${formData.passeggeroNome} ${formData.passeggieroCognome}`, '', 10);
+    addCheckbox('Acconsento', formData.passeggeroAutorizzaFoto);
+    addCheckbox('Non acconsento', !formData.passeggeroAutorizzaFoto);
+    yPos += 20;
+    
+    // AUTORIZZAZIONI TRATTAMENTO DATI
+    checkNewPage();
+    const trattamentoDati = 'Ai sensi dell\'art. 13 del d.lg.196/2003 La informiamo che i dati personali che La riguardano verranno trattati secondo principi di correttezza, liceità e trasparenza, e di tutela della Sua riservatezza e dei Suoi diritti, al fine di garantire il corretto uso della card e a fini statistici interni. Il titolare del trattamento è l\'ALDEBARANDRIVE – MARLAN S.R.L.';
+    const splitTrattamento = doc.splitTextToSize(trattamentoDati, pageWidth - 2 * margin);
+    doc.text(splitTrattamento, margin, yPos);
+    yPos += splitTrattamento.length * lineHeight + 10;
+    
+    addLine(`IL GUIDATORE: ${formData.guidatoreNome} ${formData.guidatoreCognome}`, '', 10);
+    addCheckbox('Acconsento', formData.guidatoreAutorizzaTrattamento);
+    addCheckbox('Non acconsento', !formData.guidatoreAutorizzaTrattamento);
+    yPos += 10;
+    
+    addLine(`IL PASSEGGERO: ${formData.passeggeroNome} ${formData.passeggieroCognome}`, '', 10);
+    addCheckbox('Acconsento', formData.passeggeroAutorizzaTrattamento);
+    addCheckbox('Non acconsento', !formData.passeggeroAutorizzaTrattamento);
+    
+    // Salva il PDF
+    doc.save('modulo_iscrizione_supercar_for_passion.pdf');
+  };
 
   return (
     <main className="min-h-screen bg-gray-50 text-black">
@@ -250,14 +404,312 @@ export default function Home() {
       </section>
 
       {/* PDF BUTTON */}
-      <div className="p-6 text-center">
-        <button
-          onClick={generaPDF}
-          className="bg-indigo-600 text-white py-2 px-4 rounded hover:opacity-80 transition"
-        >
-          Genera PDF di Test
-        </button>
-      </div>
+       <div className="container mx-auto p-6 max-w-4xl">
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        Modulo Iscrizione - Supercar for Passion
+      </h1>
+      
+      <form className="space-y-6">
+        {/* DATI GUIDATORE */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Dati Guidatore</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="guidatoreCognome"
+              placeholder="Cognome"
+              value={formData.guidatoreCognome}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="guidatoreNome"
+              placeholder="Nome"
+              value={formData.guidatoreNome}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="guidatoreCodiceFiscale"
+              placeholder="Codice Fiscale"
+              value={formData.guidatoreCodiceFiscale}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="guidatorePatente"
+              placeholder="Numero Patente"
+              value={formData.guidatorePatente}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="date"
+              name="guidatoreScadenzaPatente"
+              placeholder="Scadenza Patente"
+              value={formData.guidatoreScadenzaPatente}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="guidatoreCellulare"
+              placeholder="Cellulare"
+              value={formData.guidatoreCellulare}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="email"
+              name="guidatoreEmail"
+              placeholder="Email"
+              value={formData.guidatoreEmail}
+              onChange={handleInputChange}
+              className="border p-2 rounded col-span-2"
+            />
+          </div>
+        </div>
+
+        {/* DATI PASSEGGERO */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Dati Passeggero</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="passeggieroCognome"
+              placeholder="Cognome"
+              value={formData.passeggieroCognome}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="passeggeroNome"
+              placeholder="Nome"
+              value={formData.passeggeroNome}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="passeggeroCodiceFiscale"
+              placeholder="Codice Fiscale"
+              value={formData.passeggeroCodiceFiscale}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="passeggieroCellulare"
+              placeholder="Cellulare"
+              value={formData.passeggieroCellulare}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="email"
+              name="passeggeroEmail"
+              placeholder="Email"
+              value={formData.passeggeroEmail}
+              onChange={handleInputChange}
+              className="border p-2 rounded col-span-2"
+            />
+          </div>
+        </div>
+
+        {/* DATI AUTO */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Dati Autovettura</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="autoModello"
+              placeholder="Modello"
+              value={formData.autoModello}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="autoAnno"
+              placeholder="Anno Immatricolazione"
+              value={formData.autoAnno}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="autoColore"
+              placeholder="Colore"
+              value={formData.autoColore}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              name="autoTarga"
+              placeholder="Targa"
+              value={formData.autoTarga}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+          </div>
+        </div>
+
+        {/* PACCHETTO */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Pacchetto Partecipazione</h2>
+          <select
+            name="quotaSelezionata"
+            value={formData.quotaSelezionata}
+            onChange={handleInputChange}
+            className="border p-2 rounded w-full"
+          >
+            <option value="QUOTA 1">QUOTA 1</option>
+            <option value="QUOTA 2">QUOTA 2</option>
+            <option value="QUOTA 3">QUOTA 3</option>
+            <option value="QUOTA 4">QUOTA 4</option>
+            <option value="QUOTA 5">QUOTA 5</option>
+            <option value="QUOTA 6">QUOTA 6</option>
+          </select>
+        </div>
+
+        {/* ESIGENZE ALIMENTARI */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Esigenze Alimentari</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="guidatoreEsigenzeAlimentari"
+                  checked={formData.guidatoreEsigenzeAlimentari}
+                  onChange={handleInputChange}
+                />
+                <span>Guidatore ha esigenze alimentari</span>
+              </label>
+              {formData.guidatoreEsigenzeAlimentari && (
+                <input
+                  type="text"
+                  name="guidatoreIntolleranze"
+                  placeholder="Intolleranze/Allergie Guidatore"
+                  value={formData.guidatoreIntolleranze}
+                  onChange={handleInputChange}
+                  className="border p-2 rounded w-full mt-2"
+                />
+              )}
+            </div>
+            <div>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="passeggeroEsigenzeAlimentari"
+                  checked={formData.passeggeroEsigenzeAlimentari}
+                  onChange={handleInputChange}
+                />
+                <span>Passeggero ha esigenze alimentari</span>
+              </label>
+              {formData.passeggeroEsigenzeAlimentari && (
+                <input
+                  type="text"
+                  name="passeggeroIntolleranze"
+                  placeholder="Intolleranze/Allergie Passeggero"
+                  value={formData.passeggeroIntolleranze}
+                  onChange={handleInputChange}
+                  className="border p-2 rounded w-full mt-2"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* AUTORIZZAZIONI */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Autorizzazioni</h2>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2">Autorizzazione Foto/Video</h3>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="guidatoreAutorizzaFoto"
+                  checked={formData.guidatoreAutorizzaFoto}
+                  onChange={handleInputChange}
+                />
+                <span>Guidatore autorizza foto/video</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="passeggeroAutorizzaFoto"
+                  checked={formData.passeggeroAutorizzaFoto}
+                  onChange={handleInputChange}
+                />
+                <span>Passeggero autorizza foto/video</span>
+              </label>
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">Trattamento Dati Personali</h3>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="guidatoreAutorizzaTrattamento"
+                  checked={formData.guidatoreAutorizzaTrattamento}
+                  onChange={handleInputChange}
+                />
+                <span>Guidatore autorizza trattamento dati</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="passeggeroAutorizzaTrattamento"
+                  checked={formData.passeggeroAutorizzaTrattamento}
+                  onChange={handleInputChange}
+                />
+                <span>Passeggero autorizza trattamento dati</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* LUOGO E DATA */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Luogo e Data</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="luogo"
+              placeholder="Luogo"
+              value={formData.luogo}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+            <input
+              type="date"
+              name="data"
+              value={formData.data}
+              onChange={handleInputChange}
+              className="border p-2 rounded"
+            />
+          </div>
+        </div>
+
+        {/* PULSANTE GENERA PDF */}
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={generatePDF}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Genera PDF
+          </button>
+        </div>
+      </form>
+    </div>
+
     </main>
   );
 }
