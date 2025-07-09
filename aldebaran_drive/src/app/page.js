@@ -7,6 +7,7 @@ import { CalendarDaysIcon, MapPinIcon, UsersIcon, PlusIcon, XIcon, UploadIcon } 
 import React from "react";
 import jsPDF from "jspdf";
 import { useState } from 'react';
+import { supabase } from "@/lib/supabaseClient"; // Importa il client di supabase
 
 const eventi = [
   {
@@ -429,17 +430,6 @@ export default function Home() {
                 I nostri eventi sono pensati per creare momenti indimenticabili, dove la bellezza delle macchine 
                 si unisce alla scoperta di territori unici e alla condivisione di esperienze autentiche.
               </p>
-              <div className="flex flex-wrap gap-4">
-                <div className="bg-gray-800 px-4 py-2 rounded-full">
-                  <span className="font-semibold">500+</span> Eventi Organizzati
-                </div>
-                <div className="bg-gray-800 px-4 py-2 rounded-full">
-                  <span className="font-semibold">2000+</span> Appassionati
-                </div>
-                <div className="bg-gray-800 px-4 py-2 rounded-full">
-                  <span className="font-semibold">10</span> Anni di Esperienza
-                </div>
-              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[...Array(4)].map((_, i) => (
