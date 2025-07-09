@@ -49,24 +49,23 @@ export default function Home() {
       <section id="eventi" className="py-16 px-4">
         <h2 className="text-3xl font-semibold mb-8 text-center">Prossimi Eventi</h2>
         <div className="space-y-6 max-w-3xl mx-auto">
-        <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden shadow-lg max-w-sm">
-  <img
-    src="/path/to/image.jpg"
-    alt="Copertina Evento"
-    className="w-full h-48 object-cover"
-  />
-  <div className="p-5">
-    <h3 className="text-2xl font-bold text-white">[Nome Evento]</h3>
-    <p className="text-gray-400 mt-1">📍 [Data e Luogo Evento]</p>
-    <p className="text-gray-300 mt-3 text-sm">[Descrizione breve dell'evento]</p>
-    <button
-      className="mt-5 w-full bg-indigo-600 hover:opacity-80 text-white font-semibold py-2 px-4 rounded-xl transition duration-300"
-    >
-      Iscriviti
-    </button>
-  </div>
-</div>
-
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden shadow-lg max-w-sm">
+            <img
+              src="/path/to/image.jpg"
+              alt="Copertina Evento"
+              className="w-full h-48 object-cover"
+            />
+            <div className="p-5">
+              <h3 className="text-2xl font-bold text-white">[Nome Evento]</h3>
+              <p className="text-gray-400 mt-1">📍 [Data e Luogo Evento]</p>
+              <p className="text-gray-300 mt-3 text-sm">[Descrizione breve dell'evento]</p>
+              <button
+                className="mt-5 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-300"
+              >
+                Iscriviti
+              </button>
+            </div>
+          </div>
           <div className="border border-gray-700 p-4 rounded-xl">
             <h3 className="text-xl font-semibold">[Nome Evento]</h3>
             <p className="text-gray-400">[Data e Luogo Evento]</p>
