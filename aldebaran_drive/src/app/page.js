@@ -7,7 +7,7 @@ import { CalendarDaysIcon, MapPinIcon, UsersIcon, PlusIcon, XIcon, UploadIcon } 
 import React from "react";
 import jsPDF from "jspdf";
 import { useState } from 'react';
-import { supabase } from "@/lib/supabaseClient"; // Importa il client di supabase
+//import { supabase } from "@/lib/supabaseClient"; // Importa il client di supabase
 
 const eventi = [
   {
@@ -15,7 +15,7 @@ const eventi = [
     titolo: "Evento A",
     tipo: "AUTO",
     data: "01 Gennaio 2024",
-    luogo: "Luogo A",
+    luogo:"Luogo A",
     posti: 30,
     descrizione: "Descrizione evento A.",
   },
