@@ -1563,7 +1563,12 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     const maxWidth = pageWidth - (margin * 2)
     let currentPage = 1
     let totalPages = 1 // Sarà aggiornato alla fine
-    
+
+    const eventDate = new Date(event.data)
+
+    // Formattazione in formato "gg/mm/aaaa"
+    const formattedEventDate = `${eventDate.getDate().toString().padStart(2, '0')}/${(eventDate.getMonth() + 1).toString().padStart(2, '0')}/${eventDate.getFullYear()}`
+        
     // Funzione per controllare se serve una nuova pagina
     const checkNewPage = (neededSpace = 10) => {
       if (yPos + neededSpace > pageHeight - 20) {
@@ -1616,7 +1621,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     yPos += 3
     doc.text(`Cellulare: ${registration.telefono}`, margin, yPos)
     doc.text(`e-mail: ${registration.indirizzo_email}`, margin + 90, yPos)
-    yPos += 15
+    yPos += 10
     
     // Dati anagrafici del passeggero
     checkNewPage(50)
@@ -1641,7 +1646,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
       yPos += 3
       yPos = addWrappedText('Cellulare: ____________________________________  e-mail: ___________________________________', margin, yPos, maxWidth)
     }
-    yPos += 15
+    yPos += 10
     
     // Dati autovettura
     checkNewPage(30)
@@ -1651,7 +1656,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     
     doc.setFont(undefined, 'normal')
     yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione: __________  Colore: _____________  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
-    yPos += 15
+    yPos += 10
     
     // Chiede/chiedono
     checkNewPage(30)
@@ -1661,7 +1666,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     
     doc.setFont(undefined, 'normal')
     yPos = addWrappedText('di poter partecipare all\'evento in epigrafe a proprio rischio e pericolo, senza esclusiva, con l\'autovettura sopra identificata, coperta da assicurazione RCA in corso di validità.', margin, yPos, maxWidth)
-    yPos += 15
+    yPos += 10
     
 checkNewPage(60)
 doc.setFont(undefined, 'bold')
@@ -1720,13 +1725,12 @@ yPos += 8
     
     checkNewPage(20)
     yPos = addWrappedText(`Il sottoscritto (guidatore) ${registration.nome} ${registration.cognome}`, margin, yPos, maxWidth)
-    yPos += 7
     
     let passengerName = ''
     if (registration.passeggeri && registration.passeggeri.length > 0) {
       passengerName = `${registration.passeggeri[0].nome || ''} ${registration.passeggeri[0].cognome || ''}`.trim()
     }
-    yPos = addWrappedText(`e il sottoscritto (passeggero) ${passengerName || '_____________________________________________'}`, margin, yPos, maxWidth)
+    yPos = addWrappedText(` e il sottoscritto (passeggero) ${passengerName || '_____________________________________________'}`, margin, yPos, maxWidth)
     yPos += 10
     
     checkNewPage(15)
@@ -1754,33 +1758,33 @@ yPos += 8
     ]
     
     dichiarazioni.forEach(dichiarazione => {
-      checkNewPage(30)
+      checkNewPage(32)
       yPos = addWrappedText(dichiarazione, margin, yPos, maxWidth)
-      yPos += 7
+      yPos += 5
     })
     
     // Sezioni firme GUIDATORE
     checkNewPage(70)
     yPos = addWrappedText(`IL GUIDATORE: ${registration.cognome} ${registration.nome}`, margin, yPos, maxWidth)
     yPos += 8
-    doc.text('Lì____________________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma __________________', margin + 90, yPos)
     yPos += 12
     
     yPos = addWrappedText(`Il/La sottoscritto/a ${registration.cognome} ${registration.nome} dichiara di aver preso visione consapevole e di approvare le clausole di cui ai punti 5) Responsabilità, 6) Pretese, 7) Esonero, 9) Rinuncia, 11) Allontanamento e 13) Azioni legali.`, margin, yPos, maxWidth)
     yPos += 8
-    doc.text('Lì_____________________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma ____________________', margin + 90, yPos)
     yPos += 12
     
     yPos = addWrappedText(`Il/La sottoscritto/a ${registration.cognome} ${registration.nome} dichiara ai sensi del DPR n.445 del 28/12/2000 la veridicità dei dati trasmessi, conferma espressamente tutto quanto sopra precede ad ogni e qualsiasi effetto di legge ed autorizza il trattamento dei dati personali ai sensi del D.lgs. 196 del 30 giugno 2003 e s.m.i.`, margin, yPos, maxWidth)
     yPos += 8
-    doc.text('Lì_______________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma _________________', margin + 90, yPos)
     yPos += 12
     
     // Sezione PASSEGGERO
-    checkNewPage(70)
+    checkNewPage(60)
     if (registration.passeggeri && registration.passeggeri.length > 0) {
       const firstPassenger = registration.passeggeri[0]
       yPos = addWrappedText(`IL PASSEGGERO: ${firstPassenger.cognome || ''} ${firstPassenger.nome || ''}`, margin, yPos, maxWidth)
@@ -1788,7 +1792,7 @@ yPos += 8
       yPos = addWrappedText('IL PASSEGGERO (inserire Cognome e nome): __________________________________', margin, yPos, maxWidth)
     }
     yPos += 8
-    doc.text('Lì__________________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma ______________________', margin + 90, yPos)
     yPos += 12
     
@@ -1803,13 +1807,13 @@ yPos += 8
     
     yPos = addWrappedText(`Il/La sottoscritto/a ${passengerFullName}dichiara di aver preso visione consapevole e di approvare le clausole di cui ai punti 5) Responsabilità, 6) Pretese, 7) Esonero, 9) Rinuncia, 11) Allontanamento e 13) Azioni legali.`, margin, yPos, maxWidth)
     yPos += 8
-    doc.text('Lì__________________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma ____________________', margin + 90, yPos)
     yPos += 12
     
     yPos = addWrappedText(`Il/La sottoscritto/a ${passengerFullName}dichiara ai sensi del DPR n.445 del 28/12/2000 la veridicità dei dati trasmessi, conferma espressamente tutto quanto sopra precede ad ogni e qualsiasi effetto di legge ed autorizza il trattamento dei dati personali ai sensi del D.lgs. 196 del 30 giugno 2003 e s.m.i.`, margin, yPos, maxWidth)
     yPos += 8
-    doc.text('Lì__________________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma ___________________', margin + 90, yPos)
     yPos += 15
     
@@ -1830,7 +1834,7 @@ yPos += 8
     yPos += 8
     doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
     yPos += 8
-    doc.text('Lì__________________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma _________________', margin + 90, yPos)
     yPos += 12
     
@@ -1843,7 +1847,7 @@ yPos += 8
     yPos += 8
     doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
     yPos += 8
-    doc.text('Lì_____________________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma ____________________', margin + 90, yPos)
     yPos += 12
     
@@ -1861,7 +1865,7 @@ yPos += 8
     yPos += 8
     doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
     yPos += 8
-    doc.text('Lì_____________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma ______________', margin + 90, yPos)
     yPos += 12
     
@@ -1874,7 +1878,7 @@ yPos += 8
     yPos += 8
     doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
     yPos += 8
-    doc.text('Lì__________________', margin, yPos)
+    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
     doc.text('Firma _____________________', margin + 90, yPos)
     
     // Gestione passeggeri aggiuntivi (dal secondo in poi)
@@ -1910,32 +1914,32 @@ yPos += 8
         
         yPos = addWrappedText(`IL PASSEGGERO: ${passenger.cognome || ''} ${passenger.nome || ''}`, margin, yPos, maxWidth)
         yPos += 8
-        doc.text('Lì__________________', margin, yPos)
+        doc.text(`Lì ${formattedEventDate}`, margin, yPos)
         doc.text('Firma ______________', margin + 90, yPos)
         yPos += 12
         
         yPos = addWrappedText(`Il/La sottoscritto/a ${passenger.nome || ''} ${passenger.cognome || ''} dichiara di aver preso visione consapevole e di approvare le clausole di cui ai punti 5) Responsabilità, 6) Pretese, 7) Esonero, 9) Rinuncia, 11) Allontanamento e 13) Azioni legali.`, margin, yPos, maxWidth)
         yPos += 8
-        doc.text('Lì_________________', margin, yPos)
+        doc.text(`Lì ${formattedEventDate}`, margin, yPos)
         doc.text('Firma ______________', margin + 90, yPos)
         yPos += 12
         
         yPos = addWrappedText(`Il/La sottoscritto/a ${passenger.nome || ''} ${passenger.cognome || ''} dichiara ai sensi del DPR n.445 del 28/12/2000 la veridicità dei dati trasmessi, conferma espressamente tutto quanto sopra precede ad ogni e qualsiasi effetto di legge ed autorizza il trattamento dei dati personali ai sensi del D.lgs. 196 del 30 giugno 2003 e s.m.i.`, margin, yPos, maxWidth)
         yPos += 8
-        doc.text('Lì__________________', margin, yPos)
+        doc.text(`Lì ${formattedEventDate}`, margin, yPos)
         doc.text('Firma ______________', margin + 90, yPos)
         yPos += 20
         
         // Autorizzazioni per passeggero aggiuntivo
         doc.text('[X] Acconsento [ ] Non acconsento (Autorizzazione foto/video)', margin, yPos)
         yPos += 8
-        doc.text('Lì_________________', margin, yPos)
+        doc.text(`Lì ${formattedEventDate}`, margin, yPos)
         doc.text('Firma _____________', margin + 90, yPos)
         yPos += 12
         
         doc.text('[X] Acconsento [ ] Non acconsento (Trattamento dati)', margin, yPos)
         yPos += 8
-        doc.text('Lì__________________', margin, yPos)
+        doc.text(`Lì ${formattedEventDate}`, margin, yPos)
         doc.text('Firma ______________', margin + 90, yPos)
       }
     }
