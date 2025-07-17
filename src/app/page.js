@@ -192,6 +192,11 @@ export default function Home() {
 
   // Funzioni per la camera
   const startCamera = async (fieldName, index = null, type = "front") => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Il tuo browser non supporta l'accesso alla fotocamera. Prova ad aggiornare o usare un altro browser.")
+      return
+    }
+
     try {
       const constraints = {
         video: {
@@ -209,15 +214,46 @@ export default function Home() {
       setShowCamera(true)
 
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        // Aggiunto listener per assicurare che il video parta solo quando i metadati sono caricati
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play().catch(err => console.error("Error playing video:", err));
+        videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute('autoplay', ''); // Ensure autoplay is set for some mobile browsers
+        videoRef.current.setAttribute('playsinline', ''); // Ensure playsinline for iOS
+
+        // Attempt to play immediately and handle the promise
+        const playPromise = videoRef.current.play();
+
+        if (playPromise !== undefined) {
+          playPromise.then(_ => {
+            // Autoplay started successfully.
+            console.log("Camera video started playing automatically.");
+          }).catch(error => {
+            // Autoplay was prevented. Show a "Play" button to the user.
+            console.warn("Autoplay was prevented. User interaction required.", error);
+            alert("Per favore, tocca lo schermo per avviare la fotocamera. Potrebbe essere necessario un permesso.");
+          });
+        }
+
+        // Add a loadeddata listener as a fallback/additional check
+        videoRef.current.onloadeddata = () => {
+          if (videoRef.current && videoRef.current.paused) {
+            videoRef.current.play().catch(err => console.error("Error playing video after loadeddata:", err));
+          }
         };
+
       }
     } catch (error) {
       console.error("Errore accesso camera:", error)
-      alert("Impossibile accedere alla camera. Verifica i permessi.")
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        alert("Permesso fotocamera negato. Per favore, abilita l'accesso alla fotocamera nelle impostazioni del tuo browser per continuare.")
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+        alert("Nessuna fotocamera trovata sul tuo dispositivo.")
+      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+        alert("La fotocamera è già in uso o non è accessibile. Chiudi altre applicazioni che potrebbero usarla.")
+      } else if (error.name === "OverconstrainedError" || error.name === "ConstraintNotSatisfiedError") {
+        alert("Errore nella configurazione della fotocamera. Riprova o contatta il supporto.")
+      } else {
+        alert("Errore generico nell'accesso alla fotocamera: " + error.message + ". Prova a ricaricare la pagina.")
+      }
+      stopCamera(); // Ensure camera modal is closed on error
     }
   }
 
@@ -225,6 +261,10 @@ export default function Home() {
     if (cameraStream) {
       cameraStream.getTracks().forEach((track) => track.stop())
       setCameraStream(null)
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null; // Clear the source
+      videoRef.current.onloadeddata = null; // Remove listener
     }
     setShowCamera(false)
     setCurrentCameraField(null)
@@ -240,10 +280,17 @@ export default function Home() {
       canvas.height = video.videoHeight
 
       const ctx = canvas.getContext("2d")
-      ctx.drawImage(video, 0, 0)
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height) // Ensure drawing covers the canvas
 
       canvas.toBlob(
         (blob) => {
+          // Check if blob is valid
+          if (!blob) {
+            console.error("Failed to create blob from canvas.");
+            alert("Impossibile catturare l'immagine. Riprova.");
+            return;
+          }
+
           const file = new File([blob], `${currentCameraField}_${cameraType}_${Date.now()}.jpg`, {
             type: "image/jpeg",
           })
