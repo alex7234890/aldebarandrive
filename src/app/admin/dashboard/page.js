@@ -717,10 +717,10 @@ const RegistrationsModal = ({
                           <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
                         </Button>
                       )}
-                      {reg.docuemnto_retro && (
+                      {reg.documento_retro && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.docuemnto_retro, "pdf")}
+                          onClick={() => openDocumentInModal(reg.documento_retro, "pdf")}
                           className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
                         >
                           <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
@@ -987,7 +987,7 @@ export default function AdminDashboard() {
   const [loadingEvents, setLoadingEvents] = useState(true)
   const [loadingPastEvents, setLoadingPastEvents] = useState(true)
   const [loadingImages, setLoadingImages] = useState(true)
-  const [loadingRegistrations, setLoadingRegistrations] = useState(true) // <- Added this
+  const [loadingRegistrations, setLoadingRegistrations] = useState(true)
 
   // Verifica autenticazione amministratore
   useEffect(() => {
@@ -1291,27 +1291,41 @@ export default function AdminDashboard() {
     try {
       let overallSuccess = true;
 
-      // Step 1: Delete associated registrations
+      // Step 1: Delete associated registrations from guidatore table
       try {
-        const { error: deleteRegistrationsError } = await supabase
-          .from("iscrizioni")
+        const { error: deleteGuidatoriError } = await supabase
+          .from("guidatore")
           .delete()
-          .eq("id_evento", eventId);
+          .eq("id_evento_fk", eventId);
 
-        if (deleteRegistrationsError) {
-          throw new Error(`Errore durante l'eliminazione delle iscrizioni: ${deleteRegistrationsError.message}`);
+        if (deleteGuidatoriError) {
+          throw new Error(`Errore durante l'eliminazione dei guidatori: ${deleteGuidatoriError.message}`);
         }
-        console.log(`Iscrizioni per l'evento ${eventId} eliminate con successo.`);
+        console.log(`Guidatori per l'evento ${eventId} eliminati con successo.`);
       } catch (error) {
         overallSuccess = false;
-        console.error(`Errore critico durante l'eliminazione delle iscrizioni per l'evento ${eventId}:`, error.message);
-        showNotification(`Errore critico durante l'eliminazione delle iscrizioni. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "error");
-        // We might choose to abort here if registrations deletion is absolutely critical for atomicity
-        // For now, we'll continue to try deleting images and event for partial cleanup.
+        console.error(`Errore critico durante l'eliminazione dei guidatori per l'evento ${eventId}:`, error.message);
+        showNotification(`Errore critico durante l'eliminazione dei guidatori. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "error");
       }
 
+      // Step 2: Delete associated registrations from passeggero table
+      try {
+        const { error: deletePasseggeriError } = await supabase
+          .from("passeggero")
+          .delete()
+          .eq("id_evento_fk", eventId);
 
-      // Step 2: Delete associated images from storage
+        if (deletePasseggeriError) {
+          throw new Error(`Errore durante l'eliminazione dei passeggeri: ${deletePasseggeriError.message}`);
+        }
+        console.log(`Passeggeri per l'evento ${eventId} eliminati con successo.`);
+      } catch (error) {
+        overallSuccess = false;
+        console.error(`Errore critico durante l'eliminazione dei passeggeri per l'evento ${eventId}:`, error.message);
+        showNotification(`Errore critico durante l'eliminazione dei passeggeri. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "error");
+      }
+
+      // Step 3: Delete associated images from storage
       try {
         const { data: imagesList, error: listError } = await supabase.storage
           .from("doc")
@@ -1341,8 +1355,7 @@ export default function AdminDashboard() {
         showNotification(`Errore durante l'eliminazione delle immagini dell'evento. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "warning");
       }
 
-
-      // Step 3: Delete the event itself
+      // Step 4: Delete the event itself
       try {
         const { error: deleteEventError } = await supabase
           .from("evento")
@@ -1470,19 +1483,57 @@ export default function AdminDashboard() {
     }
   }
 
-  // FUNZIONI DI GESTIONE ISCRIZIONI
+  // FUNZIONI DI GESTIONE ISCRIZIONI - MODIFICATA PER LA NUOVA STRUTTURA
   const fetchRegistrations = useCallback(async (eventId) => {
     setLoadingRegistrations(true)
     try {
-      const { data, error } = await supabase
-        .from("iscrizioni")
+      // Fetch guidatori per l'evento
+      const { data: guidatoriData, error: guidatoriError } = await supabase
+        .from("guidatore")
         .select("*")
-        .eq("id_evento", eventId)
+        .eq("id_evento_fk", eventId)
 
-      if (error) {
-        throw error
+      if (guidatoriError) {
+        throw guidatoriError
       }
-      setRegistrations(data)
+
+      // Per ogni guidatore, fetch i passeggeri associati
+      const registrationsWithPassengers = await Promise.all(
+        guidatoriData.map(async (guidatore) => {
+          const { data: passeggeriData, error: passeggeriError } = await supabase
+            .from("passeggero")
+            .select("*")
+            .eq("id_guidatore_fk", guidatore.id)
+
+          if (passeggeriError) {
+            console.warn(`Errore nel recupero passeggeri per guidatore ${guidatore.id}:`, passeggeriError.message)
+          }
+
+          return {
+            ...guidatore,
+            passeggeri: passeggeriData || []
+          }
+        })
+      )
+
+      // Fetch anche i passeggeri senza guidatore (se esistono)
+      const { data: passeggeriSenzaGuidatore, error: passeggeriSenzaGuidatoreError } = await supabase
+        .from("passeggero")
+        .select("*")
+        .eq("id_evento_fk", eventId)
+        .is("id_guidatore_fk", null)
+
+      if (passeggeriSenzaGuidatoreError) {
+        console.warn("Errore nel recupero passeggeri senza guidatore:", passeggeriSenzaGuidatoreError.message)
+      }
+
+      // Combina guidatori con passeggeri e passeggeri senza guidatore
+      const allRegistrations = [
+        ...registrationsWithPassengers,
+        ...(passeggeriSenzaGuidatore || [])
+      ]
+
+      setRegistrations(allRegistrations)
     } catch (error) {
       console.error("Errore nel recupero delle iscrizioni:", error)
       showNotification("Errore nel recupero delle iscrizioni: " + error.message, "error")
@@ -1548,7 +1599,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const filePath = `fatture/${selectedRegistration.id_evento}/${selectedRegistration.id}_${invoiceFile.name}`;
+      const filePath = `fatture/${selectedRegistration.id_evento_fk}/${selectedRegistration.id}_${invoiceFile.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("doc")
         .upload(filePath, invoiceFile, {
@@ -1753,7 +1804,7 @@ export default function AdminDashboard() {
           </Button>
         </div>
 
-   <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
   <TabsList className="grid w-full grid-cols-4 bg-gray-200 rounded-lg h-16 sm:h-20 p-1 sm:p-2 shadow-lg border border-gray-300 mb-8">
 
     <TabsTrigger 
@@ -1790,42 +1841,43 @@ export default function AdminDashboard() {
     </TabsTrigger>
   </TabsList>
 
-  <TabsContent value="overview" className="mt-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <Card className="p-6 bg-gradient-to-br from-black to-gray-800 text-white rounded-lg shadow-xl">
-        <CardTitle className="text-3xl font-bold mb-2">Benvenuto!</CardTitle>
-        <CardDescription className="text-gray-300 mb-4">
-          Questa è la tua dashboard amministratore. Utilizza le schede qui above per gestire i tuoi eventi, le iscrizioni e le gallerie fotografiche.
-        </CardDescription>
-        <Button
-          onClick={() => setShowNewEventForm(true)}
-          className="bg-white text-black hover:bg-gray-200 font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-        >
-          <PlusIcon className="w-5 h-5" /> Crea Nuovo Evento
-        </Button>
-      </Card>
 
-      <Card className="p-6 bg-white rounded-lg shadow-xl border border-gray-200">
-        <CardTitle className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
-          <ActivityIcon className="w-6 h-6 text-gray-600" /> Riepilogo Attività
-        </CardTitle>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-            <span className="text-gray-700 font-medium">Eventi Correnti:</span>
-            <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingEvents ? "..." : events.length}</Badge>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-            <span className="text-gray-700 font-medium">Eventi Passati:</span>
-            <Badge className="bg-gray-600 text-white px-3 py-1 text-lg font-bold">{loadingPastEvents ? "..." : pastEvents.length}</Badge>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-            <span className="text-gray-700 font-medium">Immagini in Galleria:</span>
-            <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingImages ? "..." : galleryImages.length + Object.values(eventGalleryImages).flat().length}</Badge>
-          </div>
-        </div>
-      </Card>
-    </div>
-  </TabsContent>
+          <TabsContent value="overview" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="p-6 bg-gradient-to-br from-black to-gray-800 text-white rounded-lg shadow-xl">
+                <CardTitle className="text-3xl font-bold mb-2">Benvenuto!</CardTitle>
+                <CardDescription className="text-gray-300 mb-4">
+                  Questa è la tua dashboard amministratore. Utilizza le schede qui above per gestire i tuoi eventi, le iscrizioni e le gallerie fotografiche.
+                </CardDescription>
+                <Button
+                  onClick={() => setShowNewEventForm(true)}
+                  className="bg-white text-black hover:bg-gray-200 font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
+                >
+                  <PlusIcon className="w-5 h-5" /> Crea Nuovo Evento
+                </Button>
+              </Card>
+
+              <Card className="p-6 bg-white rounded-lg shadow-xl border border-gray-200">
+                <CardTitle className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
+                  <ActivityIcon className="w-6 h-6 text-gray-600" /> Riepilogo Attività
+                </CardTitle>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <span className="text-gray-700 font-medium">Eventi Correnti:</span>
+                    <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingEvents ? "..." : events.length}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <span className="text-gray-700 font-medium">Eventi Passati:</span>
+                    <Badge className="bg-gray-600 text-white px-3 py-1 text-lg font-bold">{loadingPastEvents ? "..." : pastEvents.length}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <span className="text-gray-700 font-medium">Immagini in Galleria:</span>
+                    <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingImages ? "..." : galleryImages.length + Object.values(eventGalleryImages).flat().length}</Badge>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* Tab Eventi Correnti */}
           <TabsContent value="currentEvents" className="mt-6">
@@ -2121,3 +2173,4 @@ export default function AdminDashboard() {
     </div>
   )
 }
+
