@@ -46,8 +46,7 @@ export default function Home() {
   const [currentCameraField, setCurrentCameraField] = useState(null)
   const [currentCameraIndex, setCurrentCameraIndex] = useState(null)
   const [cameraType, setCameraType] = useState("front") // 'front' o 'back'
-  const [videoReady, setVideoReady] = useState(false) // Track if video is ready
-  const [needsManualPlay, setNeedsManualPlay] = useState(false) // Track if manual play is needed
+  const [isCameraActive, setIsCameraActive] = useState(false)
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -92,7 +91,7 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // useEffect per il caricamento degli eventi futuri e passati all\'avvio della pagina
+  // useEffect per il caricamento degli eventi futuri e passati all'avvio della pagina
   useEffect(() => {
     const fetchEventi = async () => {
       setLoadingEventi(true)
@@ -114,7 +113,7 @@ export default function Home() {
           if (eventDate < now) {
             passati.push(evento)
           } else {
-            // Parse the \'quote\' JSON string if it exists
+            // Parse the 'quote' JSON string if it exists
             if (evento.quote && typeof evento.quote === 'string') {
                 try {
                     evento.quote = JSON.parse(evento.quote);
@@ -123,7 +122,7 @@ export default function Home() {
                     evento.quote = {}; // Set to empty object if parsing fails
                 }
             } else if (!evento.quote) {
-                evento.quote = {}; // Ensure it\'s an object even if null/undefined
+                evento.quote = {}; // Ensure it's an object even if null/undefined
             }
             futuri.push(evento)
           }
@@ -192,126 +191,76 @@ export default function Home() {
     fetchImages()
   }, [])
 
-  // Funzioni per la camera
-  const startCamera = async (fieldName, index = null, type = "front") => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Il tuo browser non supporta l'accesso alla fotocamera. Prova ad aggiornare o usare un altro browser.")
-      return
-    }
-
-    try {
-      // Reset states
-      setVideoReady(false)
-      setNeedsManualPlay(false)
-
+  // useEffect per la gestione della fotocamera basato sull'esempio funzionante
+  useEffect(() => {
+    if (isCameraActive) {
       const constraints = {
         video: {
-          facingMode: type === "back" ? "environment" : "user",
+          facingMode: cameraType === "back" ? "environment" : "user",
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      setCameraStream(stream)
-      setCurrentCameraField(fieldName)
-      setCurrentCameraIndex(index)
-      setCameraType(type)
-      setShowCamera(true)
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute('autoplay', '');
-        videoRef.current.setAttribute('playsinline', '');
-        videoRef.current.muted = true; // Mute the video to help with autoplay on some devices
-
-        // Use a timeout to ensure metadata is loaded before attempting to play
-        videoRef.current.onloadedmetadata = () => {
-          setVideoReady(true)
-          videoRef.current.play().then(() => {
-            console.log("Camera video started playing automatically.");
-          }).catch(error => {
-            console.warn("Autoplay was prevented. User interaction required.", error);
-            setNeedsManualPlay(true)
-          });
-        };
-
-        // Additional event listeners for better mobile support
-        videoRef.current.oncanplay = () => {
-          if (videoRef.current && videoRef.current.paused && !needsManualPlay) {
-            videoRef.current.play().catch(() => {
-              setNeedsManualPlay(true)
-            });
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then((stream) => {
+          setCameraStream(stream)
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
           }
-        };
+        })
+        .catch((err) => {
+          console.error("Errore nell'accesso alla fotocamera:", err);
+          alert("Errore nell'accesso alla fotocamera: " + err.message);
+          setIsCameraActive(false)
+          setShowCamera(false)
+        });
+    } else {
+      // Ferma lo stream se disattivato
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+        setCameraStream(null)
       }
-    } catch (error) {
-      console.error("Errore accesso camera:", error)
-      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-        alert("Permesso fotocamera negato. Per favore, abilita l'accesso alla fotocamera nelle impostazioni del tuo browser per continuare.")
-      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
-        alert("Nessuna fotocamera trovata sul tuo dispositivo.")
-      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
-        alert("La fotocamera è già in uso o non è accessibile. Chiudi altre applicazioni che potrebbero usarla.")
-      } else if (error.name === "OverconstrainedError" || error.name === "ConstraintNotSatisfiedError") {
-        alert("Errore nella configurazione della fotocamera. Riprova o contatta il supporto.")
-      } else {
-        alert("Errore generico nell'accesso alla fotocamera: " + error.message + ". Prova a ricaricare la pagina.")
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+        videoRef.current.srcObject = null;
       }
-      stopCamera(); // Ensure camera modal is closed on error
     }
+  }, [isCameraActive, cameraType])
+
+  // Funzioni per la camera
+  const startCamera = async (fieldName, index = null, type = "back") => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Il tuo browser non supporta l'accesso alla fotocamera. Prova ad aggiornare o usare un altro browser.")
+      return
+    }
+
+    setCurrentCameraField(fieldName)
+    setCurrentCameraIndex(index)
+    setCameraType(type)
+    setShowCamera(true)
+    setIsCameraActive(true)
   }
 
   const stopCamera = () => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach((track) => track.stop())
-      setCameraStream(null)
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null; // Clear the source
-      videoRef.current.onloadedmetadata = null; // Remove listener
-      videoRef.current.oncanplay = null; // Remove listener
-    }
+    setIsCameraActive(false)
     setShowCamera(false)
     setCurrentCameraField(null)
     setCurrentCameraIndex(null)
-    setVideoReady(false)
-    setNeedsManualPlay(false)
-  }
-
-  const manualPlayVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.play().then(() => {
-        setNeedsManualPlay(false)
-        console.log("Video started playing manually.");
-      }).catch(error => {
-        console.error("Error playing video manually:", error);
-        alert("Impossibile avviare il video. Riprova o ricarica la pagina.");
-      });
-    }
   }
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current
-      const video = videoRef.current
-
-      // Ensure video dimensions are valid before drawing
-      if (video.videoWidth === 0 || video.videoHeight === 0) {
-        console.error("Video stream has invalid dimensions.");
-        alert("Impossibile catturare l'immagine: il flusso video non è pronto. Riprova.");
-        return;
-      }
-
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-
-      const ctx = canvas.getContext("2d")
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (video && canvas) {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(
         (blob) => {
-          // Check if blob is valid
           if (!blob) {
             console.error("Failed to create blob from canvas.");
             alert("Impossibile catturare l'immagine. Riprova.");
@@ -1798,39 +1747,14 @@ export default function Home() {
                     playsInline 
                     muted 
                     className="w-full h-64 object-cover"
-                    style={{ display: videoReady ? 'block' : 'none' }}
                   />
                   <canvas ref={canvasRef} className="hidden" />
-                  
-                  {/* Loading indicator */}
-                  {!videoReady && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                      <div className="text-white text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                        <p className="text-sm">Caricamento fotocamera...</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Manual play button */}
-                  {needsManualPlay && videoReady && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                      <button
-                        onClick={manualPlayVideo}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-                      >
-                        <span className="text-2xl">▶️</span>
-                        Avvia Fotocamera
-                      </button>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="flex justify-center gap-4">
                   <Button
                     onClick={capturePhoto}
-                    disabled={!videoReady || needsManualPlay}
-                    className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-lg flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-lg flex items-center gap-2"
                   >
                     <CameraIcon className="w-5 h-5" />
                     Scatta Foto
@@ -1844,10 +1768,7 @@ export default function Home() {
                 </div>
                 
                 <p className="text-sm text-gray-600 text-center mt-2">
-                  {needsManualPlay 
-                    ? "Tocca 'Avvia Fotocamera' per iniziare" 
-                    : "Posiziona il documento nel riquadro e scatta la foto"
-                  }
+                  Posiziona il documento nel riquadro e scatta la foto
                 </p>
               </div>
             </div>
