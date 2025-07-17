@@ -26,7 +26,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [passeggeri, setPasseggeri] = useState([])
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenu] = useState(false)
   const [images, setImages] = useState([])
   const [selectedImage, setSelectedImage] = useState(null)
   const [showImageModal, setShowImageModal] = useState(false)
@@ -112,6 +112,17 @@ export default function Home() {
           if (eventDate < now) {
             passati.push(evento)
           } else {
+            // Parse the 'quote' JSON string if it exists
+            if (evento.quote && typeof evento.quote === 'string') {
+                try {
+                    evento.quote = JSON.parse(evento.quote);
+                } catch (jsonError) {
+                    console.error(`Error parsing quote JSON for event ${evento.id}:`, jsonError);
+                    evento.quote = {}; // Set to empty object if parsing fails
+                }
+            } else if (!evento.quote) {
+                evento.quote = {}; // Ensure it's an object even if null/undefined
+            }
             futuri.push(evento)
           }
         })
@@ -338,6 +349,7 @@ export default function Home() {
   const handleIscriviti = (evento) => {
     setSelectedEvent(evento)
     setShowForm(true)
+    // Set the first available quote as selected by default, if any
     if (evento.quote && Object.keys(evento.quote).length > 0) {
       const firstQuotaKey = Object.keys(evento.quote)[0]
       setFormData((prev) => ({
@@ -347,7 +359,7 @@ export default function Home() {
     } else {
       setFormData((prev) => ({
         ...prev,
-        quotaSelezionata: "",
+        quotaSelezionata: "", // No quote selected if none are available
       }))
     }
   }
@@ -1502,6 +1514,7 @@ export default function Home() {
              <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
   <h3 className="text-xl font-semibold mb-4 text-black">Pacchetto di Partecipazione</h3>
   <div className="grid grid-cols-1 gap-4">
+    {/* Render quotes dynamically from selectedEvent.quote */}
     {selectedEvent?.quote && Object.keys(selectedEvent.quote).length > 0 ? (
       Object.entries(selectedEvent.quote).map(([key, quota]) => (
         <label
@@ -1523,10 +1536,10 @@ export default function Home() {
               {/* Header con titolo e prezzo - responsive */}
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
                 <h4 className="text-lg sm:text-xl font-bold text-black pr-2 break-words">
-                  {quota.titolo || quota.descrizione}
+                  {quota.titolo || key}
                 </h4>
                 <div className="text-left sm:text-right flex-shrink-0">
-                  <div className="text-2xl sm:text-3xl font-bold text-green-600">€{quota.prezzo.toFixed(2)}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600">€{parseFloat(quota.prezzo).toFixed(2)}</div>
                 </div>
               </div>
 
@@ -1546,35 +1559,6 @@ export default function Home() {
                   ))}
                 </div>
               )}
-
-              {/* Badge per evidenziare caratteristiche speciali */}
-              <div className="flex flex-wrap gap-2">
-                {quota.prezzo >= 200 && (
-                  <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded-full">
-                    🌟 Pacchetto Premium
-                  </span>
-                )}
-                {quota.prezzo < 100 && (
-                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
-                    💰 Conveniente
-                  </span>
-                )}
-                {quota.titolo?.toLowerCase().includes("completa") && (
-                  <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">
-                    🍽️ Pensione Completa
-                  </span>
-                )}
-                {quota.titolo?.toLowerCase().includes("mezza") && (
-                  <span className="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-1 rounded-full">
-                    🥪 Mezza Pensione
-                  </span>
-                )}
-                {quota.titolo?.toLowerCase().includes("raduno") && (
-                  <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-1 rounded-full">
-                    🚗 Solo Raduno
-                  </span>
-                )}
-              </div>
             </div>
           </div>
         </label>
