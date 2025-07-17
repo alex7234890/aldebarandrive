@@ -45,7 +45,9 @@ export default function Home() {
   const [showCamera, setShowCamera] = useState(false)
   const [currentCameraField, setCurrentCameraField] = useState(null)
   const [currentCameraIndex, setCurrentCameraIndex] = useState(null)
-  const [cameraType, setCameraType] = useState("front") // \'front\' o \'back\'
+  const [cameraType, setCameraType] = useState("front") // 'front' o 'back'
+  const [videoReady, setVideoReady] = useState(false) // Track if video is ready
+  const [needsManualPlay, setNeedsManualPlay] = useState(false) // Track if manual play is needed
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -198,6 +200,10 @@ export default function Home() {
     }
 
     try {
+      // Reset states
+      setVideoReady(false)
+      setNeedsManualPlay(false)
+
       const constraints = {
         video: {
           facingMode: type === "back" ? "environment" : "user",
@@ -215,30 +221,29 @@ export default function Home() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute('autoplay', ''); // Ensure autoplay is set for some mobile browsers
-        videoRef.current.setAttribute('playsinline', ''); // Ensure playsinline for iOS
+        videoRef.current.setAttribute('autoplay', '');
+        videoRef.current.setAttribute('playsinline', '');
+        videoRef.current.muted = true; // Mute the video to help with autoplay on some devices
 
-        // Attempt to play immediately and handle the promise
-        const playPromise = videoRef.current.play();
-
-        if (playPromise !== undefined) {
-          playPromise.then(_ => {
-            // Autoplay started successfully.
+        // Use a timeout to ensure metadata is loaded before attempting to play
+        videoRef.current.onloadedmetadata = () => {
+          setVideoReady(true)
+          videoRef.current.play().then(() => {
             console.log("Camera video started playing automatically.");
           }).catch(error => {
-            // Autoplay was prevented. Show a "Play" button to the user.
             console.warn("Autoplay was prevented. User interaction required.", error);
-            alert("Per favore, tocca lo schermo per avviare la fotocamera. Potrebbe essere necessario un permesso.");
+            setNeedsManualPlay(true)
           });
-        }
-
-        // Add a loadeddata listener as a fallback/additional check
-        videoRef.current.onloadeddata = () => {
-          if (videoRef.current && videoRef.current.paused) {
-            videoRef.current.play().catch(err => console.error("Error playing video after loadeddata:", err));
-          }
         };
 
+        // Additional event listeners for better mobile support
+        videoRef.current.oncanplay = () => {
+          if (videoRef.current && videoRef.current.paused && !needsManualPlay) {
+            videoRef.current.play().catch(() => {
+              setNeedsManualPlay(true)
+            });
+          }
+        };
       }
     } catch (error) {
       console.error("Errore accesso camera:", error)
@@ -264,11 +269,26 @@ export default function Home() {
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null; // Clear the source
-      videoRef.current.onloadeddata = null; // Remove listener
+      videoRef.current.onloadedmetadata = null; // Remove listener
+      videoRef.current.oncanplay = null; // Remove listener
     }
     setShowCamera(false)
     setCurrentCameraField(null)
     setCurrentCameraIndex(null)
+    setVideoReady(false)
+    setNeedsManualPlay(false)
+  }
+
+  const manualPlayVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.play().then(() => {
+        setNeedsManualPlay(false)
+        console.log("Video started playing manually.");
+      }).catch(error => {
+        console.error("Error playing video manually:", error);
+        alert("Impossibile avviare il video. Riprova o ricarica la pagina.");
+      });
+    }
   }
 
   const capturePhoto = () => {
@@ -276,11 +296,18 @@ export default function Home() {
       const canvas = canvasRef.current
       const video = videoRef.current
 
+      // Ensure video dimensions are valid before drawing
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        console.error("Video stream has invalid dimensions.");
+        alert("Impossibile catturare l'immagine: il flusso video non è pronto. Riprova.");
+        return;
+      }
+
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
 
       const ctx = canvas.getContext("2d")
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height) // Ensure drawing covers the canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
       canvas.toBlob(
         (blob) => {
@@ -1765,13 +1792,45 @@ export default function Home() {
               </div>
               <div className="p-4">
                 <div className="relative bg-black rounded-lg overflow-hidden mb-4">
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-64 object-cover" />
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    className="w-full h-64 object-cover"
+                    style={{ display: videoReady ? 'block' : 'none' }}
+                  />
                   <canvas ref={canvasRef} className="hidden" />
+                  
+                  {/* Loading indicator */}
+                  {!videoReady && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                      <div className="text-white text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                        <p className="text-sm">Caricamento fotocamera...</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Manual play button */}
+                  {needsManualPlay && videoReady && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                      <button
+                        onClick={manualPlayVideo}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+                      >
+                        <span className="text-2xl">▶️</span>
+                        Avvia Fotocamera
+                      </button>
+                    </div>
+                  )}
                 </div>
+                
                 <div className="flex justify-center gap-4">
                   <Button
                     onClick={capturePhoto}
-                    className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-lg flex items-center gap-2"
+                    disabled={!videoReady || needsManualPlay}
+                    className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-lg flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     <CameraIcon className="w-5 h-5" />
                     Scatta Foto
@@ -1783,8 +1842,12 @@ export default function Home() {
                     Annulla
                   </Button>
                 </div>
+                
                 <p className="text-sm text-gray-600 text-center mt-2">
-                  Posiziona il documento nel riquadro e scatta la foto
+                  {needsManualPlay 
+                    ? "Tocca 'Avvia Fotocamera' per iniziare" 
+                    : "Posiziona il documento nel riquadro e scatta la foto"
+                  }
                 </p>
               </div>
             </div>
