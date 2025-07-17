@@ -45,7 +45,7 @@ export default function Home() {
   const [showCamera, setShowCamera] = useState(false)
   const [currentCameraField, setCurrentCameraField] = useState(null)
   const [currentCameraIndex, setCurrentCameraIndex] = useState(null)
-  const [cameraType, setCameraType] = useState("front") // 'front' o 'back'
+  const [cameraType, setCameraType] = useState("front") // \'front\' o \'back\'
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -90,7 +90,7 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // useEffect per il caricamento degli eventi futuri e passati all'avvio della pagina
+  // useEffect per il caricamento degli eventi futuri e passati all\'avvio della pagina
   useEffect(() => {
     const fetchEventi = async () => {
       setLoadingEventi(true)
@@ -112,7 +112,7 @@ export default function Home() {
           if (eventDate < now) {
             passati.push(evento)
           } else {
-            // Parse the 'quote' JSON string if it exists
+            // Parse the \'quote\' JSON string if it exists
             if (evento.quote && typeof evento.quote === 'string') {
                 try {
                     evento.quote = JSON.parse(evento.quote);
@@ -121,7 +121,7 @@ export default function Home() {
                     evento.quote = {}; // Set to empty object if parsing fails
                 }
             } else if (!evento.quote) {
-                evento.quote = {}; // Ensure it's an object even if null/undefined
+                evento.quote = {}; // Ensure it\'s an object even if null/undefined
             }
             futuri.push(evento)
           }
@@ -210,6 +210,7 @@ export default function Home() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        videoRef.current.play() // Aggiunto per assicurare che il video parta
       }
     } catch (error) {
       console.error("Errore accesso camera:", error)
