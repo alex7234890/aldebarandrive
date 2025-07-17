@@ -711,7 +711,7 @@ const RegistrationsModal = ({
                       {reg.documento_fronte && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.documento_fronte, "jpg")}
+                          onClick={() => openDocumentInModal(reg.documento_fronte, "jpg", false)}
                           className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
                         >
                           <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
@@ -720,7 +720,7 @@ const RegistrationsModal = ({
                       {reg.documento_retro && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.documento_retro, "jpg")}
+                          onClick={() => openDocumentInModal(reg.documento_retro, "jpg", false)}
                           className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
                         >
                           <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
@@ -808,7 +808,7 @@ const RegistrationsModal = ({
                                       variant="outline"
                                       size="sm"
                                       className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
-                                      onClick={() => openDocumentInModal(pass.documento_fronte, "jpg")}
+                                      onClick={() => openDocumentInModal(pass.documento_fronte, "jpg", true)}
                                     >
                                       <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
                                     </Button>
@@ -818,7 +818,7 @@ const RegistrationsModal = ({
                                       variant="outline"
                                       size="sm"
                                       className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
-                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "jpg")}
+                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "jpg", true)}
                                     >
                                       <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
                                     </Button>
@@ -878,12 +878,16 @@ const DocumentViewerModal = ({ currentDocumentUrl, currentDocumentType, onClose 
       </CardHeader>
       <CardContent className="flex-grow flex items-center justify-center p-0 bg-gray-50 rounded-b-lg">
         {currentDocumentUrl ? (
-          <iframe
-            src={currentDocumentUrl}
-            title={currentDocumentType}
-            className="w-full h-full border-0 rounded-b-lg"
-            style={{ minHeight: "600px" }}
-          />
+          currentDocumentType === "jpg" ? (
+            <img src={currentDocumentUrl} alt="Documento" className="max-w-full max-h-full object-contain" />
+          ) : (
+            <iframe
+              src={currentDocumentUrl}
+              title={currentDocumentType}
+              className="w-full h-full border-0 rounded-b-lg"
+              style={{ minHeight: "600px" }}
+            />
+          )
         ) : (
           <div className="text-center py-16">
             <FileTextIcon className="w-20 h-20 text-gray-400 mx-auto mb-6" />
@@ -1994,14 +1998,25 @@ yPos += 8
     }
   };
 
-  const openDocumentInModal = (url, type) => {
-    if (!url) {
+  const openDocumentInModal = async (documentPath, type, isPassenger = false) => {
+    if (!documentPath) {
       showNotification("URL del documento non valido.", "warning");
       return;
     }
-    setCurrentDocumentUrl(url);
-    setCurrentDocumentType(type);
-    setShowDocumentModal(true);
+
+    try {      const fullPath = documentPath;      const { data, error } = await supabase.storage.from("doc").createSignedUrl(fullPath, 3600); // URL valido per 1 ora
+
+      if (error) {
+        throw new Error(`Errore nella generazione dell'URL firmato: ${error.message}`);
+      }
+
+      setCurrentDocumentUrl(data.signedUrl);
+      setCurrentDocumentType(type);
+      setShowDocumentModal(true);
+    } catch (error) {
+      console.error("Errore nell'apertura del documento:", error);
+      showNotification("Errore nell'apertura del documento: " + error.message, "error");
+    }
   };
 
 
