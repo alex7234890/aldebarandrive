@@ -7,6 +7,7 @@
   - Anno immatricolazione
   - Numero patente
   - Data di scadenza patente
+  - Rimuovere max auto e max partecipanti
 
 ## 🖼️ Gestione Eventi
 
