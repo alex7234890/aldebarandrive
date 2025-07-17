@@ -297,6 +297,22 @@ export default function Home() {
     }
   }
 
+  const removeFile = (fieldName, index = null) => {
+    if (index !== null) {
+      const newPasseggeri = [...passeggeri]
+      newPasseggeri[index] = {
+        ...newPasseggeri[index],
+        [fieldName]: null,
+      }
+      setPasseggeri(newPasseggeri)
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [fieldName]: null,
+      }))
+    }
+  }
+
   const aggiungiPasseggero = () => {
     if (formData.postiAuto > 0 && passeggeri.length >= formData.postiAuto - 1) {
       alert(
@@ -1127,9 +1143,16 @@ export default function Home() {
       )}
     </div>
     {formData.guidatoreDocumentoFronte && (
-      <p className="text-sm text-green-600 mt-2 break-words">
+      <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
         ✓ {formData.guidatoreDocumentoFronte.name}
-      </p>
+        <Button
+          type="button"
+          onClick={() => removeFile("guidatoreDocumentoFronte")}
+          className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+        >
+          <XIcon className="w-3 h-3" />
+        </Button>
+      </div>
     )}
   </div>
 
@@ -1164,9 +1187,16 @@ export default function Home() {
       )}
     </div>
     {formData.guidatoreDocumentoRetro && (
-      <p className="text-sm text-green-600 mt-2 break-words">
+      <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
         ✓ {formData.guidatoreDocumentoRetro.name}
-      </p>
+        <Button
+          type="button"
+          onClick={() => removeFile("guidatoreDocumentoRetro")}
+          className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+        >
+          <XIcon className="w-3 h-3" />
+        </Button>
+      </div>
     )}
   </div>
 </div>
@@ -1335,9 +1365,16 @@ export default function Home() {
                               )}
                             </div>
                             {passeggero.documentoFronte && (
-                              <p className="text-sm text-green-600 mt-2 break-words">
+                              <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
                                 ✓ {passeggero.documentoFronte.name}
-                              </p>
+                                <Button
+                                  type="button"
+                                  onClick={() => removeFile("documentoFronte", index)}
+                                  className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                                >
+                                  <XIcon className="w-3 h-3" />
+                                </Button>
+                              </div>
                             )}
                           </div>
 
@@ -1372,9 +1409,16 @@ export default function Home() {
                               )}
                             </div>
                             {passeggero.documentoRetro && (
-                              <p className="text-sm text-green-600 mt-2 break-words">
+                              <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
                                 ✓ {passeggero.documentoRetro.name}
-                              </p>
+                                <Button
+                                  type="button"
+                                  onClick={() => removeFile("documentoRetro", index)}
+                                  className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                                >
+                                  <XIcon className="w-3 h-3" />
+                                </Button>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -1568,7 +1612,7 @@ export default function Home() {
       <div className="text-center py-8">
         <div className="text-4xl mb-4">🎫</div>
         <p className="text-gray-600 text-lg">Nessuna quota disponibile per questo evento.</p>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-500 text-sm mt-2">
           Le opzioni di partecipazione verranno pubblicate presto!
         </p>
       </div>
@@ -1671,7 +1715,7 @@ export default function Home() {
               </div>
               <div className="p-4">
                 <div className="relative bg-black rounded-lg overflow-hidden mb-4">
-                  <video ref={videoRef} autoPlay playsInline className="w-full h-64 object-cover" />
+                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-64 object-cover" />
                   <canvas ref={canvasRef} className="hidden" />
                 </div>
                 <div className="flex justify-center gap-4">
