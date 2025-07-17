@@ -1,6 +1,5 @@
 "use client"
 
-// Import delle librerie e componenti necessari
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -42,7 +41,7 @@ import {
 import jsPDF from "jspdf"
 import { supabase } from "@/lib/supabaseClient"
 
-// Modale per nuovo/modifica evento
+// Modal per nuovo/modifica evento
 const EventFormModal = ({
   isEditMode,
   newEvent,
@@ -56,12 +55,12 @@ const EventFormModal = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
-        <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-2xl p-6 flex flex-row justify-between items-center">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
+        <CardHeader className="bg-black text-white rounded-t-lg p-6 flex flex-row justify-between items-center">
           <div>
             <CardTitle className="text-2xl font-bold">{isEditMode ? "Modifica Evento" : "Crea Nuovo Evento"}</CardTitle>
-            <CardDescription className="text-indigo-100 mt-1">
+            <CardDescription className="text-gray-300 mt-1">
               {isEditMode ? "Aggiorna i dettagli dell'evento" : "Inserisci i dettagli per il nuovo evento"}
             </CardDescription>
           </div>
@@ -69,7 +68,7 @@ const EventFormModal = ({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="rounded-full text-white hover:bg-white/20 transition-colors"
+            className="rounded-full text-white hover:bg-gray-800 transition-colors"
           >
             <XIcon className="w-6 h-6" />
           </Button>
@@ -78,7 +77,7 @@ const EventFormModal = ({
           <form onSubmit={isEditMode ? handleUpdateEvent : handleCreateEvent} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <Label htmlFor="titolo" className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <Label htmlFor="titolo" className="text-base font-semibold text-black flex items-center gap-2">
                   <SparklesIcon className="w-4 h-4" />
                   Titolo Evento
                 </Label>
@@ -88,13 +87,13 @@ const EventFormModal = ({
                   value={newEvent.titolo}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
                   placeholder="Inserisci il titolo dell'evento"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="descrizione" className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <Label htmlFor="descrizione" className="text-base font-semibold text-black flex items-center gap-2">
                   <FileTextIcon className="w-4 h-4" />
                   Descrizione
                 </Label>
@@ -104,13 +103,13 @@ const EventFormModal = ({
                   value={newEvent.descrizione}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 min-h-[120px] transition-colors"
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 min-h-[120px] transition-colors"
                   placeholder="Descrivi l'evento in dettaglio"
                 />
               </div>
 
               <div>
-                <Label htmlFor="data" className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <Label htmlFor="data" className="text-base font-semibold text-black flex items-center gap-2">
                   <CalendarIcon className="w-4 h-4" />
                   Data
                 </Label>
@@ -121,12 +120,12 @@ const EventFormModal = ({
                   value={newEvent.data}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
                 />
               </div>
 
               <div>
-                <Label htmlFor="orario" className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <Label htmlFor="orario" className="text-base font-semibold text-black flex items-center gap-2">
                   <ClockIcon className="w-4 h-4" />
                   Orario
                 </Label>
@@ -137,12 +136,12 @@ const EventFormModal = ({
                   value={newEvent.orario}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="luogo" className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <Label htmlFor="luogo" className="text-base font-semibold text-black flex items-center gap-2">
                   <MapPinIcon className="w-4 h-4" />
                   Luogo
                 </Label>
@@ -152,13 +151,13 @@ const EventFormModal = ({
                   value={newEvent.luogo}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
                   placeholder="Dove si svolgerà l'evento"
                 />
               </div>
 
               <div>
-                <Label htmlFor="partecipanti" className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <Label htmlFor="partecipanti" className="text-base font-semibold text-black flex items-center gap-2">
                   <UsersIcon className="w-4 h-4" />
                   Max Partecipanti
                 </Label>
@@ -169,32 +168,47 @@ const EventFormModal = ({
                   value={newEvent.partecipanti}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
                   min="1"
                 />
               </div>
 
               <div>
-                <Label htmlFor="numeroAuto" className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <Label htmlFor="numeroauto" className="text-base font-semibold text-black flex items-center gap-2">
                   <CarIcon className="w-4 h-4" />
                   Max Auto
                 </Label>
                 <Input
-                  id="numeroAuto"
-                  name="numeroAuto"
+                  id="numeroauto"
+                  name="numeroauto"
                   type="number"
-                  value={newEvent.numeroAuto}
+                  value={newEvent.numeroauto}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
                   min="1"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="programma" className="text-base font-semibold text-black flex items-center gap-2">
+                  <FileTextIcon className="w-4 h-4" />
+                  Programma (opzionale)
+                </Label>
+                <Textarea
+                  id="programma"
+                  name="programma"
+                  value={newEvent.programma || ""}
+                  onChange={handleNewEventChange}
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 min-h-[100px] transition-colors"
+                  placeholder="Descrivi il programma dell'evento"
                 />
               </div>
             </div>
 
-            {/* Gestione Quote con design migliorato */}
-            <div className="space-y-4 p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gradient-to-br from-gray-50 to-white">
-              <Label className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            {/* Gestione Quote */}
+            <div className="space-y-4 p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+              <Label className="text-lg font-bold text-black flex items-center gap-2">
                 <TrendingUpIcon className="w-5 h-5" />
                 Quote di Partecipazione
               </Label>
@@ -202,24 +216,32 @@ const EventFormModal = ({
                 {newEvent.quote.map((quota, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 shadow-sm"
+                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 bg-white rounded-lg border border-gray-300 shadow-sm"
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 w-full sm:w-auto">
                       <Input
-                        placeholder="Nome Quota (es. Standard, Premium)"
-                        value={quota.nome}
-                        onChange={(e) => updateQuota(index, "nome", e.target.value)}
-                        className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg transition-colors"
+                        placeholder="Titolo quota (es. Base, Premium)"
+                        value={quota.titolo}
+                        onChange={(e) => updateQuota(index, "titolo", e.target.value)}
+                        className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg transition-colors mb-2 sm:mb-0"
                       />
                     </div>
-                    <div className="w-32">
+                    <div className="flex-1 w-full sm:w-auto">
+                      <Input
+                        placeholder="Descrizione"
+                        value={quota.descrizione}
+                        onChange={(e) => updateQuota(index, "descrizione", e.target.value)}
+                        className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg transition-colors mb-2 sm:mb-0"
+                      />
+                    </div>
+                    <div className="w-full sm:w-32">
                       <Input
                         placeholder="€ 0.00"
                         type="number"
                         step="0.01"
                         value={quota.prezzo}
                         onChange={(e) => updateQuota(index, "prezzo", e.target.value)}
-                        className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg transition-colors"
+                        className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg transition-colors mb-2 sm:mb-0"
                       />
                     </div>
                     <Button
@@ -227,7 +249,7 @@ const EventFormModal = ({
                       variant="outline"
                       size="icon"
                       onClick={() => removeQuota(index)}
-                      className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-lg transition-colors"
+                      className="border-red-400 text-red-600 hover:bg-red-50 hover:border-red-500 rounded-lg transition-colors w-full sm:w-auto"
                     >
                       <TrashIcon className="h-4 w-4" />
                     </Button>
@@ -238,27 +260,25 @@ const EventFormModal = ({
                 type="button"
                 variant="outline"
                 onClick={addQuota}
-                className="w-full text-base border-dashed border-gray-400 text-gray-700 hover:bg-gray-50 hover:border-gray-500 rounded-lg py-3 transition-colors bg-transparent"
+                className="w-full text-base border-dashed border-gray-500 text-gray-700 hover:bg-gray-100 hover:border-gray-600 rounded-lg py-3 transition-colors bg-transparent"
               >
                 <PlusIcon className="mr-2 h-5 w-5" /> Aggiungi Quota
               </Button>
             </div>
 
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-300">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="text-base font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg transition-colors bg-transparent"
+                className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
               >
                 Annulla
               </Button>
               <Button
                 type="submit"
-                className={`text-base font-semibold py-3 px-6 rounded-lg text-white shadow-lg transition-all duration-200 ${
-                  isEditMode
-                    ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                    : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                className={`text-base font-semibold py-3 px-6 rounded-lg text-white shadow-lg transition-all duration-200 order-1 sm:order-2 ${
+                  isEditMode ? "bg-gray-800 hover:bg-gray-900" : "bg-black hover:bg-gray-800"
                 }`}
               >
                 {isEditMode ? "Aggiorna Evento" : "Crea Evento"}
@@ -271,17 +291,17 @@ const EventFormModal = ({
   )
 }
 
-// Modale per l'upload di immagini con design migliorato
+// Modal per l'upload di immagini
 const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, handleUploadImages, onClose }) => (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-    <Card className="w-full max-w-lg animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
-      <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-2xl p-6 flex flex-row justify-between items-center">
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+    <Card className="w-full max-w-lg animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
+      <CardHeader className="bg-black text-white rounded-t-lg p-6 flex flex-row justify-between items-center">
         <div>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
             <ImageIcon className="w-6 h-6" />
             Carica Immagini
           </CardTitle>
-          <CardDescription className="text-blue-100 mt-1">
+          <CardDescription className="text-gray-300 mt-1">
             Seleziona le immagini da caricare nella galleria
           </CardDescription>
         </div>
@@ -289,7 +309,7 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="rounded-full text-white hover:bg-white/20 transition-colors"
+          className="rounded-full text-white hover:bg-gray-800 transition-colors"
         >
           <XIcon className="w-6 h-6" />
         </Button>
@@ -297,10 +317,7 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
       <CardContent className="p-6">
         <div className="space-y-6">
           <div>
-            <Label
-              htmlFor="image-upload"
-              className="text-base font-semibold text-gray-800 flex items-center gap-2 mb-3"
-            >
+            <Label htmlFor="image-upload" className="text-base font-semibold text-black flex items-center gap-2 mb-3">
               <UploadIcon className="w-4 h-4" />
               Seleziona File Immagine
             </Label>
@@ -310,13 +327,13 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
               multiple
               onChange={handleImageUploadFiles}
               accept="image/*"
-              className="text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
+              className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200 transition-colors"
             />
           </div>
 
           {uploadFiles.length > 0 && (
-            <div className="p-4 border-2 border-dashed border-blue-200 rounded-xl bg-blue-50">
-              <p className="text-base font-semibold text-blue-800 mb-3 flex items-center gap-2">
+            <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+              <p className="text-base font-semibold text-black mb-3 flex items-center gap-2">
                 <CheckCircleIcon className="w-5 h-5" />
                 File selezionati ({uploadFiles.length})
               </p>
@@ -324,7 +341,7 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
                 {uploadFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 text-sm text-blue-700 bg-white px-3 py-2 rounded-lg"
+                    className="flex items-center gap-2 text-sm text-black bg-white px-3 py-2 rounded-lg border border-gray-300"
                   >
                     <ImageIcon className="w-4 h-4" />
                     {file.name}
@@ -334,18 +351,18 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
             </div>
           )}
 
-          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4 border-t border-gray-300">
             <Button
               variant="outline"
               onClick={onClose}
-              className="text-base font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg transition-colors bg-transparent"
+              className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
             >
               Annulla
             </Button>
             <Button
               onClick={handleUploadImages}
               disabled={uploadFiles.length === 0}
-              className="text-base font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-base font-semibold bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
             >
               <UploadIcon className="mr-2 h-5 w-5" />
               Carica Immagini
@@ -357,50 +374,47 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
   </div>
 )
 
-// Modale per l'upload di fatture (MODIFICATA - solo caricamento e invio email)
+// Modal per l'upload di fatture
 const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile, handleInvoiceUpload, onClose }) => (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-    <Card className="w-full max-w-lg animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
-      <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-t-2xl p-6 flex flex-row justify-between items-center">
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+    <Card className="w-full max-w-lg animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
+      <CardHeader className="bg-black text-white rounded-t-lg p-6 flex flex-row justify-between items-center">
         <div>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
             <FileTextIcon className="w-6 h-6" />
             Carica Fattura
           </CardTitle>
-          <CardDescription className="text-green-100 mt-1">Carica e invia la fattura al guidatore</CardDescription>
+          <CardDescription className="text-gray-300 mt-1">Carica e invia la fattura al guidatore</CardDescription>
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="rounded-full text-white hover:bg-white/20 transition-colors"
+          className="rounded-full text-white hover:bg-gray-800 transition-colors"
         >
           <XIcon className="w-6 h-6" />
         </Button>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-6">
-          <div className="p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">
-            <p className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-300">
+            <p className="text-base font-semibold text-black mb-2 flex items-center gap-2">
               <UserIcon className="w-5 h-5" />
               Destinatario
             </p>
             <div className="space-y-1">
-              <p className="text-lg font-bold text-gray-900">
-                {selectedRegistration?.guidatore.nome} {selectedRegistration?.guidatore.cognome}
+              <p className="text-lg font-bold text-black">
+                {selectedRegistration?.nome} {selectedRegistration?.cognome}
               </p>
               <p className="text-base text-gray-600 flex items-center gap-2">
                 <MailIcon className="w-4 h-4" />
-                {selectedRegistration?.guidatore.email}
+                {selectedRegistration?.indirizzo_email}
               </p>
             </div>
           </div>
 
           <div>
-            <Label
-              htmlFor="invoice-upload"
-              className="text-base font-semibold text-gray-800 flex items-center gap-2 mb-3"
-            >
+            <Label htmlFor="invoice-upload" className="text-base font-semibold text-black flex items-center gap-2 mb-3">
               <UploadIcon className="w-4 h-4" />
               Seleziona Fattura (PDF)
             </Label>
@@ -409,35 +423,35 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
               type="file"
               onChange={(e) => setInvoiceFile(e.target.files[0])}
               accept=".pdf"
-              className="text-base border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 transition-colors"
+              className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200 transition-colors"
             />
           </div>
 
           {invoiceFile && (
-            <div className="p-4 border-2 border-dashed border-green-200 rounded-xl bg-green-50">
-              <p className="text-base font-semibold text-green-800 mb-2 flex items-center gap-2">
+            <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+              <p className="text-base font-semibold text-black mb-2 flex items-center gap-2">
                 <CheckCircleIcon className="w-5 h-5" />
                 File selezionato
               </p>
-              <div className="flex items-center gap-2 text-sm text-green-700 bg-white px-3 py-2 rounded-lg">
+              <div className="flex items-center gap-2 text-sm text-black bg-white px-3 py-2 rounded-lg border border-gray-300">
                 <FileTextIcon className="w-4 h-4" />
                 {invoiceFile.name}
               </div>
             </div>
           )}
 
-          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4 border-t border-gray-300">
             <Button
               variant="outline"
               onClick={onClose}
-              className="text-base font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg transition-colors bg-transparent"
+              className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
             >
               Annulla
             </Button>
             <Button
               onClick={handleInvoiceUpload}
               disabled={!invoiceFile}
-              className="text-base font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-base font-semibold bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
             >
               <SendIcon className="mr-2 h-5 w-5" />
               Carica e Invia Email
@@ -449,7 +463,7 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
   </div>
 )
 
-// Modale per visualizzare le iscrizioni con design migliorato
+// Modal per visualizzare le iscrizioni
 const RegistrationsModal = ({
   selectedEventForRegistrations,
   registrations,
@@ -459,12 +473,14 @@ const RegistrationsModal = ({
   openDocumentInModal,
   onClose,
 }) => (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-    <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-2xl p-6">
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+    <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-black text-white rounded-t-lg p-6">
         <div>
-          <CardTitle className="text-3xl font-bold">Iscrizioni per: {selectedEventForRegistrations?.titolo}</CardTitle>
-          <CardDescription className="text-purple-100 mt-2 text-lg">
+          <CardTitle className="text-2xl sm:text-3xl font-bold">
+            Iscrizioni per: {selectedEventForRegistrations?.titolo}
+          </CardTitle>
+          <CardDescription className="text-gray-300 mt-2 text-base sm:text-lg">
             Gestisci le iscrizioni e genera documenti
           </CardDescription>
         </div>
@@ -472,15 +488,15 @@ const RegistrationsModal = ({
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="rounded-full text-white hover:bg-white/20 transition-colors"
+          className="rounded-full text-white hover:bg-gray-800 transition-colors"
         >
-          <XIcon className="h-7 w-7" />
+          <XIcon className="h-6 w-6 sm:h-7 sm:w-7" />
         </Button>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         {loadingRegistrations ? (
           <div className="flex flex-col justify-center items-center h-64 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
             <p className="text-xl text-gray-500">Caricamento iscrizioni...</p>
           </div>
         ) : registrations.length === 0 ? (
@@ -491,201 +507,215 @@ const RegistrationsModal = ({
         ) : (
           <div className="space-y-6">
             {registrations.map((reg, index) => (
-              <Card
-                key={reg.id}
-                className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 rounded-xl overflow-hidden"
-              >
-                <div className="border-l-4 border-purple-500">
+              <Card key={reg.id} className="shadow-lg border border-gray-300 bg-white rounded-lg overflow-hidden">
+                <div className="border-l-4 border-black">
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                        <UserIcon className="w-6 h-6 text-purple-600" />
+                    <CardTitle className="text-xl sm:text-2xl font-bold text-black flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-full flex items-center justify-center">
+                          <UserIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                        </div>
+                        {reg.nome} {reg.cognome}
                       </div>
-                      {reg.guidatore.nome} {reg.guidatore.cognome}
-                      <Badge variant="secondary" className="ml-auto bg-purple-100 text-purple-800 px-3 py-1">
+                      <Badge variant="secondary" className="bg-gray-200 text-black px-3 py-1 self-start sm:ml-auto">
                         #{index + 1}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Informazioni Guidatore */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                        <MailIcon className="w-5 h-5 text-gray-500" />
-                        <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                        <MailIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <div className="min-w-0">
                           <p className="text-sm text-gray-500">Email</p>
-                          <p className="font-semibold">{reg.guidatore.email}</p>
+                          <p className="font-semibold truncate">{reg.indirizzo_email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                        <PhoneIcon className="w-5 h-5 text-gray-500" />
-                        <div>
-                          <p className="text-sm text-gray-500">Cellulare</p>
-                          <p className="font-semibold">{reg.guidatore.cellulare}</p>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                        <PhoneIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm text-gray-500">Telefono</p>
+                          <p className="font-semibold">{reg.telefono}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                        <FileTextIcon className="w-5 h-5 text-gray-500" />
-                        <div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                        <FileTextIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <div className="min-w-0">
                           <p className="text-sm text-gray-500">Codice Fiscale</p>
-                          <p className="font-semibold">{reg.guidatore.codiceFiscale}</p>
+                          <p className="font-semibold text-xs sm:text-sm">{reg.codice_fiscale}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                        <CalendarIcon className="w-5 h-5 text-gray-500" />
-                        <div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                        <CalendarIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <div className="min-w-0">
                           <p className="text-sm text-gray-500">Data Nascita</p>
-                          <p className="font-semibold">{reg.guidatore.dataNascita}</p>
+                          <p className="font-semibold">{reg.data_nascita}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                        <TrendingUpIcon className="w-5 h-5 text-gray-500" />
-                        <div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                        <TrendingUpIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <div className="min-w-0">
                           <p className="text-sm text-gray-500">Quota</p>
-                          <Badge className="bg-green-100 text-green-800">{reg.guidatore.quota}</Badge>
+                          <Badge className="bg-black text-white">{reg.quota}</Badge>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                        <AlertCircleIcon className="w-5 h-5 text-gray-500" />
-                        <div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                        <AlertCircleIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <div className="min-w-0">
                           <p className="text-sm text-gray-500">Intolleranze</p>
-                          <p className="font-semibold">{reg.guidatore.intolleranze || "Nessuna"}</p>
+                          <p className="font-semibold text-sm">{reg.intolleranze || "Nessuna"}</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                      <MapPinIcon className="w-5 h-5 text-gray-500" />
-                      <div>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                      <MapPinIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <div className="min-w-0">
                         <p className="text-sm text-gray-500">Indirizzo</p>
-                        <p className="font-semibold">{reg.guidatore.indirizzo}</p>
+                        <p className="font-semibold text-sm">{reg.indirizzo}</p>
                       </div>
                     </div>
 
                     {/* Documenti Guidatore */}
                     <div className="flex flex-wrap gap-3">
-                      {reg.guidatore.patenteDocUrl && (
+                      {reg.documento_fronte && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.guidatore.patenteDocUrl, "pdf")}
-                          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 transition-colors"
+                          onClick={() => openDocumentInModal(reg.documento_fronte, "pdf")}
+                          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
                         >
-                          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Vedi Patente
+                          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
                         </Button>
                       )}
-                      {reg.guidatore.ricevutaDocUrl && (
+                      {reg.docuemnto_retro && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.guidatore.ricevutaDocUrl, "pdf")}
-                          className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 transition-colors"
+                          onClick={() => openDocumentInModal(reg.docuemnto_retro, "pdf")}
+                          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
                         >
-                          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Vedi Ricevuta
+                          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
                         </Button>
                       )}
                     </div>
 
                     <Separator className="my-4" />
 
-                    {/* Informazioni Auto */}
-                    <div>
-                      <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <CarIcon className="w-6 h-6 text-gray-600" />
-                        Dettagli Auto
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="p-3 bg-white rounded-lg border border-gray-200">
-                          <p className="text-sm text-gray-500">Marca</p>
-                          <p className="font-semibold">{reg.auto.marca}</p>
+                    {/* Informazioni Auto (solo per guidatori) */}
+                    {reg.auto_marca && (
+                      <>
+                        <div>
+                          <h4 className="text-lg sm:text-xl font-bold text-black mb-4 flex items-center gap-2">
+                            <CarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+                            Dettagli Auto
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <p className="text-sm text-gray-500">Marca</p>
+                              <p className="font-semibold">{reg.auto_marca}</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <p className="text-sm text-gray-500">Modello</p>
+                              <p className="font-semibold">{reg.auto_modello}</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <p className="text-sm text-gray-500">Targa</p>
+                              <p className="font-semibold">{reg.auto_targa}</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <p className="text-sm text-gray-500">Posti Auto</p>
+                              <p className="font-semibold">{reg.posti_auto}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white rounded-lg border border-gray-200">
-                          <p className="text-sm text-gray-500">Modello</p>
-                          <p className="font-semibold">{reg.auto.modello}</p>
-                        </div>
-                        <div className="p-3 bg-white rounded-lg border border-gray-200">
-                          <p className="text-sm text-gray-500">Targa</p>
-                          <p className="font-semibold">{reg.auto.targa}</p>
-                        </div>
-                        <div className="p-3 bg-white rounded-lg border border-gray-200">
-                          <p className="text-sm text-gray-500">Posti Auto</p>
-                          <p className="font-semibold">{reg.auto.postiAuto}</p>
-                        </div>
-                      </div>
-                    </div>
+                        <Separator className="my-4" />
+                      </>
+                    )}
 
                     {/* Passeggeri */}
                     {reg.passeggeri && reg.passeggeri.length > 0 && (
                       <>
-                        <Separator className="my-4" />
                         <div>
-                          <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <UsersIcon className="w-6 h-6 text-gray-600" />
+                          <h4 className="text-lg sm:text-xl font-bold text-black mb-4 flex items-center gap-2">
+                            <UsersIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
                             Passeggeri ({reg.passeggeri.length})
                           </h4>
                           <div className="space-y-4">
                             {reg.passeggeri.map((pass, pIndex) => (
-                              <div key={pIndex} className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h5 className="font-bold text-lg text-gray-800">
+                              <div key={pIndex} className="p-4 bg-gray-50 rounded-lg border border-gray-300 shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+                                  <h5 className="font-bold text-base sm:text-lg text-black">
                                     {pass.nome} {pass.cognome}
                                   </h5>
-                                  <Badge variant="outline" className="bg-gray-100">
+                                  <Badge variant="outline" className="bg-gray-200 self-start sm:self-auto">
                                     #{pIndex + 1}
                                   </Badge>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                                   <div>
                                     <span className="text-gray-500">CF:</span>{" "}
-                                    <span className="font-semibold">{pass.codiceFiscale}</span>
+                                    <span className="font-semibold break-all">{pass.codice_fiscale}</span>
                                   </div>
                                   <div>
                                     <span className="text-gray-500">Data Nascita:</span>{" "}
-                                    <span className="font-semibold">{pass.dataNascita}</span>
+                                    <span className="font-semibold">{pass.data_nascita}</span>
                                   </div>
                                   <div>
                                     <span className="text-gray-500">Email:</span>{" "}
-                                    <span className="font-semibold">{pass.email}</span>
+                                    <span className="font-semibold break-all">{pass.indirizzo_email}</span>
                                   </div>
                                   <div>
-                                    <span className="text-gray-500">Cellulare:</span>{" "}
-                                    <span className="font-semibold">{pass.cellulare}</span>
+                                    <span className="text-gray-500">Telefono:</span>{" "}
+                                    <span className="font-semibold">{pass.telefono}</span>
                                   </div>
-                                  <div className="md:col-span-2">
+                                  <div className="sm:col-span-2">
                                     <span className="text-gray-500">Intolleranze:</span>{" "}
                                     <span className="font-semibold">{pass.intolleranze || "Nessuna"}</span>
                                   </div>
                                 </div>
-                                {pass.documentoDocUrl && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 transition-colors"
-                                    onClick={() => openDocumentInModal(pass.documentoDocUrl, "pdf")}
-                                  >
-                                    <ExternalLinkIcon className="mr-2 h-4 w-4" /> Vedi Documento
-                                  </Button>
-                                )}
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {pass.documento_fronte && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
+                                      onClick={() => openDocumentInModal(pass.documento_fronte, "pdf")}
+                                    >
+                                      <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
+                                    </Button>
+                                  )}
+                                  {pass.docuemnto_retro && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
+                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "pdf")}
+                                    >
+                                      <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
                         </div>
+                        <Separator className="my-4" />
                       </>
                     )}
-
-                    <Separator className="my-4" />
 
                     {/* Azioni */}
                     <div className="flex flex-wrap gap-3">
                       <Button
                         onClick={() => handleGenerateIndividualPdf(reg, selectedEventForRegistrations)}
-                        className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg transition-all duration-200"
+                        className="bg-black hover:bg-gray-800 text-white shadow-lg transition-all duration-200 text-sm"
                       >
-                        <DownloadIcon className="mr-2 h-5 w-5" /> Esporta PDF
+                        <DownloadIcon className="mr-2 h-4 w-4" /> Esporta PDF
                       </Button>
                       <Button
                         onClick={() => handleOpenInvoiceUpload(reg)}
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg transition-all duration-200"
+                        className="bg-gray-600 hover:bg-gray-700 text-white shadow-lg transition-all duration-200 text-sm"
                       >
-                        <UploadIcon className="mr-2 h-5 w-5" /> Carica Fattura
+                        <UploadIcon className="mr-2 h-4 w-4" /> Carica Fattura
                       </Button>
                     </div>
                   </CardContent>
@@ -699,30 +729,30 @@ const RegistrationsModal = ({
   </div>
 )
 
-// Modale per visualizzare documenti
+// Modal per visualizzare documenti
 const DocumentViewerModal = ({ currentDocumentUrl, currentDocumentType, onClose }) => (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-    <Card className="w-full max-w-5xl h-[90vh] flex flex-col animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-2xl p-6">
-        <CardTitle className="text-2xl font-bold flex items-center gap-2">
-          <FileTextIcon className="w-6 h-6" />
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+    <Card className="w-full max-w-5xl h-[90vh] flex flex-col animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-black text-white rounded-t-lg p-6">
+        <CardTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6" />
           Visualizzatore Documenti
         </CardTitle>
         <Button
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="rounded-full text-white hover:bg-white/20 transition-colors"
+          className="rounded-full text-white hover:bg-gray-800 transition-colors"
         >
           <XIcon className="w-6 h-6" />
         </Button>
       </CardHeader>
-      <CardContent className="flex-grow flex items-center justify-center p-0 bg-gray-50 rounded-b-2xl">
+      <CardContent className="flex-grow flex items-center justify-center p-0 bg-gray-50 rounded-b-lg">
         {currentDocumentUrl ? (
           <iframe
             src={currentDocumentUrl}
             title={currentDocumentType}
-            className="w-full h-full border-0 rounded-b-2xl"
+            className="w-full h-full border-0 rounded-b-lg"
             style={{ minHeight: "600px" }}
           />
         ) : (
@@ -792,9 +822,9 @@ export default function AdminDashboard() {
     orario: "",
     luogo: "",
     partecipanti: "",
-    numeroAuto: "",
-    tipo: "AUTO",
-    quote: [{ nome: "", prezzo: "" }],
+    numeroauto: "",
+    programma: "",
+    quote: [{ titolo: "", descrizione: "", prezzo: "" }],
   })
 
   const [showImageUpload, setShowImageUpload] = useState(false)
@@ -809,7 +839,7 @@ export default function AdminDashboard() {
   const [currentDocumentUrl, setCurrentDocumentUrl] = useState(null)
   const [currentDocumentType, setCurrentDocumentType] = useState("")
 
-  // STATI PER FATTURE (MODIFICATI - solo caricamento)
+  // STATI PER FATTURE
   const [showInvoiceUpload, setShowInvoiceUpload] = useState(false)
   const [selectedRegistration, setSelectedRegistration] = useState(null)
   const [invoiceFile, setInvoiceFile] = useState(null)
@@ -847,7 +877,7 @@ export default function AdminDashboard() {
 
       eventiData.forEach((event) => {
         const eventDate = new Date(`${event.data}T${event.orario}`)
-        if (eventDate < now) {
+        if (event.passato || eventDate < now) {
           passati.push(event)
         } else {
           futuri.push(event)
@@ -893,38 +923,38 @@ export default function AdminDashboard() {
       // Fetch immagini eventi passati
       const eventImagesMap = {}
       for (const event of passati) {
-        const { data: imagesData, error: eventImagesError } = await supabase
-          .from("eventoimmagine")
-          .select("*")
-          .eq("id_evento_fk", event.id)
-          .order("id", { ascending: true })
+        const { data: imagesData, error: eventImagesError } = await supabase.storage
+          .from("doc")
+          .list(`eventi/${event.id}`, { sortBy: { column: "name", order: "asc" } })
 
         if (eventImagesError) {
-          console.warn(
-            `Errore nel recupero immagini dalla tabella eventoimmagine per evento ${event.id}:`,
-            eventImagesError.message,
-          )
+          console.warn(`Errore nel recupero immagini per evento ${event.id}:`, eventImagesError.message)
           eventImagesMap[event.id] = []
         } else {
           eventImagesMap[event.id] = (
             await Promise.all(
-              imagesData.map(async (item) => {
-                const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                  .from("doc")
-                  .createSignedUrl(item.path, 3600)
+              imagesData
+                .filter((item) => item.name !== ".emptyFolderPlaceholder")
+                .map(async (item) => {
+                  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                    .from("doc")
+                    .createSignedUrl(`eventi/${event.id}/${item.name}`, 3600)
 
-                if (signedUrlError) {
-                  console.warn(`Errore generazione URL firmato per ${item.path}:`, signedUrlError.message)
-                  return null
-                }
-                return {
-                  id: item.id,
-                  url: signedUrlData.signedUrl,
-                  alt: item.descrizione || item.path.split("/").pop(),
-                  evento: event.titolo,
-                  path: item.path,
-                }
-              }),
+                  if (signedUrlError) {
+                    console.warn(
+                      `Errore generazione URL firmato per eventi/${event.id}/${item.name}:`,
+                      signedUrlError.message,
+                    )
+                    return null
+                  }
+                  return {
+                    id: item.id,
+                    url: signedUrlData.signedUrl,
+                    alt: item.name,
+                    evento: event.titolo,
+                    path: `eventi/${event.id}/${item.name}`,
+                  }
+                }),
             )
           ).filter(Boolean)
         }
@@ -969,7 +999,7 @@ export default function AdminDashboard() {
   const addQuota = () => {
     setNewEvent((prev) => ({
       ...prev,
-      quote: [...prev.quote, { nome: "", prezzo: "" }],
+      quote: [...prev.quote, { titolo: "", descrizione: "", prezzo: "" }],
     }))
   }
 
@@ -992,10 +1022,11 @@ export default function AdminDashboard() {
     try {
       const quotesJson = {}
       newEvent.quote.forEach((q, index) => {
-        if (q.nome && q.prezzo !== "") {
+        if (q.titolo && q.descrizione && q.prezzo !== "") {
           quotesJson[`quota${index + 1}`] = {
-            descrizione: q.nome,
-            prezzo: Number.parseFloat(q.prezzo),
+            titolo: q.titolo,
+            descrizione: q.descrizione,
+            prezzo: q.prezzo,
           }
         }
       })
@@ -1009,9 +1040,10 @@ export default function AdminDashboard() {
           orario: newEvent.orario,
           luogo: newEvent.luogo,
           partecipanti: Number.parseInt(newEvent.partecipanti),
-          numeroauto: Number.parseInt(newEvent.numeroAuto),
+          numeroauto: Number.parseInt(newEvent.numeroauto),
           passato: false,
           quote: quotesJson,
+          programma: newEvent.programma || null,
         })
         .select()
         .single()
@@ -1027,9 +1059,9 @@ export default function AdminDashboard() {
         orario: "",
         luogo: "",
         partecipanti: "",
-        numeroAuto: "",
-        tipo: "AUTO",
-        quote: [{ nome: "", prezzo: "" }],
+        numeroauto: "",
+        programma: "",
+        quote: [{ titolo: "", descrizione: "", prezzo: "" }],
       })
       fetchEventsAndImages()
     } catch (error) {
@@ -1042,10 +1074,11 @@ export default function AdminDashboard() {
     setEditingEvent(event)
     const quotesArray = event.quote
       ? Object.entries(event.quote).map(([key, value]) => ({
-          nome: value.descrizione,
-          prezzo: value.prezzo,
+          titolo: value.titolo || "",
+          descrizione: value.descrizione || "",
+          prezzo: value.prezzo || "",
         }))
-      : [{ nome: "", prezzo: "" }]
+      : [{ titolo: "", descrizione: "", prezzo: "" }]
 
     setNewEvent({
       titolo: event.titolo,
@@ -1054,8 +1087,8 @@ export default function AdminDashboard() {
       orario: event.orario,
       luogo: event.luogo,
       partecipanti: event.partecipanti,
-      numeroAuto: event.numeroAuto,
-      tipo: event.tipo,
+      numeroauto: event.numeroauto,
+      programma: event.programma || "",
       quote: quotesArray,
     })
     setShowEditEventForm(true)
@@ -1068,10 +1101,11 @@ export default function AdminDashboard() {
     try {
       const quotesJson = {}
       newEvent.quote.forEach((q, index) => {
-        if (q.nome && q.prezzo !== "") {
+        if (q.titolo && q.descrizione && q.prezzo !== "") {
           quotesJson[`quota${index + 1}`] = {
-            descrizione: q.nome,
-            prezzo: Number.parseFloat(q.prezzo),
+            titolo: q.titolo,
+            descrizione: q.descrizione,
+            prezzo: q.prezzo,
           }
         }
       })
@@ -1085,8 +1119,9 @@ export default function AdminDashboard() {
           orario: newEvent.orario,
           luogo: newEvent.luogo,
           partecipanti: Number.parseInt(newEvent.partecipanti),
-          numeroAuto: Number.parseInt(newEvent.numeroAuto),
+          numeroauto: Number.parseInt(newEvent.numeroauto),
           quote: quotesJson,
+          programma: newEvent.programma || null,
         })
         .eq("id", editingEvent.id)
 
@@ -1102,9 +1137,9 @@ export default function AdminDashboard() {
         orario: "",
         luogo: "",
         partecipanti: "",
-        numeroAuto: "",
-        tipo: "AUTO",
-        quote: [{ nome: "", prezzo: "" }],
+        numeroauto: "",
+        programma: "",
+        quote: [{ titolo: "", descrizione: "", prezzo: "" }],
       })
       fetchEventsAndImages()
     } catch (error) {
@@ -1124,7 +1159,6 @@ export default function AdminDashboard() {
     try {
       await supabase.from("guidatore").delete().eq("id_evento_fk", eventId)
       await supabase.from("passeggero").delete().eq("id_evento_fk", eventId)
-      await supabase.from("eventoimmagine").delete().eq("id_evento_fk", eventId)
 
       const { data: files, error: listError } = await supabase.storage.from("doc").list(`eventi/${eventId}`)
       if (listError && listError.message !== "The specified key does not exist.") {
@@ -1175,12 +1209,10 @@ export default function AdminDashboard() {
     }
 
     let uploadBasePath = ""
-    let isEventImage = false
     if (uploadTarget.type === "general") {
       uploadBasePath = "galleria"
     } else if (uploadTarget.type === "event" && uploadTarget.eventId) {
       uploadBasePath = `eventi/${uploadTarget.eventId}`
-      isEventImage = true
     } else {
       alert("Target di caricamento immagini non valido.")
       return
@@ -1203,21 +1235,6 @@ export default function AdminDashboard() {
           alert(`Errore nel caricamento di ${file.name}: ${uploadError.message}`)
           continue
         }
-
-        if (isEventImage) {
-          const { error: dbInsertError } = await supabase.from("eventoimmagine").insert({
-            id_evento_fk: uploadTarget.eventId,
-            path: uploadedFile.path,
-            descrizione: file.name,
-          })
-
-          if (dbInsertError) {
-            console.error(`Errore nell'inserimento del record eventoimmagine per ${file.name}:`, dbInsertError)
-            alert(
-              `Errore nel salvare il riferimento dell'immagine nel database per ${file.name}: ${dbInsertError.message}`,
-            )
-          }
-        }
       }
       alert("Immagini caricate con successo!")
       setShowImageUpload(false)
@@ -1235,19 +1252,8 @@ export default function AdminDashboard() {
     }
 
     const storagePathToRemove = imageToDelete.path
-    const dbRecordId = imageToDelete.id
 
     try {
-      if (imageToDelete.evento !== "Generale") {
-        const { error: dbDeleteError } = await supabase.from("eventoimmagine").delete().eq("id", dbRecordId)
-
-        if (dbDeleteError) {
-          console.error("Errore nell'eliminazione del record eventoimmagine:", dbDeleteError)
-          alert("Errore nell'eliminazione del record dell'immagine dal database: " + dbDeleteError.message)
-          return
-        }
-      }
-
       const { error: storageDeleteError } = await supabase.storage.from("doc").remove([storagePathToRemove])
 
       if (storageDeleteError) {
@@ -1278,86 +1284,79 @@ export default function AdminDashboard() {
       if (eventError) throw eventError
       setSelectedEventForRegistrations(eventData)
 
+      // Fetch guidatori
       const { data: guidatoriData, error: guidatoriError } = await supabase
         .from("guidatore")
-        .select(`
-          *,
-          passeggero ( * )
-        `)
+        .select("*")
         .eq("id_evento_fk", eventId)
       if (guidatoriError) throw guidatoriError
 
+      // Fetch passeggeri per ogni guidatore
       const formattedRegistrations = await Promise.all(
         guidatoriData.map(async (guidatore) => {
-          let patenteDocUrl = null
-          if (guidatore.patente) {
+          // Genera URL firmati per i documenti del guidatore
+          let documento_fronte_url = null
+          let documento_retro_url = null
+
+          if (guidatore.documento_fronte) {
             const { data: signedUrlData, error: signedUrlError } = await supabase.storage
               .from("doc")
-              .createSignedUrl(guidatore.patente, 60)
-            if (signedUrlError) console.error("Errore generazione URL firmato patente:", signedUrlError)
-            else patenteDocUrl = signedUrlData?.signedUrl
+              .createSignedUrl(guidatore.documento_fronte, 3600)
+            if (!signedUrlError) documento_fronte_url = signedUrlData?.signedUrl
           }
 
-          let ricevutaDocUrl = null
-          if (guidatore.ricevuta) {
+          if (guidatore.documento_retro) {
             const { data: signedUrlData, error: signedUrlError } = await supabase.storage
               .from("doc")
-              .createSignedUrl(guidatore.ricevuta, 60)
-            if (signedUrlError) console.error("Errore generazione URL firmato ricevuta:", signedUrlError)
-            else ricevutaDocUrl = signedUrlData?.signedUrl
+              .createSignedUrl(guidatore.documento_retro, 3600)
+            if (!signedUrlError) documento_retro_url = signedUrlData?.signedUrl
           }
 
-          const passeggeriFormatted = await Promise.all(
-            guidatore.passeggero.map(async (p) => {
-              let documentoDocUrl = null
-              if (p.documento) {
-                const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                  .from("doc")
-                  .createSignedUrl(p.documento, 60)
-                if (signedUrlError)
-                  console.error("Errore generazione URL firmato documento passeggero:", signedUrlError)
-                else documentoDocUrl = signedUrlData?.signedUrl
-              }
-              return {
-                nome: p.nome,
-                cognome: p.cognome,
-                codiceFiscale: p.codice_fiscale,
-                dataNascita: p.data_nascita,
-                indirizzo: p.indirizzo,
-                email: p.indirizzo_email,
-                cellulare: p.telefono,
-                documentoDocUrl: documentoDocUrl,
-                intolleranze: p.intolleranze,
-              }
-            }),
-          )
+          // Fetch passeggeri per questo guidatore
+          const { data: passeggeriData, error: passeggeriError } = await supabase
+            .from("passeggero")
+            .select("*")
+            .eq("id_guidatore_fk", guidatore.id)
+
+          let passeggeriFormatted = []
+          if (!passeggeriError && passeggeriData) {
+            passeggeriFormatted = await Promise.all(
+              passeggeriData.map(async (p) => {
+                let doc_fronte_url = null
+                let doc_retro_url = null
+
+                if (p.documento_fronte) {
+                  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                    .from("doc")
+                    .createSignedUrl(p.documento_fronte, 3600)
+                  if (!signedUrlError) doc_fronte_url = signedUrlData?.signedUrl
+                }
+
+                if (p.docuemnto_retro) {
+                  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                    .from("doc")
+                    .createSignedUrl(p.docuemnto_retro, 3600)
+                  if (!signedUrlError) doc_retro_url = signedUrlData?.signedUrl
+                }
+
+                return {
+                  ...p,
+                  documento_fronte: doc_fronte_url,
+                  docuemnto_retro: doc_retro_url,
+                }
+              }),
+            )
+          }
 
           return {
-            id: guidatore.id,
-            guidatore: {
-              nome: guidatore.nome,
-              cognome: guidatore.cognome,
-              codiceFiscale: guidatore.codice_fiscale,
-              dataNascita: guidatore.data_nascita,
-              indirizzo: guidatore.indirizzo,
-              email: guidatore.indirizzo_email,
-              cellulare: guidatore.telefono,
-              patenteDocUrl: patenteDocUrl,
-              ricevutaDocUrl: ricevutaDocUrl,
-              intolleranze: guidatore.intolleranze,
-              quota: guidatore.quota,
-            },
-            auto: {
-              marca: guidatore.auto_marca,
-              modello: guidatore.auto_modello,
-              targa: guidatore.auto_targa,
-              postiAuto: guidatore.posti_auto,
-            },
+            ...guidatore,
+            documento_fronte: documento_fronte_url,
+            docuemnto_retro: documento_retro_url,
             passeggeri: passeggeriFormatted,
-            dataIscrizione: guidatore.data_inserimento,
           }
         }),
       )
+
       setRegistrations(formattedRegistrations)
       setShowRegistrationsModal(true)
     } catch (error) {
@@ -1393,79 +1392,95 @@ export default function AdminDashboard() {
     doc.text(`Luogo: ${event.luogo}`, margin, y)
     y += lineHeight * 2
 
-    // Informazioni guidatore
-    doc.setFontSize(14)
-    doc.text("GUIDATORE", margin, y)
-    y += lineHeight
-    doc.setFontSize(12)
-
-    doc.text(`Nome: ${registration.guidatore.nome} ${registration.guidatore.cognome}`, margin, y)
-    y += lineHeight
-    doc.text(`Codice Fiscale: ${registration.guidatore.codiceFiscale}`, margin, y)
-    y += lineHeight
-    doc.text(`Data Nascita: ${registration.guidatore.dataNascita}`, margin, y)
-    y += lineHeight
-    doc.text(`Email: ${registration.guidatore.email}`, margin, y)
-    y += lineHeight
-    doc.text(`Cellulare: ${registration.guidatore.cellulare}`, margin, y)
-    y += lineHeight
-    doc.text(`Indirizzo: ${registration.guidatore.indirizzo}`, margin, y)
-    y += lineHeight
-    doc.text(`Quota Selezionata: ${registration.guidatore.quota}`, margin, y)
-    y += lineHeight
-    doc.text(`Intolleranze: ${registration.guidatore.intolleranze || "Nessuna"}`, margin, y)
-    y += lineHeight * 2
-
-    // Informazioni auto
-    doc.setFontSize(14)
-    doc.text("AUTO", margin, y)
-    y += lineHeight
-    doc.setFontSize(12)
-
-    doc.text(`Marca: ${registration.auto.marca}`, margin, y)
-    y += lineHeight
-    doc.text(`Modello: ${registration.auto.modello}`, margin, y)
-    y += lineHeight
-    doc.text(`Targa: ${registration.auto.targa}`, margin, y)
-    y += lineHeight
-    doc.text(`Posti Auto: ${registration.auto.postiAuto}`, margin, y)
-    y += lineHeight * 2
-
-    // Informazioni passeggeri
-    if (registration.passeggeri && registration.passeggeri.length > 0) {
+    // Informazioni guidatore/passeggero
+    if (registration.auto_marca) {
       doc.setFontSize(14)
-      doc.text(`PASSEGGERI (${registration.passeggeri.length})`, margin, y)
+      doc.text("GUIDATORE", margin, y)
       y += lineHeight
       doc.setFontSize(12)
 
-      registration.passeggeri.forEach((pass, index) => {
-        if (y + lineHeight * 8 > pageHeight - margin) {
-          doc.addPage()
-          y = margin
-        }
+      doc.text(`Nome: ${registration.nome} ${registration.cognome}`, margin, y)
+      y += lineHeight
+      doc.text(`Codice Fiscale: ${registration.codice_fiscale}`, margin, y)
+      y += lineHeight
+      doc.text(`Data Nascita: ${registration.data_nascita}`, margin, y)
+      y += lineHeight
+      doc.text(`Email: ${registration.indirizzo_email}`, margin, y)
+      y += lineHeight
+      doc.text(`Telefono: ${registration.telefono}`, margin, y)
+      y += lineHeight
+      doc.text(`Indirizzo: ${registration.indirizzo}`, margin, y)
+      y += lineHeight
+      doc.text(`Quota Selezionata: ${registration.quota}`, margin, y)
+      y += lineHeight
+      doc.text(`Intolleranze: ${registration.intolleranze || "Nessuna"}`, margin, y)
+      y += lineHeight * 2
 
-        doc.text(`${index + 1}. ${pass.nome} ${pass.cognome}`, margin, y)
+      // Informazioni auto
+      doc.setFontSize(14)
+      doc.text("AUTO", margin, y)
+      y += lineHeight
+      doc.setFontSize(12)
+
+      doc.text(`Marca: ${registration.auto_marca}`, margin, y)
+      y += lineHeight
+      doc.text(`Modello: ${registration.auto_modello}`, margin, y)
+      y += lineHeight
+      doc.text(`Targa: ${registration.auto_targa}`, margin, y)
+      y += lineHeight
+      doc.text(`Posti Auto: ${registration.posti_auto}`, margin, y)
+      y += lineHeight * 2
+
+      // Informazioni passeggeri
+      if (registration.passeggeri && registration.passeggeri.length > 0) {
+        doc.setFontSize(14)
+        doc.text(`PASSEGGERI (${registration.passeggeri.length})`, margin, y)
         y += lineHeight
-        doc.text(`   CF: ${pass.codiceFiscale}`, margin, y)
-        y += lineHeight
-        doc.text(`   Data Nascita: ${pass.dataNascita}`, margin, y)
-        y += lineHeight
-        doc.text(`   Email: ${pass.email}`, margin, y)
-        y += lineHeight
-        doc.text(`   Cellulare: ${pass.cellulare}`, margin, y)
-        y += lineHeight
-        doc.text(`   Intolleranze: ${pass.intolleranze || "Nessuna"}`, margin, y)
-        y += lineHeight * 2
-      })
+        doc.setFontSize(12)
+
+        registration.passeggeri.forEach((pass, index) => {
+          if (y + lineHeight * 8 > pageHeight - margin) {
+            doc.addPage()
+            y = margin
+          }
+
+          doc.text(`${index + 1}. ${pass.nome} ${pass.cognome}`, margin, y)
+          y += lineHeight
+          doc.text(`   CF: ${pass.codice_fiscale}`, margin, y)
+          y += lineHeight
+          doc.text(`   Data Nascita: ${pass.data_nascita}`, margin, y)
+          y += lineHeight
+          doc.text(`   Email: ${pass.indirizzo_email}`, margin, y)
+          y += lineHeight
+          doc.text(`   Telefono: ${pass.telefono}`, margin, y)
+          y += lineHeight
+          doc.text(`   Intolleranze: ${pass.intolleranze || "Nessuna"}`, margin, y)
+          y += lineHeight * 2
+        })
+      }
     } else {
+      // È un passeggero
       doc.setFontSize(14)
-      doc.text("PASSEGGERI", margin, y)
+      doc.text("PASSEGGERO", margin, y)
       y += lineHeight
       doc.setFontSize(12)
-      doc.text("Nessun passeggero.", margin, y)
+
+      doc.text(`Nome: ${registration.nome} ${registration.cognome}`, margin, y)
+      y += lineHeight
+      doc.text(`Codice Fiscale: ${registration.codice_fiscale}`, margin, y)
+      y += lineHeight
+      doc.text(`Data Nascita: ${registration.data_nascita}`, margin, y)
+      y += lineHeight
+      doc.text(`Email: ${registration.indirizzo_email}`, margin, y)
+      y += lineHeight
+      doc.text(`Telefono: ${registration.telefono}`, margin, y)
+      y += lineHeight
+      doc.text(`Indirizzo: ${registration.indirizzo}`, margin, y)
+      y += lineHeight
+      doc.text(`Intolleranze: ${registration.intolleranze || "Nessuna"}`, margin, y)
     }
 
-    const fileName = `iscrizione_${registration.guidatore.nome}_${registration.guidatore.cognome}_${event.titolo.replace(/\s/g, "_")}.pdf`
+    const fileName = `iscrizione_${registration.nome}_${registration.cognome}_${event.titolo.replace(/\s/g, "_")}.pdf`
     doc.save(fileName)
   }
 
@@ -1475,7 +1490,6 @@ export default function AdminDashboard() {
     setShowInvoiceUpload(true)
   }
 
-  // FUNZIONE MODIFICATA: Solo caricamento fattura e invio email (senza salvataggio DB)
   const handleInvoiceUpload = async () => {
     if (!invoiceFile || !selectedRegistration) {
       alert("Seleziona un file fattura e assicurati che l'iscrizione sia selezionata.")
@@ -1483,7 +1497,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      // 1. Carica la fattura su Supabase Storage
+      // Carica la fattura su Supabase Storage
       const fileName = `fattura_${selectedRegistration.id}_${Date.now()}_${invoiceFile.name}`
       const storagePath = `fatture/${fileName}`
 
@@ -1506,17 +1520,15 @@ export default function AdminDashboard() {
         return
       }
 
-      // 2. Simula invio email (qui dovresti implementare la logica di invio email reale)
-      console.log(`Simulazione invio email a: ${selectedRegistration.guidatore.email}`)
+      // Simula invio email
+      console.log(`Simulazione invio email a: ${selectedRegistration.indirizzo_email}`)
       console.log(`Allegato fattura: ${uploadedFile.path}`)
-      alert(`Fattura caricata con successo e email inviata a ${selectedRegistration.guidatore.email}!`)
+      alert(`Fattura caricata con successo e email inviata a ${selectedRegistration.indirizzo_email}!`)
 
-      // 3. Chiudi il modal e resetta lo stato
       setShowInvoiceUpload(false)
       setSelectedRegistration(null)
       setInvoiceFile(null)
 
-      // 4. Ricarica le iscrizioni per aggiornare l'UI
       if (selectedEventForRegistrations) {
         handleViewRegistrations(selectedEventForRegistrations.id)
       }
@@ -1534,9 +1546,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-black mx-auto"></div>
           <p className="text-xl text-gray-600">Caricamento dashboard...</p>
         </div>
       </div>
@@ -1544,123 +1556,125 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8 font-inter antialiased">
-      {/* Header con design migliorato */}
-      <header className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 bg-white p-6 rounded-2xl shadow-xl border border-gray-100 backdrop-blur-sm">
+    <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8 font-sans antialiased">
+      {/* Header */}
+      <header className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 bg-black text-white p-6 rounded-lg shadow-lg">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-            <ActivityIcon className="w-7 h-7 text-white" />
+          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+            <ActivityIcon className="w-7 h-7 text-black" />
           </div>
           <div>
-            <h1 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
-              Dashboard Amministratore
-            </h1>
-            <p className="text-gray-600 mt-1">Gestisci eventi, iscrizioni e gallerie</p>
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">Dashboard Amministratore</h1>
+            <p className="text-gray-300 mt-1">Gestisci eventi, iscrizioni e gallerie</p>
           </div>
         </div>
         <Button
           onClick={handleLogout}
-          className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-lg font-semibold py-3 px-6 rounded-xl shadow-lg transition-all duration-200"
+          className="w-full sm:w-auto bg-white hover:bg-gray-100 text-black text-lg font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200"
         >
           <LogOutIcon className="mr-2 h-6 w-6" /> Logout
         </Button>
       </header>
 
-      {/* Tabs con design migliorato */}
+      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-gray-200 mb-8">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-gray-100 rounded-lg p-2 shadow-lg border border-gray-300 mb-8">
           <TabsTrigger
             value="overview"
-            className="text-lg font-semibold px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-100"
+            className="text-base sm:text-lg font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-300 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-200"
           >
-            <ActivityIcon className="w-5 h-5 mr-2" />
-            Panoramica
+            <ActivityIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+            <span className="hidden sm:inline">Panoramica</span>
+            <span className="sm:hidden">Home</span>
           </TabsTrigger>
           <TabsTrigger
             value="events"
-            className="text-lg font-semibold px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-100"
+            className="text-base sm:text-lg font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-300 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-200"
           >
-            <CalendarIcon className="w-5 h-5 mr-2" />
-            Eventi Futuri
+            <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+            <span className="hidden sm:inline">Eventi Futuri</span>
+            <span className="sm:hidden">Futuri</span>
           </TabsTrigger>
           <TabsTrigger
             value="past-events"
-            className="text-lg font-semibold px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-100"
+            className="text-base sm:text-lg font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-300 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-200"
           >
-            <ClockIcon className="w-5 h-5 mr-2" />
-            Eventi Passati
+            <ClockIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+            <span className="hidden sm:inline">Eventi Passati</span>
+            <span className="sm:hidden">Passati</span>
           </TabsTrigger>
           <TabsTrigger
             value="gallery"
-            className="text-lg font-semibold px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-100"
+            className="text-base sm:text-lg font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-300 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-200"
           >
-            <ImageIcon className="w-5 h-5 mr-2" />
-            Galleria
+            <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+            <span className="hidden sm:inline">Galleria</span>
+            <span className="sm:hidden">Foto</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab: Panoramica con design migliorato */}
+        {/* Tab: Panoramica */}
         <TabsContent value="overview" className="mt-0">
-          <Card className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-200">
-            <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-2xl p-8">
-              <CardTitle className="text-4xl font-extrabold flex items-center gap-3">
-                <SparklesIcon className="w-10 h-10" />
+          <Card className="bg-white shadow-lg rounded-lg border border-gray-300">
+            <CardHeader className="bg-black text-white rounded-t-lg p-6 sm:p-8">
+              <CardTitle className="text-2xl sm:text-4xl font-bold flex items-center gap-3">
+                <SparklesIcon className="w-8 h-8 sm:w-10 sm:h-10" />
                 Panoramica Generale
               </CardTitle>
-              <CardDescription className="text-indigo-100 text-xl mt-2">
+              <CardDescription className="text-gray-300 text-lg sm:text-xl mt-2">
                 Riepilogo delle attività e scorciatoie rapide per la gestione della piattaforma
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <Card className="text-center p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <CalendarIcon className="w-8 h-8 text-white" />
+            <CardContent className="p-6 sm:p-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12">
+                <Card className="text-center p-6 sm:p-8 bg-gray-50 border-2 border-gray-300 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                    <CalendarIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
-                  <CardTitle className="text-6xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    {events.length}
-                  </CardTitle>
-                  <CardDescription className="text-gray-700 text-xl mt-3 font-semibold">Eventi Futuri</CardDescription>
+                  <CardTitle className="text-4xl sm:text-6xl font-bold text-black">{events.length}</CardTitle>
+                  <CardDescription className="text-gray-700 text-lg sm:text-xl mt-3 font-semibold">
+                    Eventi Futuri
+                  </CardDescription>
                 </Card>
 
-                <Card className="text-center p-8 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <ClockIcon className="w-8 h-8 text-white" />
+                <Card className="text-center p-6 sm:p-8 bg-gray-50 border-2 border-gray-300 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                    <ClockIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
-                  <CardTitle className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    {pastEvents.length}
-                  </CardTitle>
-                  <CardDescription className="text-gray-700 text-xl mt-3 font-semibold">Eventi Passati</CardDescription>
+                  <CardTitle className="text-4xl sm:text-6xl font-bold text-gray-600">{pastEvents.length}</CardTitle>
+                  <CardDescription className="text-gray-700 text-lg sm:text-xl mt-3 font-semibold">
+                    Eventi Passati
+                  </CardDescription>
                 </Card>
 
-                <Card className="text-center p-8 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <ImageIcon className="w-8 h-8 text-white" />
+                <Card className="text-center p-6 sm:p-8 bg-gray-50 border-2 border-gray-300 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                    <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
-                  <CardTitle className="text-6xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  <CardTitle className="text-4xl sm:text-6xl font-bold text-gray-800">
                     {galleryImages.length + Object.values(eventGalleryImages).flat().length}
                   </CardTitle>
-                  <CardDescription className="text-gray-700 text-xl mt-3 font-semibold">
+                  <CardDescription className="text-gray-700 text-lg sm:text-xl mt-3 font-semibold">
                     Immagini Totali
                   </CardDescription>
                 </Card>
               </div>
 
-              <Separator className="my-12 bg-gradient-to-r from-transparent via-gray-300 to-transparent h-px" />
+              <Separator className="my-8 sm:my-12 bg-gray-300 h-px" />
 
-              <h3 className="text-4xl font-bold mb-8 text-gray-900 flex items-center gap-3">
-                <TrendingUpIcon className="w-10 h-10 text-indigo-600" />
+              <h3 className="text-2xl sm:text-4xl font-bold mb-6 sm:mb-8 text-black flex items-center gap-3">
+                <TrendingUpIcon className="w-8 h-8 sm:w-10 sm:h-10 text-black" />
                 Operazioni Rapide
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <Button
                   onClick={() => {
                     setShowNewEventForm(true)
                     setActiveTab("events")
                   }}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-xl font-semibold py-6 px-8 rounded-2xl shadow-lg transition-all duration-200 hover:scale-105"
+                  className="bg-black hover:bg-gray-800 text-white text-lg sm:text-xl font-semibold py-4 sm:py-6 px-6 sm:px-8 rounded-lg shadow-lg transition-all duration-200 hover:scale-105"
                 >
-                  <PlusIcon className="mr-3 h-7 w-7" /> Crea Nuovo Evento
+                  <PlusIcon className="mr-2 sm:mr-3 h-5 w-5 sm:h-7 sm:w-7" /> Crea Nuovo Evento
                 </Button>
                 <Button
                   onClick={() => {
@@ -1668,94 +1682,96 @@ export default function AdminDashboard() {
                     setUploadTarget({ type: "general", eventId: null })
                     setActiveTab("gallery")
                   }}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xl font-semibold py-6 px-8 rounded-2xl shadow-lg transition-all duration-200 hover:scale-105"
+                  className="bg-gray-600 hover:bg-gray-700 text-white text-lg sm:text-xl font-semibold py-4 sm:py-6 px-6 sm:px-8 rounded-lg shadow-lg transition-all duration-200 hover:scale-105"
                 >
-                  <UploadIcon className="mr-3 h-7 w-7" /> Carica Immagini
+                  <UploadIcon className="mr-2 sm:mr-3 h-5 w-5 sm:h-7 sm:w-7" /> Carica Immagini
                 </Button>
                 <Button
                   onClick={() => setActiveTab("events")}
                   variant="outline"
-                  className="text-xl font-semibold py-6 px-8 rounded-2xl shadow-lg transition-all duration-200 hover:scale-105 border-2 border-gray-300 text-gray-800 hover:bg-gray-50"
+                  className="text-lg sm:text-xl font-semibold py-4 sm:py-6 px-6 sm:px-8 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 border-2 border-gray-400 text-black hover:bg-gray-100"
                 >
-                  <EyeIcon className="mr-3 h-7 w-7" /> Visualizza Eventi
+                  <EyeIcon className="mr-2 sm:mr-3 h-5 w-5 sm:h-7 sm:w-7" /> Visualizza Eventi
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Tab: Eventi Futuri con design migliorato */}
+        {/* Tab: Eventi Futuri */}
         <TabsContent value="events" className="mt-0">
-          <Card className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-200">
-            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-2xl p-8">
+          <Card className="bg-white shadow-lg rounded-lg border border-gray-300">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-black text-white rounded-t-lg p-6 sm:p-8 gap-4">
               <div>
-                <CardTitle className="text-4xl font-extrabold flex items-center gap-3">
-                  <CalendarIcon className="w-10 h-10" />
+                <CardTitle className="text-2xl sm:text-4xl font-bold flex items-center gap-3">
+                  <CalendarIcon className="w-8 h-8 sm:w-10 sm:h-10" />
                   Eventi Futuri
                 </CardTitle>
-                <CardDescription className="text-blue-100 text-xl mt-2">
+                <CardDescription className="text-gray-300 text-lg sm:text-xl mt-2">
                   Gestisci gli eventi in programma
                 </CardDescription>
               </div>
               <Button
                 onClick={() => setShowNewEventForm(true)}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-lg font-semibold py-4 px-6 rounded-xl shadow-lg transition-all duration-200"
+                className="w-full sm:w-auto bg-white hover:bg-gray-100 text-black text-base sm:text-lg font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg shadow-lg transition-all duration-200"
               >
-                <PlusIcon className="mr-2 h-6 w-6" /> Nuovo Evento
+                <PlusIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Nuovo Evento
               </Button>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6 sm:p-8">
               {loadingEvents ? (
                 <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                  <p className="text-2xl text-gray-500">Caricamento eventi futuri...</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+                  <p className="text-xl sm:text-2xl text-gray-500">Caricamento eventi futuri...</p>
                 </div>
               ) : events.length === 0 ? (
                 <div className="text-center py-16">
-                  <CalendarIcon className="w-20 h-20 text-gray-400 mx-auto mb-6" />
-                  <div className="text-2xl text-gray-500">Nessun evento futuro in programma</div>
+                  <CalendarIcon className="w-16 h-16 sm:w-20 sm:h-20 text-gray-400 mx-auto mb-6" />
+                  <div className="text-xl sm:text-2xl text-gray-500">Nessun evento futuro in programma</div>
                   <Button
                     onClick={() => setShowNewEventForm(true)}
-                    className="mt-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                    className="mt-6 bg-black hover:bg-gray-800 text-white"
                   >
                     <PlusIcon className="mr-2 h-5 w-5" /> Crea il primo evento
                   </Button>
                 </div>
               ) : (
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
                   {events.map((event) => (
                     <Card
                       key={event.id}
-                      className="shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 bg-gradient-to-br from-white to-gray-50 rounded-2xl overflow-hidden"
+                      className="shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-300 bg-white rounded-lg overflow-hidden"
                     >
-                      <div className="border-l-4 border-blue-500">
-                        <CardHeader className="pb-4 px-6 pt-6">
-                          <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                            <SparklesIcon className="w-6 h-6 text-blue-500" />
-                            {event.titolo}
+                      <div className="border-l-4 border-black">
+                        <CardHeader className="pb-4 px-4 sm:px-6 pt-4 sm:pt-6">
+                          <CardTitle className="text-lg sm:text-2xl font-bold text-black flex items-center gap-2">
+                            <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+                            <span className="line-clamp-2">{event.titolo}</span>
                           </CardTitle>
-                          <CardDescription className="text-lg text-gray-700 mt-2">{event.descrizione}</CardDescription>
+                          <CardDescription className="text-base sm:text-lg text-gray-700 mt-2 line-clamp-3">
+                            {event.descrizione}
+                          </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4 text-lg px-6 pb-6">
+                        <CardContent className="space-y-4 text-base sm:text-lg px-4 sm:px-6 pb-4 sm:pb-6">
                           <div className="grid grid-cols-1 gap-3">
-                            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                              <CalendarIcon className="w-5 h-5 text-gray-500" />
-                              <span className="font-semibold">
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                              <span className="font-semibold text-sm sm:text-base">
                                 {event.data} alle {event.orario}
                               </span>
                             </div>
-                            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                              <MapPinIcon className="w-5 h-5 text-gray-500" />
-                              <span className="font-semibold">{event.luogo}</span>
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                              <span className="font-semibold text-sm sm:text-base line-clamp-1">{event.luogo}</span>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
-                              <div className="flex items-center gap-2 p-3 bg-white rounded-lg border border-gray-200">
-                                <UsersIcon className="w-5 h-5 text-gray-500" />
-                                <span className="font-semibold">{event.partecipanti}</span>
+                              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                <UsersIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                                <span className="font-semibold text-sm sm:text-base">{event.partecipanti}</span>
                               </div>
-                              <div className="flex items-center gap-2 p-3 bg-white rounded-lg border border-gray-200">
-                                <CarIcon className="w-5 h-5 text-gray-500" />
-                                <span className="font-semibold">{event.numeroauto}</span>
+                              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                <CarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                                <span className="font-semibold text-sm sm:text-base">{event.numeroauto}</span>
                               </div>
                             </div>
                           </div>
@@ -1765,42 +1781,42 @@ export default function AdminDashboard() {
                               {Object.values(event.quote).map((q, idx) => (
                                 <Badge
                                   key={idx}
-                                  className="bg-green-100 text-green-800 text-base px-3 py-1.5 font-semibold rounded-lg"
+                                  className="bg-black text-white text-xs sm:text-base px-2 sm:px-3 py-1 sm:py-1.5 font-semibold rounded-lg"
                                 >
-                                  {q.descrizione}: €{q.prezzo}
+                                  {q.titolo}: €{q.prezzo}
                                 </Badge>
                               ))}
                             </div>
                           )}
 
-                          <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t border-gray-200">
+                          <div className="flex flex-wrap gap-2 sm:gap-3 mt-6 pt-4 border-t border-gray-300">
                             <Button
                               variant="outline"
                               onClick={() => handleEditEvent(event)}
-                              className="text-base font-semibold py-2.5 px-4 rounded-lg border-orange-300 text-orange-700 hover:bg-orange-50 transition-colors duration-200"
+                              className="text-xs sm:text-base font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg border-gray-400 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                             >
-                              <EditIcon className="mr-2 h-4 w-4" /> Modifica
+                              <EditIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Modifica
                             </Button>
                             <Button
                               variant="outline"
                               onClick={() => handleViewRegistrations(event.id)}
-                              className="text-base font-semibold py-2.5 px-4 rounded-lg border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors duration-200"
+                              className="text-xs sm:text-base font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg border-gray-400 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                             >
-                              <EyeIcon className="mr-2 h-4 w-4" /> Iscrizioni
+                              <EyeIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Iscrizioni
                             </Button>
                             <Button
                               variant="outline"
                               onClick={() => markEventAsPast(event.id, true)}
-                              className="text-base font-semibold py-2.5 px-4 rounded-lg border-green-300 text-green-700 hover:bg-green-50 transition-colors duration-200"
+                              className="text-xs sm:text-base font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg border-gray-400 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                             >
-                              <CheckIcon className="mr-2 h-4 w-4" /> Completato
+                              <CheckIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Completato
                             </Button>
                             <Button
                               variant="destructive"
                               onClick={() => handleDeleteEvent(event.id)}
-                              className="text-base font-semibold py-2.5 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors duration-200"
+                              className="text-xs sm:text-base font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
                             >
-                              <TrashIcon className="mr-2 h-4 w-4" /> Elimina
+                              <TrashIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Elimina
                             </Button>
                           </div>
                         </CardContent>
@@ -1813,55 +1829,57 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* Tab: Eventi Passati con design migliorato */}
+        {/* Tab: Eventi Passati */}
         <TabsContent value="past-events" className="mt-0">
-          <Card className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-200">
-            <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-2xl p-8">
-              <CardTitle className="text-4xl font-extrabold flex items-center gap-3">
-                <ClockIcon className="w-10 h-10" />
+          <Card className="bg-white shadow-lg rounded-lg border border-gray-300">
+            <CardHeader className="bg-gray-800 text-white rounded-t-lg p-6 sm:p-8">
+              <CardTitle className="text-2xl sm:text-4xl font-bold flex items-center gap-3">
+                <ClockIcon className="w-8 h-8 sm:w-10 sm:h-10" />
                 Eventi Passati
               </CardTitle>
-              <CardDescription className="text-purple-100 text-xl mt-2">
+              <CardDescription className="text-gray-300 text-lg sm:text-xl mt-2">
                 Gestisci gli eventi completati e le loro gallerie
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6 sm:p-8">
               {loadingPastEvents ? (
                 <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                  <p className="text-2xl text-gray-500">Caricamento eventi passati...</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
+                  <p className="text-xl sm:text-2xl text-gray-500">Caricamento eventi passati...</p>
                 </div>
               ) : pastEvents.length === 0 ? (
                 <div className="text-center py-16">
-                  <ClockIcon className="w-20 h-20 text-gray-400 mx-auto mb-6" />
-                  <div className="text-2xl text-gray-500">Nessun evento passato</div>
+                  <ClockIcon className="w-16 h-16 sm:w-20 sm:h-20 text-gray-400 mx-auto mb-6" />
+                  <div className="text-xl sm:text-2xl text-gray-500">Nessun evento passato</div>
                 </div>
               ) : (
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
                   {pastEvents.map((event) => (
                     <Card
                       key={event.id}
-                      className="shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 bg-gradient-to-br from-white to-gray-50 rounded-2xl overflow-hidden"
+                      className="shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-300 bg-white rounded-lg overflow-hidden"
                     >
-                      <div className="border-l-4 border-purple-500">
-                        <CardHeader className="pb-4 px-6 pt-6">
-                          <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                            <CheckCircleIcon className="w-6 h-6 text-purple-500" />
-                            {event.titolo}
+                      <div className="border-l-4 border-gray-800">
+                        <CardHeader className="pb-4 px-4 sm:px-6 pt-4 sm:pt-6">
+                          <CardTitle className="text-lg sm:text-2xl font-bold text-black flex items-center gap-2">
+                            <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
+                            <span className="line-clamp-2">{event.titolo}</span>
                           </CardTitle>
-                          <CardDescription className="text-lg text-gray-700 mt-2">{event.descrizione}</CardDescription>
+                          <CardDescription className="text-base sm:text-lg text-gray-700 mt-2 line-clamp-3">
+                            {event.descrizione}
+                          </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4 text-lg px-6 pb-6">
+                        <CardContent className="space-y-4 text-base sm:text-lg px-4 sm:px-6 pb-4 sm:pb-6">
                           <div className="grid grid-cols-1 gap-3">
-                            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                              <CalendarIcon className="w-5 h-5 text-gray-500" />
-                              <span className="font-semibold">
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                              <span className="font-semibold text-sm sm:text-base">
                                 {event.data} alle {event.orario}
                               </span>
                             </div>
-                            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-                              <MapPinIcon className="w-5 h-5 text-gray-500" />
-                              <span className="font-semibold">{event.luogo}</span>
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                              <span className="font-semibold text-sm sm:text-base line-clamp-1">{event.luogo}</span>
                             </div>
                           </div>
 
@@ -1870,21 +1888,21 @@ export default function AdminDashboard() {
                               {Object.values(event.quote).map((q, idx) => (
                                 <Badge
                                   key={idx}
-                                  className="bg-purple-100 text-purple-800 text-base px-3 py-1.5 font-semibold rounded-lg"
+                                  className="bg-gray-800 text-white text-xs sm:text-base px-2 sm:px-3 py-1 sm:py-1.5 font-semibold rounded-lg"
                                 >
-                                  {q.descrizione}: €{q.prezzo}
+                                  {q.titolo}: €{q.prezzo}
                                 </Badge>
                               ))}
                             </div>
                           )}
 
-                          <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t border-gray-200">
+                          <div className="flex flex-wrap gap-2 sm:gap-3 mt-6 pt-4 border-t border-gray-300">
                             <Button
                               variant="outline"
                               onClick={() => handleViewRegistrations(event.id)}
-                              className="text-base font-semibold py-2.5 px-4 rounded-lg border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors duration-200"
+                              className="text-xs sm:text-base font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg border-gray-400 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                             >
-                              <EyeIcon className="mr-2 h-4 w-4" /> Iscrizioni
+                              <EyeIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Iscrizioni
                             </Button>
                             <Button
                               variant="outline"
@@ -1892,23 +1910,23 @@ export default function AdminDashboard() {
                                 setShowImageUpload(true)
                                 setUploadTarget({ type: "event", eventId: event.id })
                               }}
-                              className="text-base font-semibold py-2.5 px-4 rounded-lg border-orange-300 text-orange-700 hover:bg-orange-50 transition-colors duration-200"
+                              className="text-xs sm:text-base font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg border-gray-400 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                             >
-                              <UploadIcon className="mr-2 h-4 w-4" /> Carica Immagini
+                              <UploadIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Carica Immagini
                             </Button>
                             <Button
                               variant="outline"
                               onClick={() => markEventAsPast(event.id, false)}
-                              className="text-base font-semibold py-2.5 px-4 rounded-lg border-green-300 text-green-700 hover:bg-green-50 transition-colors duration-200"
+                              className="text-xs sm:text-base font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg border-gray-400 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                             >
-                              <CheckIcon className="mr-2 h-4 w-4" /> Riattiva
+                              <CheckIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Riattiva
                             </Button>
                             <Button
                               variant="destructive"
                               onClick={() => handleDeleteEvent(event.id)}
-                              className="text-base font-semibold py-2.5 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors duration-200"
+                              className="text-xs sm:text-base font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
                             >
-                              <TrashIcon className="mr-2 h-4 w-4" /> Elimina
+                              <TrashIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Elimina
                             </Button>
                           </div>
                         </CardContent>
@@ -1921,16 +1939,16 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* Tab: Galleria Immagini con design migliorato */}
+        {/* Tab: Galleria Immagini */}
         <TabsContent value="gallery" className="mt-0">
-          <Card className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-200">
-            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-t-2xl p-8">
+          <Card className="bg-white shadow-lg rounded-lg border border-gray-300">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700 text-white rounded-t-lg p-6 sm:p-8 gap-4">
               <div>
-                <CardTitle className="text-4xl font-extrabold flex items-center gap-3">
-                  <ImageIcon className="w-10 h-10" />
+                <CardTitle className="text-2xl sm:text-4xl font-bold flex items-center gap-3">
+                  <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10" />
                   Galleria Immagini
                 </CardTitle>
-                <CardDescription className="text-green-100 text-xl mt-2">
+                <CardDescription className="text-gray-300 text-lg sm:text-xl mt-2">
                   Gestisci le immagini della galleria generale e degli eventi
                 </CardDescription>
               </div>
@@ -1939,45 +1957,47 @@ export default function AdminDashboard() {
                   setShowImageUpload(true)
                   setUploadTarget({ type: "general", eventId: null })
                 }}
-                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-lg font-semibold py-4 px-6 rounded-xl shadow-lg transition-all duration-200"
+                className="w-full sm:w-auto bg-white hover:bg-gray-100 text-black text-base sm:text-lg font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg shadow-lg transition-all duration-200"
               >
-                <UploadIcon className="mr-2 h-6 w-6" /> Carica Immagini
+                <UploadIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Carica Immagini
               </Button>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6 sm:p-8">
               {loadingImages ? (
                 <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-                  <div className="text-2xl text-gray-500">Caricamento immagini galleria...</div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-700"></div>
+                  <div className="text-xl sm:text-2xl text-gray-500">Caricamento immagini galleria...</div>
                 </div>
               ) : (
-                <div className="space-y-12">
+                <div className="space-y-8 sm:space-y-12">
                   {/* Galleria Generale */}
                   <div>
-                    <h3 className="text-3xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-                      <SparklesIcon className="w-8 h-8 text-green-600" />
+                    <h3 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-black flex items-center gap-3">
+                      <SparklesIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700" />
                       Immagini Galleria Generale
                     </h3>
                     {galleryImages.length === 0 ? (
-                      <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-gray-300">
-                        <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <div className="text-xl text-gray-500 mb-4">Nessuna immagine nella galleria generale</div>
+                      <div className="text-center py-12 sm:py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-400">
+                        <ImageIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                        <div className="text-lg sm:text-xl text-gray-500 mb-4">
+                          Nessuna immagine nella galleria generale
+                        </div>
                         <Button
                           onClick={() => {
                             setShowImageUpload(true)
                             setUploadTarget({ type: "general", eventId: null })
                           }}
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                          className="bg-black hover:bg-gray-800 text-white"
                         >
                           <UploadIcon className="mr-2 h-5 w-5" /> Carica prima immagine
                         </Button>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
                         {galleryImages.map((image) => (
                           <div
                             key={image.path}
-                            className="relative group rounded-2xl overflow-hidden shadow-lg border border-gray-200 aspect-square hover:shadow-xl transition-all duration-300"
+                            className="relative group rounded-lg overflow-hidden shadow-lg border border-gray-300 aspect-square hover:shadow-xl transition-all duration-300"
                           >
                             <img
                               src={image.url || "/placeholder.svg"}
@@ -1985,8 +2005,7 @@ export default function AdminDashboard() {
                               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                               onError={(e) => {
                                 e.target.onerror = null
-                                e.target.src =
-                                  "https://placehold.co/400x400/E0E0E0/A0A0A0?text=Immagine+non+disponibile"
+                                e.target.src = "/placeholder.svg?height=400&width=400"
                               }}
                             />
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
@@ -1994,9 +2013,9 @@ export default function AdminDashboard() {
                                 variant="destructive"
                                 size="icon"
                                 onClick={() => handleDeleteImage(image)}
-                                className="bg-red-500 hover:bg-red-600 text-white w-12 h-12 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                                className="bg-red-600 hover:bg-red-700 text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
                               >
-                                <TrashIcon className="h-6 w-6" />
+                                <TrashIcon className="h-4 w-4 sm:h-6 sm:w-6" />
                               </Button>
                             </div>
                           </div>
@@ -2005,48 +2024,48 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
-                  <Separator className="my-12 bg-gradient-to-r from-transparent via-gray-300 to-transparent h-px" />
+                  <Separator className="my-8 sm:my-12 bg-gray-300 h-px" />
 
                   {/* Gallerie per Eventi Passati */}
                   <div>
-                    <h3 className="text-3xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-                      <ClockIcon className="w-8 h-8 text-purple-600" />
+                    <h3 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-black flex items-center gap-3">
+                      <ClockIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-800" />
                       Immagini per Eventi Passati
                     </h3>
                     {pastEvents.length === 0 ? (
-                      <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-gray-300">
-                        <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <div className="text-xl text-gray-500">Nessun evento passato disponibile</div>
+                      <div className="text-center py-12 sm:py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-400">
+                        <CalendarIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                        <div className="text-lg sm:text-xl text-gray-500">Nessun evento passato disponibile</div>
                       </div>
                     ) : (
                       pastEvents.map((event) => (
                         <div
                           key={event.id}
-                          className="mb-10 p-8 rounded-2xl bg-gradient-to-br from-white to-gray-50 shadow-lg border border-gray-200"
+                          className="mb-8 sm:mb-10 p-6 sm:p-8 rounded-lg bg-gray-50 shadow-lg border border-gray-300"
                         >
-                          <div className="flex items-center justify-between mb-6">
-                            <h4 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                                <CheckCircleIcon className="w-5 h-5 text-white" />
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-4">
+                            <h4 className="text-xl sm:text-2xl font-bold text-black flex items-center gap-3">
+                              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-800 rounded-lg flex items-center justify-center">
+                                <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                               </div>
-                              {event.titolo}
+                              <span className="line-clamp-1">{event.titolo}</span>
                             </h4>
                             <Button
                               onClick={() => {
                                 setShowImageUpload(true)
                                 setUploadTarget({ type: "event", eventId: event.id })
                               }}
-                              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+                              className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white text-sm sm:text-base"
                             >
                               <UploadIcon className="mr-2 h-4 w-4" /> Aggiungi Immagini
                             </Button>
                           </div>
                           {eventGalleryImages[event.id] && eventGalleryImages[event.id].length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
                               {eventGalleryImages[event.id].map((image) => (
                                 <div
                                   key={image.path}
-                                  className="relative group rounded-2xl overflow-hidden shadow-lg border border-gray-200 aspect-square hover:shadow-xl transition-all duration-300"
+                                  className="relative group rounded-lg overflow-hidden shadow-lg border border-gray-300 aspect-square hover:shadow-xl transition-all duration-300"
                                 >
                                   <img
                                     src={image.url || "/placeholder.svg"}
@@ -2054,8 +2073,7 @@ export default function AdminDashboard() {
                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                     onError={(e) => {
                                       e.target.onerror = null
-                                      e.target.src =
-                                        "https://placehold.co/400x400/E0E0E0/A0A0A0?text=Immagine+non+disponibile"
+                                      e.target.src = "/placeholder.svg?height=400&width=400"
                                     }}
                                   />
                                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
@@ -2063,18 +2081,20 @@ export default function AdminDashboard() {
                                       variant="destructive"
                                       size="icon"
                                       onClick={() => handleDeleteImage(image)}
-                                      className="bg-red-500 hover:bg-red-600 text-white w-12 h-12 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                                      className="bg-red-600 hover:bg-red-700 text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
                                     >
-                                      <TrashIcon className="h-6 w-6" />
+                                      <TrashIcon className="h-4 w-4 sm:h-6 sm:w-6" />
                                     </Button>
                                   </div>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-300">
-                              <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                              <div className="text-lg text-gray-500">Nessuna immagine per questo evento</div>
+                            <div className="text-center py-8 sm:py-12 bg-white rounded-lg border-2 border-dashed border-gray-400">
+                              <ImageIcon className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3" />
+                              <div className="text-base sm:text-lg text-gray-500">
+                                Nessuna immagine per questo evento
+                              </div>
                             </div>
                           )}
                         </div>
@@ -2109,9 +2129,9 @@ export default function AdminDashboard() {
               orario: "",
               luogo: "",
               partecipanti: "",
-              numeroAuto: "",
-              tipo: "AUTO",
-              quote: [{ nome: "", prezzo: "" }],
+              numeroauto: "",
+              programma: "",
+              quote: [{ titolo: "", descrizione: "", prezzo: "" }],
             })
           }}
         />
@@ -2137,9 +2157,9 @@ export default function AdminDashboard() {
               orario: "",
               luogo: "",
               partecipanti: "",
-              numeroAuto: "",
-              tipo: "AUTO",
-              quote: [{ nome: "", prezzo: "" }],
+              numeroauto: "",
+              programma: "",
+              quote: [{ titolo: "", descrizione: "", prezzo: "" }],
             })
           }}
         />
@@ -2203,6 +2223,24 @@ export default function AdminDashboard() {
         }
         .animate-scale-in {
           animation: scale-in 0.3s ease-out;
+        }
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       `}</style>
     </div>
