@@ -1549,44 +1549,411 @@ export default function AdminDashboard() {
     fetchRegistrations(event.id)
   }
 
-  const handleGenerateIndividualPdf = async (registration, event) => {
-    try {
-      const doc = new jsPDF()
-      doc.text(`Dettagli Iscrizione - Evento: ${event.titolo}`, 10, 10)
-      doc.text(`Nome: ${registration.nome} ${registration.cognome}`, 10, 20)
-      doc.text(`Email: ${registration.indirizzo_email}`, 10, 30)
-      doc.text(`Telefono: ${registration.telefono}`, 10, 40)
-      doc.text(`Codice Fiscale: ${registration.codice_fiscale}`, 10, 50)
-      doc.text(`Data Nascita: ${registration.data_nascita}`, 10, 60)
-      doc.text(`Indirizzo: ${registration.indirizzo}`, 10, 70)
-      doc.text(`Quota Selezionata: ${registration.quota}`, 10, 80)
-      doc.text(`Intolleranze: ${registration.intolleranze || "Nessuna"}`, 10, 90)
-
-      if (registration.auto_marca) {
-        doc.text(`Dettagli Auto:`, 10, 110)
-        doc.text(`Marca: ${registration.auto_marca}`, 10, 120)
-        doc.text(`Modello: ${registration.auto_modello}`, 10, 130)
-        doc.text(`Targa: ${registration.auto_targa}`, 10, 140)
-        doc.text(`Posti Auto: ${registration.posti_auto}`, 10, 150)
+const handleGenerateIndividualPdf = async (registration, event) => {
+  try {
+    const doc = new jsPDF()
+    let yPos = 20
+    const pageWidth = doc.internal.pageSize.width
+    const pageHeight = doc.internal.pageSize.height
+    const margin = 20
+    const maxWidth = pageWidth - (margin * 2)
+    let currentPage = 1
+    let totalPages = 1 // Sarà aggiornato alla fine
+    
+    // Funzione per controllare se serve una nuova pagina
+    const checkNewPage = (neededSpace = 10) => {
+      if (yPos + neededSpace > pageHeight - 20) {
+        // Aggiungi numero pagina corrente prima di passare alla prossima
+        doc.setFontSize(10)
+        doc.text(`pag. ${currentPage}/${totalPages}`, pageWidth - 25, pageHeight - 10)
+        
+        doc.addPage()
+        currentPage++
+        yPos = 20
+        return true
       }
-
-      if (registration.passeggeri && registration.passeggeri.length > 0) {
-        doc.text(`Passeggeri:`, 10, registration.auto_marca ? 170 : 110)
-        let yOffset = registration.auto_marca ? 180 : 120
-        registration.passeggeri.forEach((pass, pIndex) => {
-          doc.text(`- Passeggero ${pIndex + 1}: ${pass.nome} ${pass.cognome} (CF: ${pass.codice_fiscale})`, 15, yOffset)
-          yOffset += 10
-        })
-      }
-
-      doc.save(`iscrizione_${registration.nome}_${registration.cognome}.pdf`)
-      showNotification("PDF generato con successo!", "success")
-    } catch (error) {
-      console.error("Errore durante la generazione del PDF:", error)
-      showNotification("Errore durante la generazione del PDF: " + error.message, "error")
+      return false
     }
-  }
+    
+    // Funzione per testo con wrap
+    const addWrappedText = (text, x, y, maxWidth, lineHeight = 7) => {
+      const lines = doc.splitTextToSize(text, maxWidth)
+      lines.forEach((line, index) => {
+        checkNewPage(lineHeight)
+        doc.text(line, x, y + (index * lineHeight))
+        yPos = y + ((index + 1) * lineHeight)
+      })
+      return yPos
+    }
+    
+    // PAGINA 1
+    // Intestazione
+    doc.setFontSize(16)
+    doc.setFont(undefined, 'bold')
+    doc.text('MODULO D\'ISCRIZIONE', pageWidth/2, yPos, { align: 'center' })
+    yPos += 10
+    doc.text(`EVENTO: "${event.titolo || 'SUPERCAR FOR PASSION'}"`, pageWidth/2, yPos, { align: 'center' })
+    yPos += 15
+    
+    // Dati anagrafici del guidatore
+    checkNewPage(50)
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text('DATI ANAGRAFICI DEL GUIDATORE', margin, yPos)
+    yPos += 8
+    
+    doc.setFont(undefined, 'normal')
+    doc.text(`Cognome: ${registration.cognome}`, margin, yPos)
+    doc.text(`Nome: ${registration.nome}`, margin + 90, yPos)
+    yPos += 8
+    doc.text(`Codice Fiscale: ${registration.codice_fiscale}`, margin, yPos)
+    yPos += 8
+    yPos = addWrappedText('Patente di guida n._______________________     Scadenza______________', margin, yPos, maxWidth)
+    yPos += 3
+    doc.text(`Cellulare: ${registration.telefono}`, margin, yPos)
+    doc.text(`e-mail: ${registration.indirizzo_email}`, margin + 90, yPos)
+    yPos += 15
+    
+    // Dati anagrafici del passeggero
+    checkNewPage(50)
+    doc.setFont(undefined, 'bold')
+    doc.text('DATI ANAGRAFICI DEL PASSEGGERO', margin, yPos)
+    yPos += 8
+    
+    doc.setFont(undefined, 'normal')
+    if (registration.passeggeri && registration.passeggeri.length > 0) {
+      const firstPassenger = registration.passeggeri[0]
+      doc.text(`Cognome: ${firstPassenger.cognome || ''}`, margin, yPos)
+      doc.text(`Nome: ${firstPassenger.nome || ''}`, margin + 90, yPos)
+      yPos += 8
+      doc.text(`Codice Fiscale: ${firstPassenger.codice_fiscale || ''}`, margin, yPos)
+      yPos += 8
+      doc.text(`Cellulare: ${firstPassenger.telefono || '________________________'}`, margin, yPos)
+      doc.text(`e-mail: ${firstPassenger.indirizzo_email || '___________________________________'}`, margin + 90, yPos)
+    } else {
+      yPos = addWrappedText('Cognome: ___________________  Nome: _____________________', margin, yPos, maxWidth)
+      yPos += 3
+      yPos = addWrappedText('Codice Fiscale: ___________________________________________________', margin, yPos, maxWidth)
+      yPos += 3
+      yPos = addWrappedText('Cellulare: ____________________________________  e-mail: ___________________________________', margin, yPos, maxWidth)
+    }
+    yPos += 15
+    
+    // Dati autovettura
+    checkNewPage(30)
+    doc.setFont(undefined, 'bold')
+    doc.text('DATI AUTOVETTURA UTILIZZATA PER L\'EVENTO', margin, yPos)
+    yPos += 8
+    
+    doc.setFont(undefined, 'normal')
+    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione: __________  Colore: _____________  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
+    yPos += 15
+    
+    // Chiede/chiedono
+    checkNewPage(30)
+    doc.setFont(undefined, 'bold')
+    doc.text('CHIEDE/CHIEDONO', pageWidth/2, yPos, { align: 'center' })
+    yPos += 8
+    
+    doc.setFont(undefined, 'normal')
+    yPos = addWrappedText('di poter partecipare all\'evento in epigrafe a proprio rischio e pericolo, senza esclusiva, con l\'autovettura sopra identificata, coperta da assicurazione RCA in corso di validità.', margin, yPos, maxWidth)
+    yPos += 15
+    
+checkNewPage(60)
+doc.setFont(undefined, 'bold')
+doc.text('PACCHETTO/SOLUZIONE DI PARTECIPAZIONE', margin, yPos)
+yPos += 8
 
+doc.setFont(undefined, 'normal')
+
+// Ottieni i dati quote (stringa o oggetto)
+let quoteData = event.quote
+
+if (typeof quoteData === 'string') {
+  try {
+    quoteData = JSON.parse(quoteData)
+  } catch (e) {
+    console.error('Errore nel parsing del JSON:', e)
+    quoteData = {}
+  }
+}
+
+// Scorri le quote mantenendo sia chiave che oggetto
+Object.entries(quoteData).forEach(([key, quotaObj]) => {
+  checkNewPage(7)
+
+  // Metti la spunta se il nome della quota corrisponde (es. 'quota2')
+  const isSelected = registration.quota === key
+
+  doc.text(isSelected ? '[X]' : '[ ]', margin, yPos)
+  doc.text(quotaObj.titolo || key, margin + 15, yPos)
+
+  yPos += 7
+})
+
+yPos += 8
+
+
+    // Esigenze alimentari
+    checkNewPage(30)
+    const hasIntolleranze = registration.intolleranze && registration.intolleranze.trim() !== ''
+    doc.text(`ESIGENZE ALIMENTARI GUIDATORE: SI ${hasIntolleranze ? '[X]' : '[ ]'}         NO ${hasIntolleranze ? '[ ]' : '[X]'}`, margin, yPos)
+    yPos += 4
+    yPos = addWrappedText(`Intolleranze/Allergie: ${registration.intolleranze || '____________________________________'}`, margin, yPos, maxWidth)
+    yPos += 8
+    
+    // Esigenze alimentari passeggero
+    let passengerIntolleranze = ''
+    if (registration.passeggeri && registration.passeggeri.length > 0 && registration.passeggeri[0].intolleranze) {
+      passengerIntolleranze = registration.passeggeri[0].intolleranze
+    }
+    const hasPassengerIntolleranze = passengerIntolleranze && passengerIntolleranze.trim() !== ''
+    
+    doc.text(`ESIGENZE ALIMENTARE PASSEGGERO: Intolleranze: SI ${hasPassengerIntolleranze ? '[X]' : '[ ]'}         NO ${hasPassengerIntolleranze ? '[ ]' : '[X]'}`, margin, yPos)
+    yPos += 4
+    yPos = addWrappedText(`Intolleranze/Allergie: ${passengerIntolleranze || '_______________________________'}`, margin, yPos, maxWidth)
+    yPos += 10
+    
+    checkNewPage(20)
+    yPos = addWrappedText(`Il sottoscritto (guidatore) ${registration.nome} ${registration.cognome}`, margin, yPos, maxWidth)
+    yPos += 7
+    
+    let passengerName = ''
+    if (registration.passeggeri && registration.passeggeri.length > 0) {
+      passengerName = `${registration.passeggeri[0].nome || ''} ${registration.passeggeri[0].cognome || ''}`.trim()
+    }
+    yPos = addWrappedText(`e il sottoscritto (passeggero) ${passengerName || '_____________________________________________'}`, margin, yPos, maxWidth)
+    yPos += 10
+    
+    checkNewPage(15)
+    doc.setFont(undefined, 'bold')
+    doc.text('DICHIARA/DICHIARANO', margin, yPos)
+    yPos += 8
+    
+    // Dichiarazioni (1-14)
+    doc.setFont(undefined, 'normal')
+    const dichiarazioni = [
+      '1) d\'aver preso visione della brochure relativa all\'evento e di accettarne incondizionatamente il programma e le finalità;',
+      '2) di voler partecipare esclusivamente a scopo turistico, senza alcun fine di gara o competizione, di essere a conoscenza che è assolutamente proibito gareggiare e che lo spirito della giornata e quello di far sì che i partecipanti possano trascorrere una o più giornate in compagnia, effettuando un giro turistico in macchina, nel pieno rispetto del vigente Codice della Strada;',
+      '3) di utilizzare un mezzo di proprietà (od esserne autorizzato all\'uso dal legittimo proprietario che, pertanto, non potrà vantare alcun diritto) del quale si conferma piena efficienza, affidabilità e conformità al Codice della Strada;',
+      '4) che il suddetto mezzo guidato durante l\'evento e in regola con pagamento bollo, RC Auto, revisione e tutto quanto e necessario per la circolazione;',
+      '5) di ESONERARE, NEI LIMITI DI LEGGE, GLI ORGANIZZATORI E LA DITTA MARLAN S.R.L. da ogni responsabilità civile per danni a persone o cose che dovessero derivare dalla partecipazione all\'evento, esclusivamente nei casi di colpa lieve, restando espressamente escluso ogni esonero per i danni causati da dolo, colpa grave o da violazione di norme di ordine pubblico e di sicurezza. La presente clausola non limita in alcun modo i diritti dei terzi e la copertura assicurativa obbligatoria per la responsabilità civile verso terzi prevista dalla legge;',
+      '6) di ASSUMERSI OGNI RESPONSABILITÀ VERSO TERZI E DI MANTENERE COPERTURA RCA OBBLIGATORIA per danni eventualmente arrecati a terzi, inclusi altri partecipanti, mezzi e passeggeri, durante l\'evento. Gli organizzatori e la ditta Marlan S.r.l. sono esonerati, nei limiti previsti dalla legge e salvo il caso di dolo, colpa grave o violazione di norme inderogabili, da ogni responsabilità per pretese avanzate da terzi a seguito della partecipazione all\'evento. Il sottoscritto dichiara di essere titolare di una polizza RCA valida per il mezzo utilizzato, quale garanzia a favore dei terzi danneggiati;',
+      '7) di SOLLEVARE ED ESONERARE GLI ORGANIZZATORI (ALDEBARANDRIVE – MARLAN S.R.L.) da responsabilità per eventuali perdite, sottrazioni, danni, furti e/o danneggiamenti, e relative spese, subiti durante l\'evento, salvo che tali eventi derivino da dolo, colpa grave degli organizzatori o da violazione di norme imperative;',
+      '8) di trovarsi in perfetta salute fisica e psichica;',
+      '9) di PRENDERE ATTO CHE L\'ISCRIZIONE È ACCETTATA SOLO IN PRESENZA DI ESONERO NEI LIMITI DI LEGGE e che, in difetto, non sarebbe stata accettata l\'iscrizione. È fatto salvo il diritto al risarcimento nei casi di dolo, colpa grave o violazione di norme di ordine pubblico o di sicurezza da parte degli organizzatori. Resta salva la tutela dei terzi danneggiati e la piena efficacia della copertura assicurativa obbligatoria per la responsabilità civile verso terzi;',
+      '10) d\'essere consapevole che l\'abuso di bevande alcoliche compromette la propria sicurezza e quella delle altre persone;',
+      '11) di essere a conoscenza che gli Organizzatori, presenti all\'evento, potranno arbitrariamente decidere, per motivi di sicurezza o per comportamenti che ledono il decoro e il buon nome ALDEBARANDRIVE – MARLAN S.R.L., l\'allontanamento insindacabile dal gruppo;',
+      '12) che la quota di iscrizione versata a favore dell\'Organizzazione non sarà restituibile, neppure parzialmente;',
+      '13) di essere a conoscenza che gli Organizzatori potranno, nel caso lo ritenessero opportuno, intraprendere le adeguate azioni legali a tutela degli stessi e di terzi, versando eventuali risarcimenti ad Enti di beneficenza od alle parti lese;',
+      '14) di impegnarsi, per tutta la durata dell\'evento, a rispettare scrupolosamente il vigente Codice della Strada e tutte le ulteriori norme di sicurezza applicabili, mantenendo sempre una condotta prudente e diligente. Il sottoscritto/a si obbliga a prestare la massima attenzione al percorso, adeguando la guida alle condizioni della strada, del traffico, della segnaletica e alle indicazioni fornite dagli organizzatori o dalle autorità preposte. Il mancato rispetto di tali obblighi potrà comportare l\'esclusione dall\'evento e la responsabilità personale per eventuali danni arrecati a sé, a terzi o a cose.'
+    ]
+    
+    dichiarazioni.forEach(dichiarazione => {
+      checkNewPage(30)
+      yPos = addWrappedText(dichiarazione, margin, yPos, maxWidth)
+      yPos += 7
+    })
+    
+    // Sezioni firme GUIDATORE
+    checkNewPage(70)
+    yPos = addWrappedText(`IL GUIDATORE: ${registration.cognome} ${registration.nome}`, margin, yPos, maxWidth)
+    yPos += 8
+    doc.text('Lì____________________', margin, yPos)
+    doc.text('Firma __________________', margin + 90, yPos)
+    yPos += 12
+    
+    yPos = addWrappedText(`Il/La sottoscritto/a ${registration.cognome} ${registration.nome} dichiara di aver preso visione consapevole e di approvare le clausole di cui ai punti 5) Responsabilità, 6) Pretese, 7) Esonero, 9) Rinuncia, 11) Allontanamento e 13) Azioni legali.`, margin, yPos, maxWidth)
+    yPos += 8
+    doc.text('Lì_____________________', margin, yPos)
+    doc.text('Firma ____________________', margin + 90, yPos)
+    yPos += 12
+    
+    yPos = addWrappedText(`Il/La sottoscritto/a ${registration.cognome} ${registration.nome} dichiara ai sensi del DPR n.445 del 28/12/2000 la veridicità dei dati trasmessi, conferma espressamente tutto quanto sopra precede ad ogni e qualsiasi effetto di legge ed autorizza il trattamento dei dati personali ai sensi del D.lgs. 196 del 30 giugno 2003 e s.m.i.`, margin, yPos, maxWidth)
+    yPos += 8
+    doc.text('Lì_______________', margin, yPos)
+    doc.text('Firma _________________', margin + 90, yPos)
+    yPos += 12
+    
+    // Sezione PASSEGGERO
+    checkNewPage(70)
+    if (registration.passeggeri && registration.passeggeri.length > 0) {
+      const firstPassenger = registration.passeggeri[0]
+      yPos = addWrappedText(`IL PASSEGGERO: ${firstPassenger.cognome || ''} ${firstPassenger.nome || ''}`, margin, yPos, maxWidth)
+    } else {
+      yPos = addWrappedText('IL PASSEGGERO (inserire Cognome e nome): __________________________________', margin, yPos, maxWidth)
+    }
+    yPos += 8
+    doc.text('Lì__________________', margin, yPos)
+    doc.text('Firma ______________________', margin + 90, yPos)
+    yPos += 12
+    
+    // Aggiungi nome e cognome del passeggero dopo "Il/La sottoscritto/a"
+    let passengerFullName = '___________________________________________'
+    if (registration.passeggeri && registration.passeggeri.length > 0) {
+      const firstPassenger = registration.passeggeri[0]
+      if (firstPassenger.nome && firstPassenger.cognome) {
+        passengerFullName = `${firstPassenger.nome} ${firstPassenger.cognome} `
+      }
+    }
+    
+    yPos = addWrappedText(`Il/La sottoscritto/a ${passengerFullName}dichiara di aver preso visione consapevole e di approvare le clausole di cui ai punti 5) Responsabilità, 6) Pretese, 7) Esonero, 9) Rinuncia, 11) Allontanamento e 13) Azioni legali.`, margin, yPos, maxWidth)
+    yPos += 8
+    doc.text('Lì__________________', margin, yPos)
+    doc.text('Firma ____________________', margin + 90, yPos)
+    yPos += 12
+    
+    yPos = addWrappedText(`Il/La sottoscritto/a ${passengerFullName}dichiara ai sensi del DPR n.445 del 28/12/2000 la veridicità dei dati trasmessi, conferma espressamente tutto quanto sopra precede ad ogni e qualsiasi effetto di legge ed autorizza il trattamento dei dati personali ai sensi del D.lgs. 196 del 30 giugno 2003 e s.m.i.`, margin, yPos, maxWidth)
+    yPos += 8
+    doc.text('Lì__________________', margin, yPos)
+    doc.text('Firma ___________________', margin + 90, yPos)
+    yPos += 15
+    
+    // AUTORIZZAZIONI
+    checkNewPage(120)
+    doc.setFont(undefined, 'bold')
+    doc.text('AUTORIZZA/AUTORIZZANO', pageWidth/2, yPos, { align: 'center' })
+    yPos += 10
+    
+    doc.setFont(undefined, 'normal')
+    yPos = addWrappedText('a titolo gratuito, senza limiti di tempo, anche ai sensi degli artt. 10 e 320 cod. civ. e degli artt. 96 e 97 legge 22.4.1941, n. 633, Legge sul diritto d\'autore, l\'utilizzo delle foto o video ripresi durante le iniziative e gli eventi organizzati dall\'ALDEBARANDRIVE – MARLAN S.R.L., alla pubblicazione e/o diffusione in qualsiasi forma delle proprie immagini sul sito internet dell\'ALDEBARANDRIVE – MARLAN S.R.L., su carta stampata e/o su qualsiasi altro mezzo di diffusione, nonché autorizzano la conservazione delle foto e dei video stessi negli archivi informatici dell\'ALDEBARANDRIVE – MARLAN S.R.L. e prendono atto che la finalità di tali pubblicazioni sono meramente di carattere informativo ed eventualmente promozionale.', margin, yPos, maxWidth)
+    yPos += 10
+    
+    yPos = addWrappedText('La presente liberatoria/autorizzazione potrà essere revocata in ogni tempo con comunicazione scritta da inviare via posta comune o e-mail', margin, yPos, maxWidth)
+    yPos += 10
+    
+    yPos = addWrappedText(`IL GUIDATORE (inserire Cognome e nome): ${registration.cognome} ${registration.nome}`, margin, yPos, maxWidth)
+    yPos += 8
+    doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
+    yPos += 8
+    doc.text('Lì__________________', margin, yPos)
+    doc.text('Firma _________________', margin + 90, yPos)
+    yPos += 12
+    
+    if (registration.passeggeri && registration.passeggeri.length > 0) {
+      const firstPassenger = registration.passeggeri[0]
+      yPos = addWrappedText(`IL PASSEGGERO: ${firstPassenger.cognome || ''} ${firstPassenger.nome || ''}`, margin, yPos, maxWidth)
+    } else {
+      yPos = addWrappedText('IL PASSEGGERO (inserire Cognome e nome): ____________________________', margin, yPos, maxWidth)
+    }
+    yPos += 8
+    doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
+    yPos += 8
+    doc.text('Lì_____________________', margin, yPos)
+    doc.text('Firma ____________________', margin + 90, yPos)
+    yPos += 12
+    
+    // Seconda autorizzazione
+    checkNewPage(120)
+    doc.setFont(undefined, 'bold')
+    doc.text('AUTORIZZA/AUTORIZZANO', pageWidth/2, yPos, { align: 'center' })
+    yPos += 10
+    
+    doc.setFont(undefined, 'normal')
+    yPos = addWrappedText('Ai sensi dell\'art. 13 del d.lg.196/2003 La informiamo che i dati personali che La riguardano verranno trattati secondo principi di correttezza, liceità e trasparenza, e di tutela della Sua riservatezza e dei Suoi diritti, al fine di garantire il corretto uso della card e a fini statistici interni. Il titolare del trattamento è l\'ALDEBARANDRIVE – MARLAN S.R.L., cui Lei potrà rivolgersi in ogni momento per esercitare i diritti di cui all\'art. 7 del d.leg.196/03. In tale ottica i dati forniti, ivi incluso il ritratto contenuto nelle fotografie o i video su indicati, verranno utilizzati per le finalità strettamente connesse e strumentali alle attività come indicate nella Vostra stessa liberatoria. Il conferimento del consenso al trattamento dei dati personali è facoltativo. In qualsiasi momento è possibile esercitare tutti i diritti indicati dall\'articolo 7 del D. Lgs. n. 196/2003, in particolare la cancellazione, la rettifica o l\'integrazione dei dati. Tali diritti potranno essere esercitati inviando comunicazione scritta. I dati saranno conservati all\'interno dell\'archivio cartaceo ed informatico, non saranno oggetto di comunicazione o diffusioni a terzi e verranno trattati nell\'ambito dell\'organizzazione del Titolare da soggetti qualificati.', margin, yPos, maxWidth)
+    yPos += 10
+    
+    yPos = addWrappedText(`IL GUIDATORE: ${registration.cognome} ${registration.nome}`, margin, yPos, maxWidth)
+    yPos += 8
+    doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
+    yPos += 8
+    doc.text('Lì_____________', margin, yPos)
+    doc.text('Firma ______________', margin + 90, yPos)
+    yPos += 12
+    
+    if (registration.passeggeri && registration.passeggeri.length > 0) {
+      const firstPassenger = registration.passeggeri[0]
+      yPos = addWrappedText(`IL PASSEGGERO: ${firstPassenger.cognome || ''} ${firstPassenger.nome || ''}`, margin, yPos, maxWidth)
+    } else {
+      yPos = addWrappedText('IL PASSEGGERO (inserire Cognome e nome): _____________________________________________________', margin, yPos, maxWidth)
+    }
+    yPos += 8
+    doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
+    yPos += 8
+    doc.text('Lì__________________', margin, yPos)
+    doc.text('Firma _____________________', margin + 90, yPos)
+    
+    // Gestione passeggeri aggiuntivi (dal secondo in poi)
+    if (registration.passeggeri && registration.passeggeri.length > 1) {
+      for (let i = 1; i < registration.passeggeri.length; i++) {
+        const passenger = registration.passeggeri[i]
+        doc.addPage()
+        currentPage++
+        yPos = 20
+        
+        doc.setFontSize(16)
+        doc.setFont(undefined, 'bold')
+        doc.text(`PASSEGGERO AGGIUNTIVO ${i + 1}`, pageWidth/2, yPos, { align: 'center' })
+        yPos += 15
+        
+        doc.setFontSize(12)
+        doc.setFont(undefined, 'normal')
+        yPos = addWrappedText(`Nome: ${passenger.nome || ''} ${passenger.cognome || ''}`, margin, yPos, maxWidth)
+        yPos += 8
+        yPos = addWrappedText(`Codice Fiscale: ${passenger.codice_fiscale || ''}`, margin, yPos, maxWidth)
+        yPos += 8
+        yPos = addWrappedText(`Cellulare: ${passenger.telefono || ''}`, margin, yPos, maxWidth)
+        yPos += 8
+        yPos = addWrappedText(`E-mail: ${passenger.email || ''}`, margin, yPos, maxWidth)
+        yPos += 15
+        
+        // Esigenze alimentari passeggero aggiuntivo
+        const hasPassengerIntolleranze = passenger.intolleranze && passenger.intolleranze.trim() !== ''
+        doc.text(`ESIGENZE ALIMENTARI: SI ${hasPassengerIntolleranze ? '[X]' : '[ ]'}         NO ${hasPassengerIntolleranze ? '[ ]' : '[X]'}`, margin, yPos)
+        yPos += 8
+        yPos = addWrappedText(`se SI indicare Intolleranze/Allergie: ${passenger.intolleranze || ''}`, margin, yPos, maxWidth)
+        yPos += 20
+        
+        yPos = addWrappedText(`IL PASSEGGERO: ${passenger.cognome || ''} ${passenger.nome || ''}`, margin, yPos, maxWidth)
+        yPos += 8
+        doc.text('Lì__________________', margin, yPos)
+        doc.text('Firma ______________', margin + 90, yPos)
+        yPos += 12
+        
+        yPos = addWrappedText(`Il/La sottoscritto/a ${passenger.nome || ''} ${passenger.cognome || ''} dichiara di aver preso visione consapevole e di approvare le clausole di cui ai punti 5) Responsabilità, 6) Pretese, 7) Esonero, 9) Rinuncia, 11) Allontanamento e 13) Azioni legali.`, margin, yPos, maxWidth)
+        yPos += 8
+        doc.text('Lì_________________', margin, yPos)
+        doc.text('Firma ______________', margin + 90, yPos)
+        yPos += 12
+        
+        yPos = addWrappedText(`Il/La sottoscritto/a ${passenger.nome || ''} ${passenger.cognome || ''} dichiara ai sensi del DPR n.445 del 28/12/2000 la veridicità dei dati trasmessi, conferma espressamente tutto quanto sopra precede ad ogni e qualsiasi effetto di legge ed autorizza il trattamento dei dati personali ai sensi del D.lgs. 196 del 30 giugno 2003 e s.m.i.`, margin, yPos, maxWidth)
+        yPos += 8
+        doc.text('Lì__________________', margin, yPos)
+        doc.text('Firma ______________', margin + 90, yPos)
+        yPos += 20
+        
+        // Autorizzazioni per passeggero aggiuntivo
+        doc.text('[X] Acconsento [ ] Non acconsento (Autorizzazione foto/video)', margin, yPos)
+        yPos += 8
+        doc.text('Lì_________________', margin, yPos)
+        doc.text('Firma _____________', margin + 90, yPos)
+        yPos += 12
+        
+        doc.text('[X] Acconsento [ ] Non acconsento (Trattamento dati)', margin, yPos)
+        yPos += 8
+        doc.text('Lì__________________', margin, yPos)
+        doc.text('Firma ______________', margin + 90, yPos)
+      }
+    }
+    
+    // Aggiorna il numero totale di pagine
+    totalPages = currentPage
+    
+    // Aggiungi i numeri di pagina a tutte le pagine
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i)
+      doc.setFontSize(10)
+      doc.text(`pag. ${i}/${totalPages}`, pageWidth - 25, pageHeight - 10)
+    }
+    
+    doc.save(`modulo_iscrizione_${registration.nome}_${registration.cognome}.pdf`)
+    showNotification("PDF generato con successo!", "success")
+    
+  } catch (error) {
+    console.error("Errore durante la generazione del PDF:", error)
+    showNotification("Errore durante la generazione del PDF: " + error.message, "error")
+  }
+}
   const handleOpenInvoiceUpload = (registration) => {
     setSelectedRegistration(registration)
     setShowInvoiceUpload(true)
