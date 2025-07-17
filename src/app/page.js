@@ -46,6 +46,7 @@ export default function Home() {
   const [currentCameraField, setCurrentCameraField] = useState(null)
   const [currentCameraIndex, setCurrentCameraIndex] = useState(null)
   const [cameraType, setCameraType] = useState("front") // 'front' o 'back'
+  const [isCameraActive, setIsCameraActive] = useState(false)
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -190,56 +191,82 @@ export default function Home() {
     fetchImages()
   }, [])
 
-  // Funzioni per la camera
-  const startCamera = async (fieldName, index = null, type = "front") => {
-    try {
+  // useEffect per la gestione della fotocamera basato sull'esempio funzionante
+  useEffect(() => {
+    if (isCameraActive) {
       const constraints = {
         video: {
-          facingMode: type === "back" ? "environment" : "user",
+          facingMode: cameraType === "back" ? "environment" : "user",
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      setCameraStream(stream)
-      setCurrentCameraField(fieldName)
-      setCurrentCameraIndex(index)
-      setCameraType(type)
-      setShowCamera(true)
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then((stream) => {
+          setCameraStream(stream)
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        })
+        .catch((err) => {
+          console.error("Errore nell'accesso alla fotocamera:", err);
+          alert("Errore nell'accesso alla fotocamera: " + err.message);
+          setIsCameraActive(false)
+          setShowCamera(false)
+        });
+    } else {
+      // Ferma lo stream se disattivato
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+        setCameraStream(null)
       }
-    } catch (error) {
-      console.error("Errore accesso camera:", error)
-      alert("Impossibile accedere alla camera. Verifica i permessi.")
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+        videoRef.current.srcObject = null;
+      }
     }
+  }, [isCameraActive, cameraType])
+
+  // Funzioni per la camera
+  const startCamera = async (fieldName, index = null, type = "back") => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Il tuo browser non supporta l'accesso alla fotocamera. Prova ad aggiornare o usare un altro browser.")
+      return
+    }
+
+    setCurrentCameraField(fieldName)
+    setCurrentCameraIndex(index)
+    setCameraType(type)
+    setShowCamera(true)
+    setIsCameraActive(true)
   }
 
   const stopCamera = () => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach((track) => track.stop())
-      setCameraStream(null)
-    }
+    setIsCameraActive(false)
     setShowCamera(false)
     setCurrentCameraField(null)
     setCurrentCameraIndex(null)
   }
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current
-      const video = videoRef.current
-
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-
-      const ctx = canvas.getContext("2d")
-      ctx.drawImage(video, 0, 0)
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (video && canvas) {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(
         (blob) => {
+          if (!blob) {
+            console.error("Failed to create blob from canvas.");
+            alert("Impossibile catturare l'immagine. Riprova.");
+            return;
+          }
+
           const file = new File([blob], `${currentCameraField}_${cameraType}_${Date.now()}.jpg`, {
             type: "image/jpeg",
           })
@@ -293,6 +320,22 @@ export default function Home() {
           [fieldName]: file,
         }))
       }
+    }
+  }
+
+  const removeFile = (fieldName, index = null) => {
+    if (index !== null) {
+      const newPasseggeri = [...passeggeri]
+      newPasseggeri[index] = {
+        ...newPasseggeri[index],
+        [fieldName]: null,
+      }
+      setPasseggeri(newPasseggeri)
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [fieldName]: null,
+      }))
     }
   }
 
@@ -1126,9 +1169,16 @@ export default function Home() {
       )}
     </div>
     {formData.guidatoreDocumentoFronte && (
-      <p className="text-sm text-green-600 mt-2 break-words">
+      <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
         ✓ {formData.guidatoreDocumentoFronte.name}
-      </p>
+        <Button
+          type="button"
+          onClick={() => removeFile("guidatoreDocumentoFronte")}
+          className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+        >
+          <XIcon className="w-3 h-3" />
+        </Button>
+      </div>
     )}
   </div>
 
@@ -1163,9 +1213,16 @@ export default function Home() {
       )}
     </div>
     {formData.guidatoreDocumentoRetro && (
-      <p className="text-sm text-green-600 mt-2 break-words">
+      <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
         ✓ {formData.guidatoreDocumentoRetro.name}
-      </p>
+        <Button
+          type="button"
+          onClick={() => removeFile("guidatoreDocumentoRetro")}
+          className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+        >
+          <XIcon className="w-3 h-3" />
+        </Button>
+      </div>
     )}
   </div>
 </div>
@@ -1334,9 +1391,16 @@ export default function Home() {
                               )}
                             </div>
                             {passeggero.documentoFronte && (
-                              <p className="text-sm text-green-600 mt-2 break-words">
+                              <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
                                 ✓ {passeggero.documentoFronte.name}
-                              </p>
+                                <Button
+                                  type="button"
+                                  onClick={() => removeFile("documentoFronte", index)}
+                                  className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                                >
+                                  <XIcon className="w-3 h-3" />
+                                </Button>
+                              </div>
                             )}
                           </div>
 
@@ -1371,9 +1435,16 @@ export default function Home() {
                               )}
                             </div>
                             {passeggero.documentoRetro && (
-                              <p className="text-sm text-green-600 mt-2 break-words">
+                              <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
                                 ✓ {passeggero.documentoRetro.name}
-                              </p>
+                                <Button
+                                  type="button"
+                                  onClick={() => removeFile("documentoRetro", index)}
+                                  className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                                >
+                                  <XIcon className="w-3 h-3" />
+                                </Button>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -1567,7 +1638,7 @@ export default function Home() {
       <div className="text-center py-8">
         <div className="text-4xl mb-4">🎫</div>
         <p className="text-gray-600 text-lg">Nessuna quota disponibile per questo evento.</p>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-500 text-sm mt-2">
           Le opzioni di partecipazione verranno pubblicate presto!
         </p>
       </div>
@@ -1670,9 +1741,16 @@ export default function Home() {
               </div>
               <div className="p-4">
                 <div className="relative bg-black rounded-lg overflow-hidden mb-4">
-                  <video ref={videoRef} autoPlay playsInline className="w-full h-64 object-cover" />
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    className="w-full h-64 object-cover"
+                  />
                   <canvas ref={canvasRef} className="hidden" />
                 </div>
+                
                 <div className="flex justify-center gap-4">
                   <Button
                     onClick={capturePhoto}
@@ -1688,6 +1766,7 @@ export default function Home() {
                     Annulla
                   </Button>
                 </div>
+                
                 <p className="text-sm text-gray-600 text-center mt-2">
                   Posiziona il documento nel riquadro e scatta la foto
                 </p>

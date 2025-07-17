@@ -711,7 +711,7 @@ const RegistrationsModal = ({
                       {reg.documento_fronte && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.documento_fronte, "pdf")}
+                          onClick={() => openDocumentInModal(reg.documento_fronte, "jpg")}
                           className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
                         >
                           <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
@@ -720,7 +720,7 @@ const RegistrationsModal = ({
                       {reg.documento_retro && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.documento_retro, "pdf")}
+                          onClick={() => openDocumentInModal(reg.documento_retro, "jpg")}
                           className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
                         >
                           <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
@@ -808,7 +808,7 @@ const RegistrationsModal = ({
                                       variant="outline"
                                       size="sm"
                                       className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
-                                      onClick={() => openDocumentInModal(pass.documento_fronte, "pdf")}
+                                      onClick={() => openDocumentInModal(pass.documento_fronte, "jpg")}
                                     >
                                       <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
                                     </Button>
@@ -818,7 +818,7 @@ const RegistrationsModal = ({
                                       variant="outline"
                                       size="sm"
                                       className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
-                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "pdf")}
+                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "jpg")}
                                     >
                                       <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
                                     </Button>
