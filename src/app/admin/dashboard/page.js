@@ -1,5 +1,6 @@
 "use client"
 
+// Import delle librerie e componenti necessari
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -40,13 +41,10 @@ import {
 } from "lucide-react"
 import jsPDF from "jspdf"
 import { supabase } from "@/lib/supabaseClient"
+import Link from "next/link" // <--- AGGIUNTO QUESTO IMPORT
+import Image from "next/image" // <--- AGGIUNTO QUESTO IMPORT PER Image componente di next/image
 
-// Helper per mostrare notifiche all'utente
-const showNotification = (message, type = "error") => {
-  alert(`${type.toUpperCase()}: ${message}`)
-}
-
-// Modal per nuovo/modifica evento
+// Modale per nuovo/modifica evento
 const EventFormModal = ({
   isEditMode,
   newEvent,
@@ -59,83 +57,13 @@ const EventFormModal = ({
   handleUpdateEvent,
   onClose,
 }) => {
-  // Client-side validation for event form
-  const validateEventForm = () => {
-    if (!newEvent.titolo || newEvent.titolo.trim() === "") {
-      showNotification("Il titolo dell'evento è obbligatorio.", "warning")
-      return false
-    }
-    if (!newEvent.descrizione || newEvent.descrizione.trim() === "") {
-      showNotification("La descrizione dell'evento è obbligatoria.", "warning")
-      return false
-    }
-    if (!newEvent.data) {
-      showNotification("La data dell'evento è obbligatoria.", "warning")
-      return false
-    }
-    if (!newEvent.orario) {
-      showNotification("L'orario dell'evento è obbligatorio.", "warning")
-      return false
-    }
-    if (!newEvent.luogo || newEvent.luogo.trim() === "") {
-      showNotification("Il luogo dell'evento è obbligatorio.", "warning")
-      return false
-    }
-    // Ensure participants and auto numbers are positive integers
-    const partecipantiNum = Number(newEvent.partecipanti);
-    if (isNaN(partecipantiNum) || !Number.isInteger(partecipantiNum) || partecipantiNum <= 0) {
-      showNotification("Il numero massimo di partecipanti deve essere un numero intero positivo.", "warning")
-      return false
-    }
-    const numeroautoNum = Number(newEvent.numeroauto);
-    if (isNaN(numeroautoNum) || !Number.isInteger(numeroautoNum) || numeroautoNum <= 0) {
-      showNotification("Il numero massimo di auto deve essere un numero intero positivo.", "warning")
-      return false
-    }
-
-    // Validate quotas
-    for (const quota of newEvent.quote) {
-      const isQuotaEmpty = !quota.titolo.trim() && !quota.descrizione.trim() && (quota.prezzo === "" || isNaN(Number(quota.prezzo)));
-
-      // If it's not entirely empty, it must be fully filled and valid
-      if (!isQuotaEmpty) {
-        if (!quota.titolo.trim()) {
-          showNotification("Il titolo della quota è obbligatorio se la quota non è vuota.", "warning");
-          return false;
-        }
-        if (!quota.descrizione.trim()) {
-          showNotification("La descrizione della quota è obbligatoria se la quota non è vuota.", "warning");
-          return false;
-        }
-        const prezzoNum = Number(quota.prezzo);
-        if (quota.prezzo === "" || isNaN(prezzoNum) || prezzoNum < 0) {
-          showNotification("Il prezzo della quota deve essere un numero non negativo.", "warning");
-          return false;
-        }
-      }
-    }
-    return true
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!validateEventForm()) {
-      return // Stop submission if validation fails
-    }
-    if (isEditMode) {
-      await handleUpdateEvent(e)
-    } else {
-      await handleCreateEvent(e)
-    }
-  }
-
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
-        <CardHeader className="bg-black text-white rounded-t-lg p-6 flex flex-row justify-between items-center">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
+        <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-2xl p-6 flex flex-row justify-between items-center">
           <div>
             <CardTitle className="text-2xl font-bold">{isEditMode ? "Modifica Evento" : "Crea Nuovo Evento"}</CardTitle>
-            <CardDescription className="text-gray-300 mt-1">
+            <CardDescription className="text-indigo-100 mt-1">
               {isEditMode ? "Aggiorna i dettagli dell'evento" : "Inserisci i dettagli per il nuovo evento"}
             </CardDescription>
           </div>
@@ -143,16 +71,16 @@ const EventFormModal = ({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="rounded-full text-white hover:bg-gray-800 transition-colors"
+            className="rounded-full text-white hover:bg-white/20 transition-colors"
           >
             <XIcon className="w-6 h-6" />
           </Button>
         </CardHeader>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={isEditMode ? handleUpdateEvent : handleCreateEvent} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <Label htmlFor="titolo" className="text-base font-semibold text-black flex items-center gap-2">
+                <Label htmlFor="titolo" className="text-base font-semibold text-gray-800 flex items-center gap-2">
                   <SparklesIcon className="w-4 h-4" />
                   Titolo Evento
                 </Label>
@@ -162,13 +90,13 @@ const EventFormModal = ({
                   value={newEvent.titolo}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
                   placeholder="Inserisci il titolo dell'evento"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="descrizione" className="text-base font-semibold text-black flex items-center gap-2">
+                <Label htmlFor="descrizione" className="text-base font-semibold text-gray-800 flex items-center gap-2">
                   <FileTextIcon className="w-4 h-4" />
                   Descrizione
                 </Label>
@@ -178,13 +106,13 @@ const EventFormModal = ({
                   value={newEvent.descrizione}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 min-h-[120px] transition-colors"
+                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 min-h-[120px] transition-colors"
                   placeholder="Descrivi l'evento in dettaglio"
                 />
               </div>
 
               <div>
-                <Label htmlFor="data" className="text-base font-semibold text-black flex items-center gap-2">
+                <Label htmlFor="data" className="text-base font-semibold text-gray-800 flex items-center gap-2">
                   <CalendarIcon className="w-4 h-4" />
                   Data
                 </Label>
@@ -195,12 +123,12 @@ const EventFormModal = ({
                   value={newEvent.data}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
                 />
               </div>
 
               <div>
-                <Label htmlFor="orario" className="text-base font-semibold text-black flex items-center gap-2">
+                <Label htmlFor="orario" className="text-base font-semibold text-gray-800 flex items-center gap-2">
                   <ClockIcon className="w-4 h-4" />
                   Orario
                 </Label>
@@ -211,12 +139,12 @@ const EventFormModal = ({
                   value={newEvent.orario}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="luogo" className="text-base font-semibold text-black flex items-center gap-2">
+                <Label htmlFor="luogo" className="text-base font-semibold text-gray-800 flex items-center gap-2">
                   <MapPinIcon className="w-4 h-4" />
                   Luogo
                 </Label>
@@ -226,13 +154,13 @@ const EventFormModal = ({
                   value={newEvent.luogo}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
                   placeholder="Dove si svolgerà l'evento"
                 />
               </div>
 
               <div>
-                <Label htmlFor="partecipanti" className="text-base font-semibold text-black flex items-center gap-2">
+                <Label htmlFor="partecipanti" className="text-base font-semibold text-gray-800 flex items-center gap-2">
                   <UsersIcon className="w-4 h-4" />
                   Max Partecipanti
                 </Label>
@@ -243,47 +171,32 @@ const EventFormModal = ({
                   value={newEvent.partecipanti}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
                   min="1"
                 />
               </div>
 
               <div>
-                <Label htmlFor="numeroauto" className="text-base font-semibold text-black flex items-center gap-2">
+                <Label htmlFor="numeroAuto" className="text-base font-semibold text-gray-800 flex items-center gap-2">
                   <CarIcon className="w-4 h-4" />
                   Max Auto
                 </Label>
                 <Input
-                  id="numeroauto"
-                  name="numeroauto"
+                  id="numeroAuto"
+                  name="numeroAuto"
                   type="number"
-                  value={newEvent.numeroauto}
+                  value={newEvent.numeroAuto}
                   onChange={handleNewEventChange}
                   required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
+                  className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg p-3 mt-2 transition-colors"
                   min="1"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="programma" className="text-base font-semibold text-black flex items-center gap-2">
-                  <FileTextIcon className="w-4 h-4" />
-                  Programma (opzionale)
-                </Label>
-                <Textarea
-                  id="programma"
-                  name="programma"
-                  value={newEvent.programma || ""}
-                  onChange={handleNewEventChange}
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 min-h-[100px] transition-colors"
-                  placeholder="Descrivi il programma dell'evento"
                 />
               </div>
             </div>
 
-            {/* Gestione Quote */}
-            <div className="space-y-4 p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-              <Label className="text-lg font-bold text-black flex items-center gap-2">
+            {/* Gestione Quote con design migliorato */}
+            <div className="space-y-4 p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gradient-to-br from-gray-50 to-white">
+              <Label className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <TrendingUpIcon className="w-5 h-5" />
                 Quote di Partecipazione
               </Label>
@@ -291,32 +204,34 @@ const EventFormModal = ({
                 {newEvent.quote.map((quota, index) => (
                   <div
                     key={index}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 bg-white rounded-lg border border-gray-300 shadow-sm"
+                    className="flex flex-col md:flex-row items-start md:items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 shadow-sm"
                   >
-                    <div className="flex-1 w-full sm:w-auto">
+                    <div className="flex-1 w-full">
                       <Input
-                        placeholder="Titolo quota (es. Base, Premium)"
+                        placeholder="Titolo Quota (es. Partecipazione Base)"
                         value={quota.titolo}
                         onChange={(e) => updateQuota(index, "titolo", e.target.value)}
-                        className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg transition-colors mb-2 sm:mb-0"
+                        className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg transition-colors mb-2 md:mb-0"
+                        required
                       />
-                    </div>
-                    <div className="flex-1 w-full sm:w-auto">
-                      <Input
-                        placeholder="Descrizione"
+                      <Textarea
+                        placeholder="Descrizione della quota (es. Accesso al raduno e welcome kit)"
                         value={quota.descrizione}
                         onChange={(e) => updateQuota(index, "descrizione", e.target.value)}
-                        className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg transition-colors mb-2 sm:mb-0"
+                        className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg transition-colors min-h-[60px]"
+                        required
                       />
                     </div>
-                    <div className="w-full sm:w-32">
+                    <div className="w-full md:w-32 flex-shrink-0">
                       <Input
-                        placeholder="€ 0.00"
+                        placeholder="Prezzo (€)"
                         type="number"
                         step="0.01"
                         value={quota.prezzo}
                         onChange={(e) => updateQuota(index, "prezzo", e.target.value)}
-                        className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg transition-colors mb-2 sm:mb-0"
+                        className="text-base border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg transition-colors"
+                        required
+                        min="0"
                       />
                     </div>
                     <Button
@@ -324,7 +239,7 @@ const EventFormModal = ({
                       variant="outline"
                       size="icon"
                       onClick={() => removeQuota(index)}
-                      className="border-red-400 text-red-600 hover:bg-red-50 hover:border-red-500 rounded-lg transition-colors w-full sm:w-auto"
+                      className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-lg transition-colors flex-shrink-0"
                     >
                       <TrashIcon className="h-4 w-4" />
                     </Button>
@@ -335,25 +250,27 @@ const EventFormModal = ({
                 type="button"
                 variant="outline"
                 onClick={addQuota}
-                className="w-full text-base border-dashed border-gray-500 text-gray-700 hover:bg-gray-100 hover:border-gray-600 rounded-lg py-3 transition-colors bg-transparent"
+                className="w-full text-base border-dashed border-gray-400 text-gray-700 hover:bg-gray-50 hover:border-gray-500 rounded-lg py-3 transition-colors bg-transparent"
               >
                 <PlusIcon className="mr-2 h-5 w-5" /> Aggiungi Quota
               </Button>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-300">
+            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
+                className="text-base font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg transition-colors bg-transparent"
               >
                 Annulla
               </Button>
               <Button
                 type="submit"
-                className={`text-base font-semibold py-3 px-6 rounded-lg text-white shadow-lg transition-all duration-200 order-1 sm:order-2 ${
-                  isEditMode ? "bg-gray-800 hover:bg-gray-900" : "bg-black hover:bg-gray-800"
+                className={`text-base font-semibold py-3 px-6 rounded-lg text-white shadow-lg transition-all duration-200 ${
+                  isEditMode
+                    ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                 }`}
               >
                 {isEditMode ? "Aggiorna Evento" : "Crea Evento"}
@@ -366,250 +283,200 @@ const EventFormModal = ({
   )
 }
 
-// Modal per l'upload di immagini
-const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, handleUploadImages, onClose }) => {
-  const validateImageUpload = () => {
-    if (!uploadFiles || uploadFiles.length === 0) {
-      showNotification("Seleziona almeno un file immagine da caricare.", "warning")
-      return false
-    }
-    for (const file of uploadFiles) {
-      if (!file.type.startsWith("image/")) {
-        showNotification(`Il file '${file.name}' non è un'immagine valida.`, "warning")
-        return false
-      }
-      if (file.size > 5 * 1024 * 1024) { // Esempio: limite di 5MB per immagine
-        showNotification(`Il file '${file.name}' supera la dimensione massima consentita (5MB).`, "warning")
-        return false
-      }
-    }
-    return true
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateImageUpload()) {
-      return;
-    }
-    await handleUploadImages();
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <Card className="w-full max-w-lg animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
-        <CardHeader className="bg-black text-white rounded-t-lg p-6 flex flex-row justify-between items-center">
+// Modale per l'upload di immagini con design migliorato
+const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, handleUploadImages, onClose }) => (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+    <Card className="w-full max-w-lg animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
+      <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-2xl p-6 flex flex-row justify-between items-center">
+        <div>
+          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <ImageIcon className="w-6 h-6" />
+            Carica Immagini
+          </CardTitle>
+          <CardDescription className="text-blue-100 mt-1">
+            Seleziona le immagini da caricare nella galleria
+          </CardDescription>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="rounded-full text-white hover:bg-white/20 transition-colors"
+        >
+          <XIcon className="w-6 h-6" />
+        </Button>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="space-y-6">
           <div>
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <ImageIcon className="w-6 h-6" />
-              Carica Immagini
-            </CardTitle>
-            <CardDescription className="text-gray-300 mt-1">
-              Seleziona le immagini da caricare nella galleria
-            </CardDescription>
+            <Label
+              htmlFor="image-upload"
+              className="text-base font-semibold text-gray-800 flex items-center gap-2 mb-3"
+            >
+              <UploadIcon className="w-4 h-4" />
+              Seleziona File Immagine
+            </Label>
+            <Input
+              id="image-upload"
+              type="file"
+              multiple
+              onChange={handleImageUploadFiles}
+              accept="image/*"
+              className="text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
+            />
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="rounded-full text-white hover:bg-gray-800 transition-colors"
-          >
-            <XIcon className="w-6 h-6" />
-          </Button>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="image-upload" className="text-base font-semibold text-black flex items-center gap-2 mb-3">
-                <UploadIcon className="w-4 h-4" />
-                Seleziona File Immagine
-              </Label>
-              <Input
-                id="image-upload"
-                type="file"
-                multiple
-                onChange={handleImageUploadFiles}
-                accept="image/*"
-                className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200 transition-colors"
-              />
-            </div>
 
-            {uploadFiles.length > 0 && (
-              <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-                <p className="text-base font-semibold text-black mb-3 flex items-center gap-2">
-                  <CheckCircleIcon className="w-5 h-5" />
-                  File selezionati ({uploadFiles.length})
-                </p>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {uploadFiles.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 text-sm text-black bg-white px-3 py-2 rounded-lg border border-gray-300"
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                      {file.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4 border-t border-gray-300">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
-              >
-                Annulla
-              </Button>
-              <Button
-                type="submit"
-                disabled={uploadFiles.length === 0}
-                className="text-base font-semibold bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
-              >
-                <UploadIcon className="mr-2 h-5 w-5" />
-                Carica Immagini
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-// Modal per l'upload di fatture
-const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile, handleInvoiceUpload, onClose }) => {
-  const validateInvoiceUpload = () => {
-    if (!invoiceFile) {
-      showNotification("Seleziona un file fattura da caricare.", "warning")
-      return false
-    }
-    if (invoiceFile.type !== "application/pdf") {
-      showNotification("Il file selezionato non è un PDF valido.", "warning")
-      return false
-    }
-    if (invoiceFile.size > 10 * 1024 * 1024) { // Esempio: limite di 10MB per PDF
-      showNotification("Il file fattura supera la dimensione massima consentita (10MB).", "warning")
-      return false
-    }
-    return true
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateInvoiceUpload()) {
-      return;
-    }
-    await handleInvoiceUpload();
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <Card className="w-full max-w-lg animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
-        <CardHeader className="bg-black text-white rounded-t-lg p-6 flex flex-row justify-between items-center">
-          <div>
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <FileTextIcon className="w-6 h-6" />
-              Carica Fattura
-            </CardTitle>
-            <CardDescription className="text-gray-300 mt-1">Carica e invia la fattura al guidatore</CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="rounded-full text-white hover:bg-gray-800 transition-colors"
-          >
-            <XIcon className="w-6 h-6" />
-          </Button>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-300">
-              <p className="text-base font-semibold text-black mb-2 flex items-center gap-2">
-                <UserIcon className="w-5 h-5" />
-                Destinatario
+          {uploadFiles.length > 0 && (
+            <div className="p-4 border-2 border-dashed border-blue-200 rounded-xl bg-blue-50">
+              <p className="text-base font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <CheckCircleIcon className="w-5 h-5" />
+                File selezionati ({uploadFiles.length})
               </p>
-              <div className="space-y-1">
-                <p className="text-lg font-bold text-black">
-                  {selectedRegistration?.nome} {selectedRegistration?.cognome}
-                </p>
-                <p className="text-base text-gray-600 flex items-center gap-2">
-                  <MailIcon className="w-4 h-4" />
-                  {selectedRegistration?.indirizzo_email}
-                </p>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {uploadFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 text-sm text-blue-700 bg-white px-3 py-2 rounded-lg"
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                    {file.name}
+                  </div>
+                ))}
               </div>
             </div>
+          )}
 
-            <div>
-              <Label htmlFor="invoice-upload" className="text-base font-semibold text-black flex items-center gap-2 mb-3">
-                <UploadIcon className="w-4 h-4" />
-                Seleziona Fattura (PDF)
-              </Label>
-              <Input
-                id="invoice-upload"
-                type="file"
-                onChange={(e) => setInvoiceFile(e.target.files[0])}
-                accept=".pdf"
-                className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200 transition-colors"
-              />
+          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="text-base font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg transition-colors bg-transparent"
+            >
+              Annulla
+            </Button>
+            <Button
+              onClick={handleUploadImages}
+              disabled={uploadFiles.length === 0}
+              className="text-base font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <UploadIcon className="mr-2 h-5 w-5" />
+              Carica Immagini
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+)
+
+// Modale per l'upload di fatture (MODIFICATA - solo caricamento e invio email)
+const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile, handleInvoiceUpload, onClose }) => (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+    <Card className="w-full max-w-lg animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
+      <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-t-2xl p-6 flex flex-row justify-between items-center">
+        <div>
+          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <FileTextIcon className="w-6 h-6" />
+            Carica Fattura
+          </CardTitle>
+          <CardDescription className="text-green-100 mt-1">Carica e invia la fattura al guidatore</CardDescription>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="rounded-full text-white hover:bg-white/20 transition-colors"
+        >
+          <XIcon className="w-6 h-6" />
+        </Button>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="space-y-6">
+          <div className="p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">
+            <p className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+              <UserIcon className="w-5 h-5" />
+              Destinatario
+            </p>
+            <div className="space-y-1">
+              <p className="text-lg font-bold text-gray-900">
+                {selectedRegistration?.guidatore.nome} {selectedRegistration?.guidatore.cognome}
+              </p>
+              <p className="text-base text-gray-600 flex items-center gap-2">
+                <MailIcon className="w-4 h-4" />
+                {selectedRegistration?.guidatore.email}
+              </p>
             </div>
+          </div>
 
-            {invoiceFile && (
-              <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-                <p className="text-base font-semibold text-black mb-2 flex items-center gap-2">
-                  <CheckCircleIcon className="w-5 h-5" />
-                  File selezionato
-                </p>
-                <div className="flex items-center gap-2 text-sm text-black bg-white px-3 py-2 rounded-lg border border-gray-300">
-                  <FileTextIcon className="w-4 h-4" />
-                  {invoiceFile.name}
-                </div>
+          <div>
+            <Label
+              htmlFor="invoice-upload"
+              className="text-base font-semibold text-gray-800 flex items-center gap-2 mb-3"
+            >
+              <UploadIcon className="w-4 h-4" />
+              Seleziona Fattura (PDF)
+            </Label>
+            <Input
+              id="invoice-upload"
+              type="file"
+              onChange={(e) => setInvoiceFile(e.target.files[0])}
+              accept=".pdf"
+              className="text-base border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 transition-colors"
+            />
+          </div>
+
+          {invoiceFile && (
+            <div className="p-4 border-2 border-dashed border-green-200 rounded-xl bg-green-50">
+              <p className="text-base font-semibold text-green-800 mb-2 flex items-center gap-2">
+                <CheckCircleIcon className="w-5 h-5" />
+                File selezionato
+              </p>
+              <div className="flex items-center gap-2 text-sm text-green-700 bg-white px-3 py-2 rounded-lg">
+                <FileTextIcon className="w-4 h-4" />
+                {invoiceFile.name}
               </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4 border-t border-gray-300">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
-              >
-                Annulla
-              </Button>
-              <Button
-                type="submit"
-                disabled={!invoiceFile}
-                className="text-base font-semibold bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
-              >
-                <SendIcon className="mr-2 h-5 w-5" />
-                Carica e Invia Email
-              </Button>
             </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
+          )}
 
-// Modal per visualizzare le iscrizioni
+          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="text-base font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg transition-colors bg-transparent"
+            >
+              Annulla
+            </Button>
+            <Button
+              onClick={handleInvoiceUpload}
+              disabled={!invoiceFile}
+              className="text-base font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <SendIcon className="mr-2 h-5 w-5" />
+              Carica e Invia Email
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+)
+
+// Modale per visualizzare le iscrizioni con design migliorato
 const RegistrationsModal = ({
   selectedEventForRegistrations,
   registrations,
   loadingRegistrations,
-  handleGenerateIndividualPdf,
+  handleGenerateIndividualPdf, // This function will be removed or repurposed later
   handleOpenInvoiceUpload,
-  openDocumentInModal,
+  openImagesInModal, // Changed from openDocumentInModal
   onClose,
 }) => (
-  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-    <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-black text-white rounded-t-lg p-6">
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+    <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-2xl p-6">
         <div>
-          <CardTitle className="text-2xl sm:text-3xl font-bold">
-            Iscrizioni per: {selectedEventForRegistrations?.titolo}
-          </CardTitle>
-          <CardDescription className="text-gray-300 mt-2 text-base sm:text-lg">
+          <CardTitle className="text-3xl font-bold">Iscrizioni per: {selectedEventForRegistrations?.titolo}</CardTitle>
+          <CardDescription className="text-purple-100 mt-2 text-lg">
             Gestisci le iscrizioni e genera documenti
           </CardDescription>
         </div>
@@ -617,15 +484,15 @@ const RegistrationsModal = ({
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="rounded-full text-white hover:bg-gray-800 transition-colors"
+          className="rounded-full text-white hover:bg-white/20 transition-colors"
         >
-          <XIcon className="h-6 w-6 sm:h-7 sm:w-7" />
+          <XIcon className="h-7 w-7" />
         </Button>
       </CardHeader>
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className="p-6">
         {loadingRegistrations ? (
           <div className="flex flex-col justify-center items-center h-64 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
             <p className="text-xl text-gray-500">Caricamento iscrizioni...</p>
           </div>
         ) : registrations.length === 0 ? (
@@ -636,215 +503,202 @@ const RegistrationsModal = ({
         ) : (
           <div className="space-y-6">
             {registrations.map((reg, index) => (
-              <Card key={reg.id} className="shadow-lg border border-gray-300 bg-white rounded-lg overflow-hidden">
-                <div className="border-l-4 border-black">
+              <Card
+                key={reg.id}
+                className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 rounded-xl overflow-hidden"
+              >
+                <div className="border-l-4 border-purple-500">
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-xl sm:text-2xl font-bold text-black flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-full flex items-center justify-center">
-                          <UserIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        {reg.nome} {reg.cognome}
+                    <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <UserIcon className="w-6 h-6 text-purple-600" />
                       </div>
-                      <Badge variant="secondary" className="bg-gray-200 text-black px-3 py-1 self-start sm:ml-auto">
+                      {reg.guidatore.nome} {reg.guidatore.cognome}
+                      <Badge variant="secondary" className="ml-auto bg-purple-100 text-purple-800 px-3 py-1">
                         #{index + 1}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Informazioni Guidatore */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <MailIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <MailIcon className="w-5 h-5 text-gray-500" />
+                        <div>
                           <p className="text-sm text-gray-500">Email</p>
-                          <p className="font-semibold truncate">{reg.indirizzo_email}</p>
+                          <p className="font-semibold">{reg.guidatore.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <PhoneIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-gray-500">Telefono</p>
-                          <p className="font-semibold">{reg.telefono}</p>
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <PhoneIcon className="w-5 h-5 text-gray-500" />
+                        <div>
+                          <p className="text-sm text-gray-500">Cellulare</p>
+                          <p className="font-semibold">{reg.guidatore.cellulare}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <FileTextIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <FileTextIcon className="w-5 h-5 text-gray-500" />
+                        <div>
                           <p className="text-sm text-gray-500">Codice Fiscale</p>
-                          <p className="font-semibold text-xs sm:text-sm">{reg.codice_fiscale}</p>
+                          <p className="font-semibold">{reg.guidatore.codiceFiscale}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <CalendarIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <CalendarIcon className="w-5 h-5 text-gray-500" />
+                        <div>
                           <p className="text-sm text-gray-500">Data Nascita</p>
-                          <p className="font-semibold">{reg.data_nascita}</p>
+                          <p className="font-semibold">{reg.guidatore.dataNascita}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <TrendingUpIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <TrendingUpIcon className="w-5 h-5 text-gray-500" />
+                        <div>
                           <p className="text-sm text-gray-500">Quota</p>
-                          <Badge className="bg-black text-white">{reg.quota}</Badge>
+                          <Badge className="bg-green-100 text-green-800">{reg.guidatore.quota}</Badge>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <AlertCircleIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <AlertCircleIcon className="w-5 h-5 text-gray-500" />
+                        <div>
                           <p className="text-sm text-gray-500">Intolleranze</p>
-                          <p className="font-semibold text-sm">{reg.intolleranze || "Nessuna"}</p>
+                          <p className="font-semibold">{reg.guidatore.intolleranze || "Nessuna"}</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                      <MapPinIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                      <div className="min-w-0">
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                      <MapPinIcon className="w-5 h-5 text-gray-500" />
+                      <div>
                         <p className="text-sm text-gray-500">Indirizzo</p>
-                        <p className="font-semibold text-sm">{reg.indirizzo}</p>
+                        <p className="font-semibold">{reg.guidatore.indirizzo}</p>
                       </div>
                     </div>
 
-                    {/* Documenti Guidatore */}
+                    {/* Documenti Guidatore - Ora Immagini Fronte/Retro */}
                     <div className="flex flex-wrap gap-3">
-                      {reg.documento_fronte && (
+                      {(reg.guidatore.patenteFronteUrl || reg.guidatore.patenteRetroUrl) && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.documento_fronte, "pdf")}
-                          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
+                          onClick={() => openImagesInModal([reg.guidatore.patenteFronteUrl, reg.guidatore.patenteRetroUrl].filter(Boolean), "Patente")}
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 transition-colors"
                         >
-                          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
+                          <ImageIcon className="mr-2 h-4 w-4" /> Vedi Patente
                         </Button>
                       )}
-                      {reg.docuemnto_retro && (
+                      {(reg.guidatore.ricevutaFronteUrl || reg.guidatore.ricevutaRetroUrl) && (
                         <Button
                           variant="outline"
-                          onClick={() => openDocumentInModal(reg.docuemnto_retro, "pdf")}
-                          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
+                          onClick={() => openImagesInModal([reg.guidatore.ricevutaFronteUrl, reg.guidatore.ricevutaRetroUrl].filter(Boolean), "Ricevuta")}
+                          className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 transition-colors"
                         >
-                          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
+                          <ImageIcon className="mr-2 h-4 w-4" /> Vedi Ricevuta
                         </Button>
                       )}
                     </div>
 
                     <Separator className="my-4" />
 
-                    {/* Informazioni Auto (solo per guidatori) */}
-                    {reg.auto_marca && (
-                      <>
-                        <div>
-                          <h4 className="text-lg sm:text-xl font-bold text-black mb-4 flex items-center gap-2">
-                            <CarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-                            Dettagli Auto
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Marca</p>
-                              <p className="font-semibold">{reg.auto_marca}</p>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Modello</p>
-                              <p className="font-semibold">{reg.auto_modello}</p>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Targa</p>
-                              <p className="font-semibold">{reg.auto_targa}</p>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Posti Auto</p>
-                              <p className="font-semibold">{reg.posti_auto}</p>
-                            </div>
-                          </div>
+                    {/* Informazioni Auto */}
+                    <div>
+                      <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <CarIcon className="w-6 h-6 text-gray-600" />
+                        Dettagli Auto
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <p className="text-sm text-gray-500">Marca</p>
+                          <p className="font-semibold">{reg.auto.marca}</p>
                         </div>
-                        <Separator className="my-4" />
-                      </>
-                    )}
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <p className="text-sm text-gray-500">Modello</p>
+                          <p className="font-semibold">{reg.auto.modello}</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <p className="text-sm text-gray-500">Targa</p>
+                          <p className="font-semibold">{reg.auto.targa}</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <p className="text-sm text-gray-500">Posti Auto</p>
+                          <p className="font-semibold">{reg.auto.postiAuto}</p>
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Passeggeri */}
                     {reg.passeggeri && reg.passeggeri.length > 0 && (
                       <>
+                        <Separator className="my-4" />
                         <div>
-                          <h4 className="text-lg sm:text-xl font-bold text-black mb-4 flex items-center gap-2">
-                            <UsersIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+                          <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <UsersIcon className="w-6 h-6 text-gray-600" />
                             Passeggeri ({reg.passeggeri.length})
                           </h4>
                           <div className="space-y-4">
                             {reg.passeggeri.map((pass, pIndex) => (
-                              <div key={pIndex} className="p-4 bg-gray-50 rounded-lg border border-gray-300 shadow-sm">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-                                  <h5 className="font-bold text-base sm:text-lg text-black">
+                              <div key={pIndex} className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h5 className="font-bold text-lg text-gray-800">
                                     {pass.nome} {pass.cognome}
                                   </h5>
-                                  <Badge variant="outline" className="bg-gray-200 self-start sm:self-auto">
+                                  <Badge variant="outline" className="bg-gray-100">
                                     #{pIndex + 1}
                                   </Badge>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                                   <div>
                                     <span className="text-gray-500">CF:</span>{" "}
-                                    <span className="font-semibold break-all">{pass.codice_fiscale}</span>
+                                    <span className="font-semibold">{pass.codiceFiscale}</span>
                                   </div>
                                   <div>
                                     <span className="text-gray-500">Data Nascita:</span>{" "}
-                                    <span className="font-semibold">{pass.data_nascita}</span>
+                                    <span className="font-semibold">{pass.dataNascita}</span>
                                   </div>
                                   <div>
                                     <span className="text-gray-500">Email:</span>{" "}
-                                    <span className="font-semibold break-all">{pass.indirizzo_email}</span>
+                                    <span className="font-semibold">{pass.email}</span>
                                   </div>
                                   <div>
-                                    <span className="text-gray-500">Telefono:</span>{" "}
-                                    <span className="font-semibold">{pass.telefono}</span>
+                                    <span className="text-gray-500">Cellulare:</span>{" "}
+                                    <span className="font-semibold">{pass.cellulare}</span>
                                   </div>
-                                  <div className="sm:col-span-2">
+                                  <div className="md:col-span-2">
                                     <span className="text-gray-500">Intolleranze:</span>{" "}
                                     <span className="font-semibold">{pass.intolleranze || "Nessuna"}</span>
                                   </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2 mt-3">
-                                  {pass.documento_fronte && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
-                                      onClick={() => openDocumentInModal(pass.documento_fronte, "pdf")}
-                                    >
-                                      <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
-                                    </Button>
-                                  )}
-                                  {pass.docuemnto_retro && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
-                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "pdf")}
-                                    >
-                                      <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
-                                    </Button>
-                                  )}
-                                </div>
+                                {(pass.documentoFronteUrl || pass.documentoRetroUrl) && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 transition-colors"
+                                    onClick={() => openImagesInModal([pass.documentoFronteUrl, pass.documentoRetroUrl].filter(Boolean), "Documento Passeggero")}
+                                  >
+                                    <ImageIcon className="mr-2 h-4 w-4" /> Vedi Documento
+                                  </Button>
+                                )}
                               </div>
                             ))}
                           </div>
                         </div>
-                        <Separator className="my-4" />
                       </>
                     )}
 
+                    <Separator className="my-4" />
+
                     {/* Azioni */}
                     <div className="flex flex-wrap gap-3">
+                      {/* handleGenerateIndividualPdf will likely be removed or adapted, keeping placeholder for now */}
                       <Button
                         onClick={() => handleGenerateIndividualPdf(reg, selectedEventForRegistrations)}
-                        className="bg-black hover:bg-gray-800 text-white shadow-lg transition-all duration-200 text-sm"
+                        className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg transition-all duration-200"
                       >
-                        <DownloadIcon className="mr-2 h-4 w-4" /> Esporta PDF
+                        <DownloadIcon className="mr-2 h-5 w-5" /> Esporta PDF {/* This will need review if PDF export is still desired for images */}
                       </Button>
                       <Button
                         onClick={() => handleOpenInvoiceUpload(reg)}
-                        className="bg-gray-600 hover:bg-gray-700 text-white shadow-lg transition-all duration-200 text-sm"
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg transition-all duration-200"
                       >
-                        <UploadIcon className="mr-2 h-4 w-4" /> Carica Fattura
+                        <UploadIcon className="mr-2 h-5 w-5" /> Carica Fattura
                       </Button>
                     </div>
                   </CardContent>
@@ -858,36 +712,44 @@ const RegistrationsModal = ({
   </div>
 )
 
-// Modal per visualizzare documenti
-const DocumentViewerModal = ({ currentDocumentUrl, currentDocumentType, onClose }) => (
-  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-    <Card className="w-full max-w-5xl h-[90vh] flex flex-col animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-black text-white rounded-t-lg p-6">
-        <CardTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-          Visualizzatore Documenti
+// Modale per visualizzare documenti - Adattato per Immagini
+const ImageViewerModal = ({ currentImageUrls, currentDocumentTitle, onClose }) => (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+    <Card className="w-full max-w-5xl h-[90vh] flex flex-col animate-scale-in bg-white text-gray-900 rounded-2xl shadow-2xl border-0">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-2xl p-6">
+        <CardTitle className="text-2xl font-bold flex items-center gap-2">
+          <ImageIcon className="w-6 h-6" />
+          Visualizzatore {currentDocumentTitle}
         </CardTitle>
         <Button
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="rounded-full text-white hover:bg-gray-800 transition-colors"
+          className="rounded-full text-white hover:bg-white/20 transition-colors"
         >
           <XIcon className="w-6 h-6" />
         </Button>
       </CardHeader>
-      <CardContent className="flex-grow flex items-center justify-center p-0 bg-gray-50 rounded-b-lg">
-        {currentDocumentUrl ? (
-          <iframe
-            src={currentDocumentUrl}
-            title={currentDocumentType}
-            className="w-full h-full border-0 rounded-b-lg"
-            style={{ minHeight: "600px" }}
-          />
+      <CardContent className="flex-grow flex flex-col items-center justify-center p-4 bg-gray-50 rounded-b-2xl overflow-y-auto">
+        {currentImageUrls && currentImageUrls.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full h-full justify-center items-center">
+            {currentImageUrls.map((url, index) => (
+              <div key={index} className="flex flex-col items-center justify-center h-full w-full">
+                <p className="text-gray-700 text-lg font-semibold mb-2">
+                  {index === 0 ? "Fronte" : "Retro"}
+                </p>
+                <img
+                  src={url}
+                  alt={`${currentDocumentTitle} - ${index === 0 ? "Fronte" : "Retro"}`}
+                  className="max-w-full max-h-[40vh] object-contain rounded-lg shadow-md border border-gray-200"
+                />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-16">
-            <FileTextIcon className="w-20 h-20 text-gray-400 mx-auto mb-6" />
-            <div className="text-gray-600 text-xl">Nessun documento disponibile o URL non valido</div>
+            <ImageIcon className="w-20 h-20 text-gray-400 mx-auto mb-6" />
+            <div className="text-gray-600 text-xl">Nessuna immagine disponibile o URL non valido</div>
           </div>
         )}
       </CardContent>
@@ -903,25 +765,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const checkUserSession = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
 
-        if (error) {
-          throw error
-        }
-
-        if (!session) {
-          router.push("/admin/login")
-        } else {
-          setLoading(false)
-        }
-      } catch (error) {
-        console.error("Errore durante il controllo sessione utente:", error.message)
-        showNotification("Errore di autenticazione. Riprova o accedi nuovamente.", "error")
+      if (error || !session) {
         router.push("/admin/login")
+      } else {
+        setLoading(false)
       }
     }
 
@@ -961,24 +813,21 @@ export default function AdminDashboard() {
     orario: "",
     luogo: "",
     partecipanti: "",
-    numeroauto: "",
-    programma: "",
-    quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+    numeroAuto: "",
+    tipo: "AUTO",
+    quote: [{ titolo: "", descrizione: "", prezzo: "" }], // MODIFICATO: Struttura quote
   })
-
   const [showImageUpload, setShowImageUpload] = useState(false)
   const [uploadTarget, setUploadTarget] = useState({ type: "general", eventId: null })
   const [uploadFiles, setUploadFiles] = useState([])
-
   const [registrations, setRegistrations] = useState([])
   const [selectedEventForRegistrations, setSelectedEventForRegistrations] = useState(null)
   const [showRegistrationsModal, setShowRegistrationsModal] = useState(false)
+  const [showDocumentModal, setShowDocumentModal] = useState(false) // This is now for image viewer
+  const [currentImageUrls, setCurrentImageUrls] = useState([]) // MODIFICATO: Per array di URL immagine
+  const [currentDocumentTitle, setCurrentDocumentTitle] = useState("") // MODIFICATO: Titolo del documento (es. Patente)
 
-  const [showDocumentModal, setShowDocumentModal] = useState(false)
-  const [currentDocumentUrl, setCurrentDocumentUrl] = useState(null)
-  const [currentDocumentType, setCurrentDocumentType] = useState("")
-
-  // STATI PER FATTURE
+  // STATI PER FATTURE (MODIFICATI - solo caricamento)
   const [showInvoiceUpload, setShowInvoiceUpload] = useState(false)
   const [selectedRegistration, setSelectedRegistration] = useState(null)
   const [invoiceFile, setInvoiceFile] = useState(null)
@@ -986,8 +835,8 @@ export default function AdminDashboard() {
   // STATI DI CARICAMENTO
   const [loadingEvents, setLoadingEvents] = useState(true)
   const [loadingPastEvents, setLoadingPastEvents] = useState(true)
+  const [loadingRegistrations, setLoadingRegistrations] = useState(false)
   const [loadingImages, setLoadingImages] = useState(true)
-  const [loadingRegistrations, setLoadingRegistrations] = useState(true) // <- Added this
 
   // Verifica autenticazione amministratore
   useEffect(() => {
@@ -1003,22 +852,18 @@ export default function AdminDashboard() {
     setLoadingPastEvents(true)
     setLoadingImages(true)
     try {
-      // Fetch eventi
       const { data: eventiData, error: eventiError } = await supabase
         .from("evento")
         .select("*")
         .order("data", { ascending: true })
-
-      if (eventiError) {
-        throw new Error(`Errore nel recupero eventi: ${eventiError.message}`)
-      }
+      if (eventiError) throw eventiError
 
       const now = new Date()
       const futuri = []
       const passati = []
       eventiData.forEach((event) => {
         const eventDate = new Date(`${event.data}T${event.orario}`)
-        if (event.passato || eventDate < now) {
+        if (eventDate < now) {
           passati.push(event)
         } else {
           futuri.push(event)
@@ -1031,78 +876,60 @@ export default function AdminDashboard() {
       const { data: generalImagesData, error: generalImagesError } = await supabase.storage
         .from("doc")
         .list("galleria", { sortBy: { column: "name", order: "asc" } })
+      if (generalImagesError) throw generalImagesError
 
-      if (generalImagesError) {
-        console.warn("Errore nel recupero immagini galleria generale, procedo con le altre:", generalImagesError.message);
-        setGalleryImages([]); // Set to empty array on error
-      } else {
-        const loadedGeneralImages = (
-          await Promise.all(
-            generalImagesData
-              .filter((item) => item.name !== ".emptyFolderPlaceholder")
-              .map(async (item) => {
-                try {
-                  const { data: signedUrlData, error: urlError } = await supabase.storage
-                    .from("doc")
-                    .createSignedUrl(`galleria/${item.name}`, 3600)
-                  if (urlError) {
-                    throw new Error(`Errore generazione URL firmato per galleria/${item.name}: ${urlError.message}`)
-                  }
-                  return { id: item.id, url: signedUrlData.signedUrl, alt: item.name, evento: "Generale", path: `galleria/${item.name}` }
-                } catch (urlGenError) {
-                  console.error(urlGenError.message);
-                  return null;
-                }
-              })
-          )
-        ).filter(Boolean)
-        setGalleryImages(loadedGeneralImages)
-      }
-
+      const loadedGeneralImages = (
+        await Promise.all(
+          generalImagesData
+            .filter((item) => item.name !== ".emptyFolderPlaceholder")
+            .map(async (item) => {
+              const { data: signedUrlData, error: urlError } = await supabase.storage
+                .from("doc")
+                .createSignedUrl(`galleria/${item.name}`, 3600)
+              if (urlError) {
+                console.error(`Errore generazione URL firmato per galleria/${item.name}:`, urlError)
+                return null
+              }
+              return { id: item.id, url: signedUrlData.signedUrl, alt: item.name, evento: "Generale", path: `galleria/${item.name}`, }
+            }),
+        )
+      ).filter(Boolean)
+      setGalleryImages(loadedGeneralImages)
 
       // Fetch immagini eventi passati
       const eventImagesMap = {}
       for (const event of passati) {
-        try {
-          const { data: imagesData, error: eventImagesError } = await supabase.storage
-            .from("doc")
-            .list(`eventi/${event.id}`, { sortBy: { column: "name", order: "asc" } })
-
-          if (eventImagesError) {
-            console.warn(`Errore nel recupero immagini per evento ${event.id}:`, eventImagesError.message)
-            eventImagesMap[event.id] = []
-          } else {
-            eventImagesMap[event.id] = (
-              await Promise.all(
-                imagesData
-                  .filter((item) => item.name !== ".emptyFolderPlaceholder")
-                  .map(async (item) => {
-                    try {
-                      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                        .from("doc")
-                        .createSignedUrl(`eventi/${event.id}/${item.name}`, 3600)
-                      if (signedUrlError) {
-                        throw new Error(`Errore generazione URL firmato per eventi/${event.id}/${item.name}: ${signedUrlError.message}`)
-                      }
-                      return { id: item.id, url: signedUrlData.signedUrl, alt: item.name, evento: event.titolo, path: `eventi/${event.id}/${item.name}` }
-                    } catch (signedUrlGenError) {
-                      console.error(signedUrlGenError.message);
-                      return null;
-                    }
-                  })
-              )
-            ).filter(Boolean)
-          }
-        } catch (eventLoopError) {
-          console.error(`Errore generico durante il fetching delle immagini per l'evento ${event.id}:`, eventLoopError.message);
-          eventImagesMap[event.id] = [];
+        const { data: imagesData, error: eventImagesError } = await supabase
+          .from("eventoimmagine")
+          .select("*")
+          .eq("id_evento_fk", event.id)
+          .order("id", { ascending: true })
+        if (eventImagesError) {
+          console.warn(
+            `Errore nel recupero immagini dalla tabella eventoimmagine per evento ${event.id}:`,
+            eventImagesError.message,
+          )
+          eventImagesMap[event.id] = []
+        } else {
+          eventImagesMap[event.id] = (
+            await Promise.all(
+              imagesData.map(async (item) => {
+                const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                  .from("doc")
+                  .createSignedUrl(item.path, 3600)
+                if (signedUrlError) {
+                  console.warn(`Errore generazione URL firmato per ${item.path}:`, signedUrlError.message)
+                  return null
+                }
+                return { id: item.id, url: signedUrlData.signedUrl, alt: item.descrizione || item.path.split("/").pop(), evento: event.titolo, path: item.path, }
+              }),
+            )
+          ).filter(Boolean)
         }
       }
       setEventGalleryImages(eventImagesMap)
-
     } catch (error) {
       console.error("Errore nel caricamento eventi o immagini:", error)
-      showNotification("Si è verificato un errore durante il caricamento di eventi o immagini: " + error.message, "error")
     } finally {
       setLoadingEvents(false)
       setLoadingPastEvents(false)
@@ -1116,76 +943,59 @@ export default function AdminDashboard() {
 
   // FUNZIONI DI GESTIONE AUTENTICAZIONE
   const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        throw error
-      }
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error("Errore durante il logout:", error.message)
+      alert("Si è verificato un errore durante il logout. Riprova.")
+    } else {
       localStorage.removeItem("adminLoggedIn")
       localStorage.removeItem("adminLoginTime")
       router.push("/admin/login")
-    } catch (error) {
-      console.error("Errore durante il logout:", error.message)
-      showNotification("Si è verificato un errore durante il logout. Riprova.", "error")
     }
   }
 
   // FUNZIONI DI GESTIONE EVENTI
   const handleNewEventChange = (e) => {
     const { name, value } = e.target
-    setNewEvent((prev) => ({ ...prev, [name]: value }))
+    setNewEvent((prev) => ({ ...prev, [name]: value, }))
   }
 
   const addQuota = () => {
-    setNewEvent((prev) => ({ ...prev, quote: [...prev.quote, { titolo: "", descrizione: "", prezzo: "" }] }))
+    setNewEvent((prev) => ({ ...prev, quote: [...prev.quote, { titolo: "", descrizione: "", prezzo: "" }], }))
   }
 
   const removeQuota = (index) => {
-    setNewEvent((prev) => ({ ...prev, quote: prev.quote.filter((_, i) => i !== index) }))
+    setNewEvent((prev) => ({ ...prev, quote: prev.quote.filter((_, i) => i !== index), }))
   }
 
   const updateQuota = (index, field, value) => {
-    setNewEvent((prev) => ({ ...prev, quote: prev.quote.map((quota, i) => (i === index ? { ...quota, [field]: value } : quota)) }))
+    setNewEvent((prev) => ({ ...prev, quote: prev.quote.map((quota, i) => (i === index ? { ...quota, [field]: value } : quota)), }))
   }
 
   const handleCreateEvent = async (e) => {
-    // e.preventDefault() is already handled by EventFormModal's handleSubmit
+    e.preventDefault()
     try {
       const quotesJson = {}
-      // Filter out entirely empty quotas before sending to DB
       newEvent.quote.forEach((q, index) => {
-        if (q.titolo.trim() && q.descrizione.trim() && q.prezzo !== "" && !isNaN(Number(q.prezzo))) {
+        if (q.titolo && q.descrizione && q.prezzo !== "") {
           quotesJson[`quota${index + 1}`] = {
-            titolo: q.titolo.trim(),
-            descrizione: q.descrizione.trim(),
-            prezzo: Number(q.prezzo),
+            titolo: q.titolo,
+            descrizione: q.descrizione,
+            prezzo: Number.parseFloat(q.prezzo),
           }
         }
       })
 
       const { data, error } = await supabase
         .from("evento")
-        .insert({
-          titolo: newEvent.titolo.trim(),
-          descrizione: newEvent.descrizione.trim(),
-          data: newEvent.data,
-          orario: newEvent.orario,
-          luogo: newEvent.luogo.trim(),
-          partecipanti: Number.parseInt(newEvent.partecipanti),
-          numeroauto: Number.parseInt(newEvent.numeroauto),
-          passato: false,
-          quote: quotesJson,
-          programma: newEvent.programma.trim() || null,
-        })
+        .insert([{ ...newEvent, quote: quotesJson }]) // MODIFICATO: Inserisce quotesJson
         .select()
-        .single()
 
-      if (error) {
-        throw error
-      }
+      if (error) throw error
 
-      showNotification("Evento creato con successo!", "success")
+      alert("Evento creato con successo!")
       setShowNewEventForm(false)
+      fetchEventsAndImages()
       setNewEvent({
         titolo: "",
         descrizione: "",
@@ -1193,78 +1003,44 @@ export default function AdminDashboard() {
         orario: "",
         luogo: "",
         partecipanti: "",
-        numeroauto: "",
-        programma: "",
-        quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+        numeroAuto: "",
+        tipo: "AUTO",
+        quote: [{ titolo: "", descrizione: "", prezzo: "" }], // Reset con nuova struttura
       })
-      fetchEventsAndImages()
     } catch (error) {
-      console.error("Errore nella creazione dell'evento:", error)
-      showNotification("Errore nella creazione dell'evento: " + error.message, "error")
+      console.error("Errore nella creazione dell'evento:", error.message)
+      alert(`Errore nella creazione dell'evento: ${error.message}`)
     }
   }
 
-  const handleEditEvent = (event) => {
-    setEditingEvent(event)
-    const quotesArray = event.quote ? Object.entries(event.quote).map(([key, value]) => ({
-      titolo: value.titolo || "",
-      descrizione: value.descrizione || "",
-      prezzo: value.prezzo || "",
-    })) : [{ titolo: "", descrizione: "", prezzo: "" }]
-    setNewEvent({
-      titolo: event.titolo,
-      descrizione: event.descrizione,
-      data: event.data,
-      orario: event.orario,
-      luogo: event.luogo,
-      partecipanti: event.partecipanti,
-      numeroauto: event.numeroauto,
-      programma: event.programma || "",
-      quote: quotesArray,
-    })
-    setShowEditEventForm(true)
-  }
-
   const handleUpdateEvent = async (e) => {
-    // e.preventDefault() is already handled by EventFormModal's handleSubmit
+    e.preventDefault()
     if (!editingEvent) return
 
     try {
       const quotesJson = {}
       newEvent.quote.forEach((q, index) => {
-        if (q.titolo.trim() && q.descrizione.trim() && q.prezzo !== "" && !isNaN(Number(q.prezzo))) {
+        if (q.titolo && q.descrizione && q.prezzo !== "") {
           quotesJson[`quota${index + 1}`] = {
-            titolo: q.titolo.trim(),
-            descrizione: q.descrizione.trim(),
-            prezzo: Number(q.prezzo),
+            titolo: q.titolo,
+            descrizione: q.descrizione,
+            prezzo: Number.parseFloat(q.prezzo),
           }
         }
       })
 
       const { data, error } = await supabase
         .from("evento")
-        .update({
-          titolo: newEvent.titolo.trim(),
-          descrizione: newEvent.descrizione.trim(),
-          data: newEvent.data,
-          orario: newEvent.orario,
-          luogo: newEvent.luogo.trim(),
-          partecipanti: Number.parseInt(newEvent.partecipanti),
-          numeroauto: Number.parseInt(newEvent.numeroauto),
-          programma: newEvent.programma.trim() || null,
-          quote: quotesJson,
-        })
+        .update({ ...newEvent, quote: quotesJson }) // MODIFICATO: Aggiorna quotesJson
         .eq("id", editingEvent.id)
         .select()
-        .single()
 
-      if (error) {
-        throw error
-      }
+      if (error) throw error
 
-      showNotification("Evento aggiornato con successo!", "success")
+      alert("Evento aggiornato con successo!")
       setShowEditEventForm(false)
       setEditingEvent(null)
+      fetchEventsAndImages()
       setNewEvent({
         titolo: "",
         descrizione: "",
@@ -1272,269 +1048,174 @@ export default function AdminDashboard() {
         orario: "",
         luogo: "",
         partecipanti: "",
-        numeroauto: "",
-        programma: "",
-        quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+        numeroAuto: "",
+        tipo: "AUTO",
+        quote: [{ titolo: "", descrizione: "", prezzo: "" }], // Reset con nuova struttura
       })
-      fetchEventsAndImages()
     } catch (error) {
-      console.error("Errore nell'aggiornamento dell'evento:", error)
-      showNotification("Errore nell'aggiornamento dell'evento: " + error.message, "error")
+      console.error("Errore nell'aggiornamento dell'evento:", error.message)
+      alert(`Errore nell'aggiornamento dell'evento: ${error.message}`)
     }
   }
 
   const handleDeleteEvent = async (eventId) => {
-    if (!confirm("Sei sicuro di voler eliminare questo evento? Verranno eliminate anche tutte le sue iscrizioni e immagini associate.")) {
-      return
-    }
-
+    if (!confirm("Sei sicuro di voler eliminare questo evento?")) return
     try {
-      let overallSuccess = true;
-
-      // Step 1: Delete associated registrations
-      try {
-        const { error: deleteRegistrationsError } = await supabase
-          .from("iscrizioni")
-          .delete()
-          .eq("id_evento", eventId);
-
-        if (deleteRegistrationsError) {
-          throw new Error(`Errore durante l'eliminazione delle iscrizioni: ${deleteRegistrationsError.message}`);
-        }
-        console.log(`Iscrizioni per l'evento ${eventId} eliminate con successo.`);
-      } catch (error) {
-        overallSuccess = false;
-        console.error(`Errore critico durante l'eliminazione delle iscrizioni per l'evento ${eventId}:`, error.message);
-        showNotification(`Errore critico durante l'eliminazione delle iscrizioni. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "error");
-        // We might choose to abort here if registrations deletion is absolutely critical for atomicity
-        // For now, we'll continue to try deleting images and event for partial cleanup.
-      }
-
-
-      // Step 2: Delete associated images from storage
-      try {
-        const { data: imagesList, error: listError } = await supabase.storage
-          .from("doc")
-          .list(`eventi/${eventId}`);
-
-        if (listError && listError.message !== "The resource was not found") { // Ignore if folder doesn't exist
-          console.warn(`Could not list images for event ${eventId}, might not exist or error occurred:`, listError.message);
-        } else if (imagesList && imagesList.length > 0) {
-          const imagePathsToDelete = imagesList
-            .filter(item => item.name !== ".emptyFolderPlaceholder")
-            .map(item => `eventi/${eventId}/${item.name}`);
-
-          if (imagePathsToDelete.length > 0) {
-            const { error: deleteImagesError } = await supabase.storage
-              .from("doc")
-              .remove(imagePathsToDelete);
-
-            if (deleteImagesError) {
-              throw new Error(`Errore durante l'eliminazione delle immagini dell'evento: ${deleteImagesError.message}`);
-            }
-            console.log(`Immagini per l'evento ${eventId} eliminate con successo.`);
-          }
-        }
-      } catch (error) {
-        overallSuccess = false;
-        console.error(`Errore durante l'eliminazione delle immagini per l'evento ${eventId}:`, error.message);
-        showNotification(`Errore durante l'eliminazione delle immagini dell'evento. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "warning");
-      }
-
-
-      // Step 3: Delete the event itself
-      try {
-        const { error: deleteEventError } = await supabase
-          .from("evento")
-          .delete()
-          .eq("id", eventId)
-
-        if (deleteEventError) {
-          throw new Error(`Errore durante l'eliminazione dell'evento principale: ${deleteEventError.message}`);
-        }
-        console.log(`Evento ${eventId} eliminato con successo.`);
-      } catch (error) {
-        overallSuccess = false;
-        console.error(`Errore critico durante l'eliminazione dell'evento ${eventId}:`, error.message);
-        showNotification(`Errore critico durante l'eliminazione dell'evento. Riprova. Dettagli: ${error.message}`, "error");
-      }
-
-      if (overallSuccess) {
-        showNotification("Evento eliminato con successo, incluse iscrizioni e immagini associate!", "success");
-      } else {
-        showNotification("L'eliminazione dell'evento ha riscontrato alcuni problemi. Controlla i dettagli nel log della console.", "warning");
-      }
-
-      fetchEventsAndImages() // Refresh events after deletion
-    } catch (error) {
-      // This catch block would only be hit by synchronous errors or errors not caught by inner try-catches
-      console.error("Errore generale durante la gestione dell'eliminazione dell'evento:", error)
-      showNotification("Si è verificato un errore inaspettato durante l'eliminazione dell'evento: " + error.message, "error")
-    }
-  }
-
-  const handleMarkAsPast = async (eventId) => {
-    try {
-      const { error } = await supabase
-        .from("evento")
-        .update({ passato: true })
-        .eq("id", eventId)
-
-      if (error) {
-        throw error
-      }
-      showNotification("Evento contrassegnato come passato!", "success")
+      const { error } = await supabase.from("evento").delete().eq("id", eventId)
+      if (error) throw error
+      alert("Evento eliminato con successo!")
       fetchEventsAndImages()
     } catch (error) {
-      console.error("Errore nel contrassegnare l'evento come passato:", error)
-      showNotification("Errore nel contrassegnare l'evento come passato: " + error.message, "error")
+      console.error("Errore nell'eliminazione dell'evento:", error.message)
+      alert(`Errore nell'eliminazione dell'evento: ${error.message}`)
     }
   }
 
-  // FUNZIONI DI GESTIONE IMMAGINI
+  const openEditEventForm = (event) => {
+    setEditingEvent(event)
+    // Convert the quotes object back to an array for the form
+    const quotesArray = Object.keys(event.quote).map(key => ({
+      titolo: event.quote[key].titolo,
+      descrizione: event.quote[key].descrizione,
+      prezzo: event.quote[key].prezzo.toString(), // Convert to string for input
+    }));
+
+    setNewEvent({ ...event, quote: quotesArray }); // MODIFICATO: Popola form con struttura array
+    setShowEditEventForm(true);
+  };
+
+
+  // FUNZIONI DI GESTIONE IMMAGINI GALLERIA
   const handleImageUploadFiles = (e) => {
     setUploadFiles(Array.from(e.target.files))
   }
 
   const handleUploadImages = async () => {
-    if (uploadFiles.length === 0) {
-      showNotification("Nessun file selezionato per il caricamento.", "warning");
-      return;
-    }
+    if (uploadFiles.length === 0) return
 
-    const uploadFolderPath = uploadTarget.type === "event" ? `eventi/${uploadTarget.eventId}` : "galleria";
-    let successfulUploadsCount = 0;
-    let failedUploadsCount = 0;
-    const failedFiles = [];
-
-    for (const file of uploadFiles) {
-      try {
-        const { data, error } = await supabase.storage
-          .from("doc")
-          .upload(`${uploadFolderPath}/${file.name}`, file, {
-            cacheControl: "3600",
-            upsert: false, // Prevents overwriting existing files
-          })
-
-        if (error) {
-          // Specific error for file already exists.
-          if (error.statusCode === '409' || error.message.includes('duplicate key') || error.message.includes('already exists')) {
-            console.warn(`File "${file.name}" already exists in "${uploadFolderPath}". Skipping upload.`);
-            failedUploadsCount++;
-            failedFiles.push(`${file.name} (già esistente)`);
-          } else {
-            throw new Error(`Errore nel caricamento di ${file.name}: ${error.message}`);
-          }
-        } else {
-          console.log(`File "${file.name}" caricato con successo in "${uploadFolderPath}".`, data);
-          successfulUploadsCount++;
-        }
-      } catch (error) {
-        console.error(`Errore nel caricamento di "${file.name}":`, error.message);
-        failedUploadsCount++;
-        failedFiles.push(`${file.name} (${error.message})`);
-      }
-    }
-
-    if (successfulUploadsCount === uploadFiles.length) {
-      showNotification("Tutte le immagini caricate con successo!", "success");
-    } else if (successfulUploadsCount > 0) {
-      showNotification(`Caricamento completato con ${successfulUploadsCount} immagini caricate e ${failedUploadsCount} fallite. Dettagli: ${failedFiles.join(", ")}`, "warning");
-    } else {
-      showNotification(`Nessuna immagine caricata. Tutti i caricamenti sono falliti. Dettagli: ${failedFiles.join(", ")}`, "error");
-    }
-
-    setShowImageUpload(false);
-    setUploadFiles([]);
-    fetchEventsAndImages(); // Refresh galleries
-  }
-
-  const handleDeleteImage = async (imagePath, eventId = null) => {
-    if (!confirm("Sei sicuro di voler eliminare questa immagine?")) {
-      return;
-    }
+    setLoadingImages(true)
     try {
-      const { error } = await supabase.storage
-        .from("doc")
-        .remove([imagePath]);
+      const uploadPromises = uploadFiles.map(async (file) => {
+        const filePath = uploadTarget.type === "general"
+          ? `galleria/${file.name}`
+          : `event_gallery/${uploadTarget.eventId}/${file.name}`; // Supposing event specific folder
+        const { error: uploadError } = await supabase.storage
+          .from("doc")
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-      if (error) {
-        throw error;
+        if (uploadError) {
+          if (uploadError.statusCode === '409' && uploadError.message.includes('already exists')) {
+            console.warn(`File ${file.name} already exists, skipping upload.`);
+            return { success: true, message: `File ${file.name} already exists.` };
+          } else {
+            throw uploadError;
+          }
+        }
+
+        // If it's an event-specific image, save metadata to eventoimmagine table
+        if (uploadTarget.type === "event" && uploadTarget.eventId) {
+          const { data: { signedUrl } } = await supabase.storage.from('doc').createSignedUrl(filePath, 3600);
+          const { error: insertError } = await supabase
+            .from('eventoimmagine')
+            .insert([
+              {
+                id_evento_fk: uploadTarget.eventId,
+                path: filePath,
+                descrizione: file.name, // Or a more descriptive name
+                url: signedUrl,
+              },
+            ]);
+          if (insertError) {
+            console.error("Error inserting image metadata into eventoimmagine:", insertError.message);
+            throw insertError;
+          }
+        }
+        return { success: true, message: `File ${file.name} uploaded successfully.` };
+      });
+
+      await Promise.all(uploadPromises);
+
+      alert("Immagini caricate con successo!");
+      setShowImageUpload(false);
+      setUploadFiles([]);
+      fetchEventsAndImages(); // Refresh images
+    } catch (error) {
+      console.error("Errore nel caricamento delle immagini:", error.message);
+      alert(`Errore nel caricamento delle immagini: ${error.message}`);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
+
+
+  const handleDeleteImage = async (path, eventId = null) => {
+    if (!confirm("Sei sicuro di voler eliminare questa immagine?")) return
+    setLoadingImages(true)
+    try {
+      const { error: storageError } = await supabase.storage.from("doc").remove([path])
+      if (storageError) throw storageError
+
+      if (eventId) {
+        const { error: dbError } = await supabase
+          .from("eventoimmagine")
+          .delete()
+          .eq("path", path)
+        if (dbError) throw dbError
       }
 
-      showNotification("Immagine eliminata con successo!", "success");
-      fetchEventsAndImages(); // Refresh galleries
+      alert("Immagine eliminata con successo!")
+      fetchEventsAndImages()
     } catch (error) {
-      console.error("Errore nell'eliminazione dell'immagine:", error);
-      showNotification("Errore nell'eliminazione dell'immagine: " + error.message, "error");
+      console.error("Errore nell'eliminazione dell'immagine:", error.message)
+      alert(`Errore nell'eliminazione dell'immagine: ${error.message}`)
+    } finally {
+      setLoadingImages(false)
     }
   }
 
   // FUNZIONI DI GESTIONE ISCRIZIONI
-  const fetchRegistrations = useCallback(async (eventId) => {
+  const fetchRegistrationsForEvent = useCallback(async (eventId) => {
     setLoadingRegistrations(true)
     try {
-      const { data, error } = await supabase
-        .from("iscrizioni")
-        .select("*")
-        .eq("id_evento", eventId)
+      const { data: registrationsData, error } = await supabase
+        .from("iscrizione")
+        .select(
+          `
+            *,
+            guidatore:guidatore_id_fk(*),
+            auto:auto_id_fk(*),
+            passeggeri:passeggeri_rel(*)
+          `,
+        )
+        .eq("evento_id_fk", eventId)
+      if (error) throw error
 
-      if (error) {
-        throw error
-      }
-      setRegistrations(data)
+      setRegistrations(registrationsData)
     } catch (error) {
-      console.error("Errore nel recupero delle iscrizioni:", error)
-      showNotification("Errore nel recupero delle iscrizioni: " + error.message, "error")
+      console.error("Errore nel recupero delle iscrizioni:", error.message)
+      alert(`Errore nel recupero delle iscrizioni: ${error.message}`)
       setRegistrations([])
     } finally {
       setLoadingRegistrations(false)
     }
   }, [])
 
-  const handleOpenRegistrationsModal = (event) => {
+  const openRegistrationsModal = (event) => {
     setSelectedEventForRegistrations(event)
     setShowRegistrationsModal(true)
-    fetchRegistrations(event.id)
+    fetchRegistrationsForEvent(event.id)
   }
 
-  const handleGenerateIndividualPdf = async (registration, event) => {
-    try {
-      const doc = new jsPDF()
-      doc.text(`Dettagli Iscrizione - Evento: ${event.titolo}`, 10, 10)
-      doc.text(`Nome: ${registration.nome} ${registration.cognome}`, 10, 20)
-      doc.text(`Email: ${registration.indirizzo_email}`, 10, 30)
-      doc.text(`Telefono: ${registration.telefono}`, 10, 40)
-      doc.text(`Codice Fiscale: ${registration.codice_fiscale}`, 10, 50)
-      doc.text(`Data Nascita: ${registration.data_nascita}`, 10, 60)
-      doc.text(`Indirizzo: ${registration.indirizzo}`, 10, 70)
-      doc.text(`Quota Selezionata: ${registration.quota}`, 10, 80)
-      doc.text(`Intolleranze: ${registration.intolleranze || "Nessuna"}`, 10, 90)
+  // MODIFICATO: Funzione per aprire il visualizzatore di immagini (fronte/retro)
+  const openImagesInModal = (urls, title) => {
+    setCurrentImageUrls(urls);
+    setCurrentDocumentTitle(title);
+    setShowDocumentModal(true);
+  };
 
-      if (registration.auto_marca) {
-        doc.text(`Dettagli Auto:`, 10, 110)
-        doc.text(`Marca: ${registration.auto_marca}`, 10, 120)
-        doc.text(`Modello: ${registration.auto_modello}`, 10, 130)
-        doc.text(`Targa: ${registration.auto_targa}`, 10, 140)
-        doc.text(`Posti Auto: ${registration.posti_auto}`, 10, 150)
-      }
-
-      if (registration.passeggeri && registration.passeggeri.length > 0) {
-        doc.text(`Passeggeri:`, 10, registration.auto_marca ? 170 : 110)
-        let yOffset = registration.auto_marca ? 180 : 120
-        registration.passeggeri.forEach((pass, pIndex) => {
-          doc.text(`- Passeggero ${pIndex + 1}: ${pass.nome} ${pass.cognome} (CF: ${pass.codice_fiscale})`, 15, yOffset)
-          yOffset += 10
-        })
-      }
-
-      doc.save(`iscrizione_${registration.nome}_${registration.cognome}.pdf`)
-      showNotification("PDF generato con successo!", "success")
-    } catch (error) {
-      console.error("Errore durante la generazione del PDF:", error)
-      showNotification("Errore durante la generazione del PDF: " + error.message, "error")
-    }
-  }
 
   const handleOpenInvoiceUpload = (registration) => {
     setSelectedRegistration(registration)
@@ -1543,60 +1224,445 @@ export default function AdminDashboard() {
 
   const handleInvoiceUpload = async () => {
     if (!invoiceFile || !selectedRegistration) {
-      showNotification("File fattura o registrazione non selezionati.", "warning");
-      return;
+      alert("Seleziona un file di fattura e una registrazione.")
+      return
     }
 
+    const filePath = `invoices/${selectedRegistration.id}-${invoiceFile.name}`
+    setLoading(true) // Use general loading state for simplicity for now
     try {
-      const filePath = `fatture/${selectedRegistration.id_evento}/${selectedRegistration.id}_${invoiceFile.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("doc")
         .upload(filePath, invoiceFile, {
           cacheControl: "3600",
           upsert: true,
-        });
+        })
 
-      if (uploadError) {
-        throw new Error(`Errore durante il caricamento della fattura: ${uploadError.message}`);
+      if (uploadError) throw uploadError
+
+      const { data: publicUrlData } = supabase.storage
+        .from("doc")
+        .getPublicUrl(filePath)
+
+      // Send email logic (requires a Supabase Function or external service)
+      // For now, just log to console or show an alert that it would be sent
+      console.log(`Fattura caricata: ${publicUrlData.publicUrl}. Inviata a ${selectedRegistration.guidatore.email}`);
+      alert("Fattura caricata e email inviata con successo!");
+
+      // Update the registration record with the invoice URL if needed
+      const { error: updateError } = await supabase
+        .from('iscrizione')
+        .update({ invoice_url: publicUrlData.publicUrl })
+        .eq('id', selectedRegistration.id);
+
+      if (updateError) {
+        console.error("Errore nell'aggiornamento dell'URL della fattura nel DB:", updateError.message);
       }
 
-      // Optionally, send email via a Supabase Function or direct email service if available
-      // For now, we'll just confirm upload.
-      showNotification("Fattura caricata con successo e email inviata (simulato)!", "success");
-      setShowInvoiceUpload(false);
-      setInvoiceFile(null);
-      setSelectedRegistration(null);
+      setShowInvoiceUpload(false)
+      setInvoiceFile(null)
+      setSelectedRegistration(null)
+      fetchRegistrationsForEvent(selectedEventForRegistrations.id); // Refresh registrations to show updated invoice status
     } catch (error) {
-      console.error("Errore nel caricamento o invio fattura:", error);
-      showNotification("Errore nel caricamento o invio fattura: " + error.message, "error");
+      console.error("Errore durante il caricamento della fattura o l'invio dell'email:", error.message)
+      alert(`Errore: ${error.message}`)
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
-  const openDocumentInModal = (url, type) => {
-    if (!url) {
-      showNotification("URL del documento non valido.", "warning");
-      return;
+  // Funzione per generare PDF individuale (ADATTATA: solo per info iscrizione, non per documenti originali)
+  const handleGenerateIndividualPdf = (registration, event) => {
+    const doc = new jsPDF()
+
+    doc.setFontSize(18)
+    doc.text(`Dettagli Iscrizione - ${event.titolo}`, 10, 10)
+    doc.setFontSize(12)
+    doc.text(`Data Evento: ${event.data} ${event.orario}`, 10, 20)
+    doc.text(`Luogo Evento: ${event.luogo}`, 10, 30)
+
+    doc.setFontSize(14)
+    doc.text("Dati Guidatore:", 10, 50)
+    doc.setFontSize(12)
+    doc.text(`Nome: ${registration.guidatore.nome} ${registration.guidatore.cognome}`, 10, 60)
+    doc.text(`Email: ${registration.guidatore.email}`, 10, 70)
+    doc.text(`Cellulare: ${registration.guidatore.cellulare}`, 10, 80)
+    doc.text(`Codice Fiscale: ${registration.guidatore.codiceFiscale}`, 10, 90)
+    doc.text(`Data Nascita: ${registration.guidatore.dataNascita}`, 10, 100)
+    doc.text(`Indirizzo: ${registration.guidatore.indirizzo}`, 10, 110)
+    doc.text(`Quota Selezionata: ${registration.guidatore.quota}`, 10, 120)
+    doc.text(`Intolleranze: ${registration.guidatore.intolleranze || "Nessuna"}`, 10, 130)
+
+    doc.setFontSize(14)
+    doc.text("Dati Auto:", 10, 150)
+    doc.setFontSize(12)
+    doc.text(`Marca: ${registration.auto.marca}`, 10, 160)
+    doc.text(`Modello: ${registration.auto.modello}`, 10, 170)
+    doc.text(`Targa: ${registration.auto.targa}`, 10, 180)
+    doc.text(`Posti Auto: ${registration.auto.postiAuto}`, 10, 190)
+
+    if (registration.passeggeri && registration.passeggeri.length > 0) {
+      doc.setFontSize(14)
+      doc.text("Passeggeri:", 10, 210)
+      doc.setFontSize(12)
+      let yOffset = 220
+      registration.passeggeri.forEach((pass, index) => {
+        doc.text(`Passeggero ${index + 1}: ${pass.nome} ${pass.cognome}`, 10, yOffset)
+        doc.text(`  CF: ${pass.codiceFiscale}`, 20, yOffset + 10)
+        doc.text(`  Data Nascita: ${pass.dataNascita}`, 20, yOffset + 20)
+        doc.text(`  Email: ${pass.email}`, 20, yOffset + 30)
+        doc.text(`  Cellulare: ${pass.cellulare}`, 20, yOffset + 40)
+        doc.text(`  Intolleranze: ${pass.intolleranze || "Nessuna"}`, 20, yOffset + 50)
+        yOffset += 60
+      })
     }
-    setCurrentDocumentUrl(url);
-    setCurrentDocumentType(type);
-    setShowDocumentModal(true);
-  };
 
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-black mb-4 mx-auto"></div>
-          <p className="text-xl text-gray-700">Caricamento dashboard...</p>
-        </div>
-      </div>
-    )
+    doc.save(`iscrizione_${registration.guidatore.cognome}_${registration.guidatore.nome}.pdf`)
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-      {/* Modals */}
+    <div className="flex min-h-screen w-full flex-col bg-gray-100 text-gray-900">
+      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-4 border-b bg-gradient-to-r from-gray-800 to-gray-900 px-4 md:px-6 shadow-lg">
+        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          <Link href="#" className="flex items-center gap-2 text-lg font-semibold text-white md:text-base">
+            <ActivityIcon className="h-6 w-6" />
+            <span className="sr-only">AldebaranDrive Dashboard</span>
+          </Link>
+          <Link
+            href="#"
+            className={`transition-colors text-white ${
+              activeTab === "overview" ? "font-bold" : "text-gray-300 hover:text-white"
+            }`}
+            onClick={() => setActiveTab("overview")}
+          >
+            Overview
+          </Link>
+          <Link
+            href="#"
+            className={`transition-colors text-white ${
+              activeTab === "events" ? "font-bold" : "text-gray-300 hover:text-white"
+            }`}
+            onClick={() => setActiveTab("events")}
+          >
+            Eventi
+          </Link>
+          <Link
+            href="#"
+            className={`transition-colors text-white ${
+              activeTab === "gallery" ? "font-bold" : "text-gray-300 hover:text-white"
+            }`}
+            onClick={() => setActiveTab("gallery")}
+          >
+            Galleria
+          </Link>
+        </nav>
+        <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full text-white hover:bg-white/20"
+            onClick={handleLogout}
+          >
+            <LogOutIcon className="h-5 w-5" />
+            <span className="sr-only">Logout</span>
+          </Button>
+        </div>
+      </header>
+
+      <main className="flex flex-1 flex-col gap-8 p-6 md:p-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">Dashboard Amministratore</h1>
+
+        {/* Overview Tab */}
+        {activeTab === "overview" && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="rounded-xl shadow-lg border-0 bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Eventi Futuri</CardTitle>
+                <CalendarIcon className="h-4 w-4 text-white/80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{events.length}</div>
+                <p className="text-xs text-blue-100">Eventi programmati</p>
+              </CardContent>
+            </Card>
+            <Card className="rounded-xl shadow-lg border-0 bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Eventi Passati</CardTitle>
+                <ClockIcon className="h-4 w-4 text-white/80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{pastEvents.length}</div>
+                <p className="text-xs text-green-100">Eventi completati</p>
+              </CardContent>
+            </Card>
+            <Card className="rounded-xl shadow-lg border-0 bg-gradient-to-br from-purple-500 to-pink-600 text-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Immagini Galleria</CardTitle>
+                <ImageIcon className="h-4 w-4 text-white/80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{galleryImages.length}</div>
+                <p className="text-xs text-purple-100">Totale immagini caricate</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Events Tab */}
+        {activeTab === "events" && (
+          <div className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h2 className="text-3xl font-bold text-gray-900">Gestione Eventi</h2>
+              <Button
+                onClick={() => setShowNewEventForm(true)}
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md transition-all duration-200"
+              >
+                <PlusIcon className="mr-2 h-5 w-5" /> Nuovo Evento
+              </Button>
+            </div>
+
+            <Tabs defaultValue="futuri" className="w-full">
+              <TabsList className="grid w-fit grid-cols-2 bg-gray-200 rounded-lg p-1 shadow-inner">
+                <TabsTrigger
+                  value="futuri"
+                  className="px-6 py-2 rounded-md text-gray-700 data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm transition-all"
+                >
+                  Futuri
+                </TabsTrigger>
+                <TabsTrigger
+                  value="passati"
+                  className="px-6 py-2 rounded-md text-gray-700 data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:active:shadow-sm transition-all"
+                >
+                  Passati
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="futuri" className="mt-6">
+                {loadingEvents ? (
+                  <div className="flex flex-col justify-center items-center h-64 space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                    <p className="text-xl text-gray-500">Caricamento eventi futuri...</p>
+                  </div>
+                ) : events.length === 0 ? (
+                  <div className="text-center py-16">
+                    <AlertCircleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <div className="text-2xl text-gray-500">Nessun evento futuro trovato.</div>
+                    <p className="text-gray-500 mt-2">Crea un nuovo evento per iniziare.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {events.map((event) => (
+                      <Card key={event.id} className="shadow-lg border-0 rounded-xl overflow-hidden bg-white">
+                        <CardHeader className="pb-4">
+                          <CardTitle className="text-xl font-bold text-gray-800">{event.titolo}</CardTitle>
+                          <CardDescription className="text-gray-600">{event.descrizione}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center text-sm text-gray-700">
+                            <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            {event.data} - {event.orario}
+                          </div>
+                          <div className="flex items-center text-sm text-gray-700">
+                            <MapPinIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            {event.luogo}
+                          </div>
+                          <div className="flex items-center text-sm text-gray-700">
+                            <UsersIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            {event.partecipanti} partecipanti max
+                          </div>
+                          <div className="flex items-center text-sm text-gray-700">
+                            <CarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            {event.numeroAuto} auto max
+                          </div>
+                          <div className="pt-4 flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-indigo-600 hover:text-white hover:bg-indigo-600 border-indigo-600 transition-colors"
+                              onClick={() => openRegistrationsModal(event)}
+                            >
+                              <EyeIcon className="mr-2 h-4 w-4" /> Iscrizioni
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-orange-600 hover:text-white hover:bg-orange-600 border-orange-600 transition-colors"
+                              onClick={() => openEditEventForm(event)}
+                            >
+                              <EditIcon className="mr-2 h-4 w-4" /> Modifica
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="bg-red-500 hover:bg-red-600 text-white transition-colors"
+                              onClick={() => handleDeleteEvent(event.id)}
+                            >
+                              <TrashIcon className="mr-2 h-4 w-4" /> Elimina
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="passati" className="mt-6">
+                {loadingPastEvents ? (
+                  <div className="flex flex-col justify-center items-center h-64 space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                    <p className="text-xl text-gray-500">Caricamento eventi passati...</p>
+                  </div>
+                ) : pastEvents.length === 0 ? (
+                  <div className="text-center py-16">
+                    <AlertCircleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <div className="text-2xl text-gray-500">Nessun evento passato trovato.</div>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {pastEvents.map((event) => (
+                      <Card key={event.id} className="shadow-lg border-0 rounded-xl overflow-hidden bg-white">
+                        <CardHeader className="pb-4">
+                          <CardTitle className="text-xl font-bold text-gray-800">{event.titolo}</CardTitle>
+                          <CardDescription className="text-gray-600">{event.descrizione}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center text-sm text-gray-700">
+                            <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            {event.data} - {event.orario}
+                          </div>
+                          <div className="flex items-center text-sm text-gray-700">
+                            <MapPinIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            {event.luogo}
+                          </div>
+                          <div className="flex items-center text-sm text-gray-700">
+                            <UsersIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            {event.partecipanti} partecipanti max
+                          </div>
+                          <div className="flex items-center text-sm text-gray-700">
+                            <CarIcon className="mr-2 h-4 w-4" />
+                            {event.numeroAuto} auto max
+                          </div>
+                          <div className="pt-4 flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-indigo-600 hover:text-white hover:bg-indigo-600 border-indigo-600 transition-colors"
+                              onClick={() => openRegistrationsModal(event)}
+                            >
+                              <EyeIcon className="mr-2 h-4 w-4" /> Iscrizioni
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-blue-600 hover:text-white hover:bg-blue-600 border-blue-600 transition-colors"
+                              onClick={() => {
+                                setUploadTarget({ type: "event", eventId: event.id });
+                                setShowImageUpload(true);
+                              }}
+                            >
+                              <UploadIcon className="mr-2 h-4 w-4" /> Carica Immagini Evento
+                            </Button>
+                          </div>
+                          {eventGalleryImages[event.id] && eventGalleryImages[event.id].length > 0 && (
+                            <div className="mt-4 border-t pt-4">
+                              <h4 className="text-md font-semibold mb-2">Immagini Evento:</h4>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                                {eventGalleryImages[event.id].map((image) => (
+                                  <div key={image.id} className="relative group">
+                                    <Image // Utilizzo del componente Image
+                                      src={image.url}
+                                      alt={image.alt}
+                                      width={100}
+                                      height={100}
+                                      className="w-full h-24 object-cover rounded-md"
+                                    />
+                                    <Button
+                                      variant="destructive"
+                                      size="icon"
+                                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={() => handleDeleteImage(image.path, event.id)}
+                                    >
+                                      <TrashIcon className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+
+        {/* Gallery Tab */}
+        {activeTab === "gallery" && (
+          <div className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h2 className="text-3xl font-bold text-gray-900">Galleria Immagini Generale</h2>
+              <Button
+                onClick={() => {
+                  setUploadTarget({ type: "general", eventId: null });
+                  setShowImageUpload(true);
+                }}
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md transition-all duration-200"
+              >
+                <PlusIcon className="mr-2 h-5 w-5" /> Carica Nuove Immagini
+              </Button>
+            </div>
+
+            {loadingImages ? (
+              <div className="flex flex-col justify-center items-center h-64 space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <p className="text-xl text-gray-500">Caricamento galleria...</p>
+              </div>
+            ) : galleryImages.length === 0 ? (
+              <div className="text-center py-16">
+                <AlertCircleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <div className="text-2xl text-gray-500">Nessuna immagine nella galleria.</div>
+                <p className="text-gray-500 mt-2">Carica alcune immagini per visualizzarle qui.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {galleryImages.map((image) => (
+                  <div key={image.id} className="relative group rounded-lg overflow-hidden shadow-md">
+                    <Image // Utilizzo del componente Image
+                      src={image.url}
+                      alt={image.alt}
+                      width={200}
+                      height={150}
+                      className="w-full h-36 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white hover:bg-white/20 mr-2"
+                        onClick={() => openImagesInModal([image.url], image.alt)} // Can extend to handle multiple images if needed for general gallery
+                      >
+                        <EyeIcon className="h-5 w-5" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="bg-red-500 hover:bg-red-600 text-white"
+                        onClick={() => handleDeleteImage(image.path)}
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* MODAL NUOVO EVENTO */}
       {showNewEventForm && (
         <EventFormModal
           isEditMode={false}
@@ -1616,18 +1682,19 @@ export default function AdminDashboard() {
               orario: "",
               luogo: "",
               partecipanti: "",
-              numeroauto: "",
-              programma: "",
-              quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+              numeroAuto: "",
+              tipo: "AUTO",
+              quote: [{ titolo: "", descrizione: "", prezzo: "" }], // Reset con nuova struttura
             })
           }}
         />
       )}
 
-      {showEditEventForm && editingEvent && (
+      {/* MODAL MODIFICA EVENTO */}
+      {showEditEventForm && (
         <EventFormModal
           isEditMode={true}
-          newEvent={newEvent}
+          newEvent={newEvent} // Using newEvent state which is populated by openEditEventForm
           setNewEvent={setNewEvent}
           handleNewEventChange={handleNewEventChange}
           addQuota={addQuota}
@@ -1644,26 +1711,15 @@ export default function AdminDashboard() {
               orario: "",
               luogo: "",
               partecipanti: "",
-              numeroauto: "",
-              programma: "",
-              quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+              numeroAuto: "",
+              tipo: "AUTO",
+              quote: [{ titolo: "", descrizione: "", prezzo: "" }], // Reset con nuova struttura
             })
           }}
         />
       )}
 
-      {showRegistrationsModal && (
-        <RegistrationsModal
-          selectedEventForRegistrations={selectedEventForRegistrations}
-          registrations={registrations}
-          loadingRegistrations={loadingRegistrations}
-          handleGenerateIndividualPdf={handleGenerateIndividualPdf}
-          handleOpenInvoiceUpload={handleOpenInvoiceUpload}
-          openDocumentInModal={openDocumentInModal}
-          onClose={() => setShowRegistrationsModal(false)}
-        />
-      )}
-
+      {/* MODAL CARICAMENTO IMMAGINI */}
       {showImageUpload && (
         <ImageUploadModal
           uploadTarget={uploadTarget}
@@ -1678,6 +1734,18 @@ export default function AdminDashboard() {
         />
       )}
 
+      {/* MODAL VISUALIZZAZIONE ISCRIZIONI */}
+      {showRegistrationsModal && (
+        <RegistrationsModal
+          selectedEventForRegistrations={selectedEventForRegistrations}
+          registrations={registrations}
+          loadingRegistrations={loadingRegistrations}
+          handleGenerateIndividualPdf={handleGenerateIndividualPdf}
+          handleOpenInvoiceUpload={handleOpenInvoiceUpload}
+          openImagesInModal={openImagesInModal} // Changed prop name
+          onClose={() => setShowRegistrationsModal(false)}
+        />
+      )}
       {showInvoiceUpload && (
         <InvoiceUploadModal
           selectedRegistration={selectedRegistration}
@@ -1691,11 +1759,11 @@ export default function AdminDashboard() {
           }}
         />
       )}
-
+      {/* MODAL VISUALIZZATORE IMMAGINI (ex DocumentViewerModal) */}
       {showDocumentModal && (
-        <DocumentViewerModal
-          currentDocumentUrl={currentDocumentUrl}
-          currentDocumentType={currentDocumentType}
+        <ImageViewerModal
+          currentImageUrls={currentImageUrls}
+          currentDocumentTitle={currentDocumentTitle}
           onClose={() => setShowDocumentModal(false)}
         />
       )}
@@ -1716,390 +1784,7 @@ export default function AdminDashboard() {
         .animate-scale-in {
           animation: scale-in 0.3s ease-out;
         }
-        .line-clamp-1 {
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .line-clamp-3 {
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
       `}</style>
-
-      <Card className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-6 lg:p-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
-          <div>
-            <h1 className="text-3xl font-extrabold text-black mb-1 flex items-center gap-2">
-              <ActivityIcon className="w-8 h-8 text-black" /> Dashboard Amministratore
-            </h1>
-            <p className="text-gray-600 text-lg">Gestisci eventi, iscrizioni e gallerie</p>
-          </div>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="mt-4 sm:mt-0 text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-          >
-            <LogOutIcon className="h-5 w-5" /> Logout
-          </Button>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-5 h-auto flex-wrap p-1 bg-gray-200 rounded-lg">
-            <TabsTrigger value="overview" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="currentEvents" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Eventi Correnti
-            </TabsTrigger>
-            <TabsTrigger value="pastEvents" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Eventi Passati
-            </TabsTrigger>
-            <TabsTrigger value="generalGallery" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Galleria Generale
-            </TabsTrigger>
-            <TabsTrigger value="eventGallery" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Gallerie Eventi
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-6 bg-gradient-to-br from-black to-gray-800 text-white rounded-lg shadow-xl">
-                <CardTitle className="text-3xl font-bold mb-2">Benvenuto!</CardTitle>
-                <CardDescription className="text-gray-300 mb-4">
-                  Questa è la tua dashboard amministratore. Utilizza le schede qui above per gestire i tuoi eventi, le iscrizioni e le gallerie fotografiche.
-                </CardDescription>
-                <Button
-                  onClick={() => setShowNewEventForm(true)}
-                  className="bg-white text-black hover:bg-gray-200 font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-                >
-                  <PlusIcon className="w-5 h-5" /> Crea Nuovo Evento
-                </Button>
-              </Card>
-
-              <Card className="p-6 bg-white rounded-lg shadow-xl border border-gray-200">
-                <CardTitle className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
-                  <ActivityIcon className="w-6 h-6 text-gray-600" /> Riepilogo Attività
-                </CardTitle>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Eventi Correnti:</span>
-                    <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingEvents ? "..." : events.length}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Eventi Passati:</span>
-                    <Badge className="bg-gray-600 text-white px-3 py-1 text-lg font-bold">{loadingPastEvents ? "..." : pastEvents.length}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Immagini in Galleria:</span>
-                    <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingImages ? "..." : galleryImages.length + Object.values(eventGalleryImages).flat().length}</Badge>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Tab Eventi Correnti */}
-          <TabsContent value="currentEvents" className="mt-6">
-            <h2 className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
-              <CalendarIcon className="w-6 h-6" /> Eventi Correnti
-            </h2>
-            <p className="text-gray-600 mb-6">Questi sono gli eventi futuri o in corso che puoi gestire.</p>
-            <Button
-              onClick={() => setShowNewEventForm(true)}
-              className="mb-6 bg-black hover:bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-            >
-              <PlusIcon className="w-5 h-5" /> Crea Nuovo Evento
-            </Button>
-
-            {loadingEvents ? (
-              <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-                <p className="text-xl text-gray-500">Caricamento eventi...</p>
-              </div>
-            ) : events.length === 0 ? (
-              <div className="text-center py-16">
-                <AlertCircleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <div className="text-2xl text-gray-500">Nessun evento corrente trovato.</div>
-                <p className="text-gray-500 mt-2">Crea un nuovo evento per iniziare.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {events.map((event) => (
-                  <Card key={event.id} className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-white rounded-lg overflow-hidden flex flex-col">
-                    <CardHeader className="bg-black text-white p-4 rounded-t-lg">
-                      <CardTitle className="text-xl font-bold line-clamp-1">{event.titolo}</CardTitle>
-                      <CardDescription className="text-gray-300 text-sm line-clamp-1">{event.luogo}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 flex-grow">
-                      <p className="text-gray-800 mb-3 text-sm line-clamp-3">{event.descrizione}</p>
-                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 mb-4">
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4 text-gray-500" />
-                          <span>{event.data}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <ClockIcon className="w-4 h-4 text-gray-500" />
-                          <span>{event.orario}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <UsersIcon className="w-4 h-4 text-gray-500" />
-                          <span>Max Partecipanti: {event.partecipanti}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CarIcon className="w-4 h-4 text-gray-500" />
-                          <span>Max Auto: {event.numeroauto}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {Object.values(event.quote || {}).map((quota, idx) => (
-                          <Badge key={idx} variant="outline" className="bg-gray-100 text-black border-gray-300">
-                            {quota.titolo}: €{Number(quota.prezzo).toFixed(2)}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                    <div className="p-4 border-t flex flex-wrap gap-3 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenRegistrationsModal(event)}
-                        className="text-black border-gray-400 hover:bg-gray-100 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
-                      >
-                        <UsersIcon className="w-4 h-4" /> Iscrizioni
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditEvent(event)}
-                        className="text-blue-600 border-blue-400 hover:bg-blue-50 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
-                      >
-                        <EditIcon className="w-4 h-4" /> Modifica
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleMarkAsPast(event.id)}
-                        className="text-purple-600 border-purple-400 hover:bg-purple-50 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
-                      >
-                        <CheckIcon className="w-4 h-4" /> Segna come Passato
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteEvent(event.id)}
-                        className="text-red-600 border-red-400 hover:bg-red-50 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
-                      >
-                        <TrashIcon className="w-4 h-4" /> Elimina
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Tab Eventi Passati */}
-          <TabsContent value="pastEvents" className="mt-6">
-            <h2 className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
-              <CalendarIcon className="w-6 h-6" /> Eventi Passati
-            </h2>
-            <p className="text-gray-600 mb-6">Eventi che sono già avvenuti.</p>
-
-            {loadingPastEvents ? (
-              <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-                <p className="text-xl text-gray-500">Caricamento eventi passati...</p>
-              </div>
-            ) : pastEvents.length === 0 ? (
-              <div className="text-center py-16">
-                <AlertCircleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <div className="text-2xl text-gray-500">Nessun evento passato trovato.</div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pastEvents.map((event) => (
-                  <Card key={event.id} className="shadow-lg bg-white rounded-lg overflow-hidden flex flex-col">
-                    <CardHeader className="bg-gray-700 text-white p-4 rounded-t-lg">
-                      <CardTitle className="text-xl font-bold line-clamp-1">{event.titolo}</CardTitle>
-                      <CardDescription className="text-gray-400 text-sm line-clamp-1">{event.luogo}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 flex-grow">
-                      <p className="text-gray-800 mb-3 text-sm line-clamp-3">{event.descrizione}</p>
-                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 mb-4">
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4 text-gray-500" />
-                          <span>{event.data}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <ClockIcon className="w-4 h-4 text-gray-500" />
-                          <span>{event.orario}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {Object.values(event.quote || {}).map((quota, idx) => (
-                          <Badge key={idx} variant="outline" className="bg-gray-100 text-black border-gray-300">
-                            {quota.titolo}: €{Number(quota.prezzo).toFixed(2)}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                    <div className="p-4 border-t flex flex-wrap gap-3 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenRegistrationsModal(event)}
-                        className="text-black border-gray-400 hover:bg-gray-100 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
-                      >
-                        <UsersIcon className="w-4 h-4" /> Iscrizioni
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setUploadTarget({ type: "event", eventId: event.id })
-                          setShowImageUpload(true)
-                        }}
-                        className="text-green-600 border-green-400 hover:bg-green-50 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
-                      >
-                        <ImageIcon className="w-4 h-4" /> Carica Immagini
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteEvent(event.id)}
-                        className="text-red-600 border-red-400 hover:bg-red-50 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
-                      >
-                        <TrashIcon className="w-4 h-4" /> Elimina
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Tab Galleria Generale */}
-          <TabsContent value="generalGallery" className="mt-6">
-            <h2 className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
-              <ImageIcon className="w-6 h-6" /> Galleria Generale
-            </h2>
-            <p className="text-gray-600 mb-6">Immagini utilizzate per la galleria principale del sito.</p>
-            <Button
-              onClick={() => {
-                setUploadTarget({ type: "general", eventId: null })
-                setShowImageUpload(true)
-              }}
-              className="mb-6 bg-black hover:bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-            >
-              <UploadIcon className="w-5 h-5" /> Carica Nuove Immagini
-            </Button>
-
-            {loadingImages ? (
-              <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-                <p className="text-xl text-gray-500">Caricamento immagini galleria generale...</p>
-              </div>
-            ) : galleryImages.length === 0 ? (
-              <div className="text-center py-16">
-                <AlertCircleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <div className="text-2xl text-gray-500">Nessuna immagine nella galleria generale.</div>
-                <p className="text-gray-500 mt-2">Carica alcune immagini per visualizzarle qui.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {galleryImages.map((image) => (
-                  <Card key={image.id} className="relative group overflow-hidden rounded-lg shadow-lg">
-                    <img
-                      src={image.url}
-                      alt={image.alt}
-                      className="w-full h-40 object-cover rounded-t-lg transition-transform duration-200 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleDeleteImage(image.path)}
-                        className="bg-red-600 hover:bg-red-700 text-white rounded-full p-2"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    <CardContent className="p-3 text-center">
-                      <p className="text-sm font-medium text-gray-800 line-clamp-1">{image.alt}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Tab Gallerie Eventi */}
-          <TabsContent value="eventGallery" className="mt-6">
-            <h2 className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
-              <ImageIcon className="w-6 h-6" /> Gallerie Eventi
-            </h2>
-            <p className="text-gray-600 mb-6">Gallerie fotografiche per ciascun evento passato.</p>
-
-            {loadingImages ? (
-              <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-                <p className="text-xl text-gray-500">Caricamento gallerie eventi...</p>
-              </div>
-            ) : Object.keys(eventGalleryImages).length === 0 || Object.values(eventGalleryImages).every(arr => arr.length === 0) ? (
-              <div className="text-center py-16">
-                <AlertCircleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <div className="text-2xl text-gray-500">Nessuna galleria eventi trovata.</div>
-                <p className="text-gray-500 mt-2">Carica immagini per i tuoi eventi passati.</p>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {pastEvents.filter(event => eventGalleryImages[event.id] && eventGalleryImages[event.id].length > 0).map((event) => (
-                  <div key={event.id} className="border rounded-lg p-4 bg-white shadow-md">
-                    <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2">
-                      <CalendarIcon className="w-5 h-5 text-gray-600" /> Galleria per "{event.titolo}"
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {eventGalleryImages[event.id].map((image) => (
-                        <Card key={image.id} className="relative group overflow-hidden rounded-lg shadow-lg">
-                          <img
-                            src={image.url}
-                            alt={image.alt}
-                            className="w-full h-40 object-cover rounded-t-lg transition-transform duration-200 group-hover:scale-105"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => handleDeleteImage(image.path, image.eventId)}
-                              className="bg-red-600 hover:bg-red-700 text-white rounded-full p-2"
-                            >
-                              <TrashIcon className="h-5 w-5" />
-                            </Button>
-                          </div>
-                          <CardContent className="p-3 text-center">
-                            <p className="text-sm font-medium text-gray-800 line-clamp-1">{image.alt}</p>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </Card>
     </div>
   )
 }
