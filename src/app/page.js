@@ -210,7 +210,10 @@ export default function Home() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        videoRef.current.play() // Aggiunto per assicurare che il video parta
+        // Aggiunto listener per assicurare che il video parta solo quando i metadati sono caricati
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().catch(err => console.error("Error playing video:", err));
+        };
       }
     } catch (error) {
       console.error("Errore accesso camera:", error)
