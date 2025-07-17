@@ -1753,61 +1753,79 @@ export default function AdminDashboard() {
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-5 h-auto flex-wrap p-1 bg-gray-200 rounded-lg">
-            <TabsTrigger value="overview" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="currentEvents" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Eventi Correnti
-            </TabsTrigger>
-            <TabsTrigger value="pastEvents" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Eventi Passati
-            </TabsTrigger>
-            <TabsTrigger value="generalGallery" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Galleria Generale
-            </TabsTrigger>
-            <TabsTrigger value="eventGallery" className="text-base font-semibold py-2 px-3 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200">
-              Gallerie Eventi
-            </TabsTrigger>
-          </TabsList>
+   <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+  <TabsList className="grid w-full grid-cols-4 bg-gray-200 rounded-lg h-16 sm:h-20 p-1 sm:p-2 shadow-lg border border-gray-300 mb-8">
 
-          <TabsContent value="overview" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-6 bg-gradient-to-br from-black to-gray-800 text-white rounded-lg shadow-xl">
-                <CardTitle className="text-3xl font-bold mb-2">Benvenuto!</CardTitle>
-                <CardDescription className="text-gray-300 mb-4">
-                  Questa è la tua dashboard amministratore. Utilizza le schede qui above per gestire i tuoi eventi, le iscrizioni e le gallerie fotografiche.
-                </CardDescription>
-                <Button
-                  onClick={() => setShowNewEventForm(true)}
-                  className="bg-white text-black hover:bg-gray-200 font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-                >
-                  <PlusIcon className="w-5 h-5" /> Crea Nuovo Evento
-                </Button>
-              </Card>
+    <TabsTrigger 
+      value="overview" 
+      className="text-xs sm:text-base font-semibold px-1 sm:px-3 py-2 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200 flex flex-col sm:flex-row items-center justify-center"
+    >
+      <ActivityIcon className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-1" />
+      <span className="hidden sm:inline">Overview</span>
+      <span className="sm:hidden text-xs mt-1">Home</span>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="currentEvents" 
+      className="text-xs sm:text-base font-semibold px-1 sm:px-3 py-2 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200 flex flex-col sm:flex-row items-center justify-center"
+    >
+      <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-1" />
+      <span className="hidden sm:inline">Eventi Correnti</span>
+      <span className="sm:hidden text-xs mt-1">Correnti</span>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="pastEvents" 
+      className="text-xs sm:text-base font-semibold px-1 sm:px-3 py-2 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200 flex flex-col sm:flex-row items-center justify-center"
+    >
+      <ClockIcon className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-1" />
+      <span className="hidden sm:inline">Eventi Passati</span>
+      <span className="sm:hidden text-xs mt-1">Passati</span>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="generalGallery" 
+      className="text-xs sm:text-base font-semibold px-1 sm:px-3 py-2 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200 flex flex-col sm:flex-row items-center justify-center"
+    >
+      <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-1" />
+      <span className="hidden sm:inline">Galleria Generale</span>
+      <span className="sm:hidden text-xs mt-1">Generale</span>
+    </TabsTrigger>
+  </TabsList>
 
-              <Card className="p-6 bg-white rounded-lg shadow-xl border border-gray-200">
-                <CardTitle className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
-                  <ActivityIcon className="w-6 h-6 text-gray-600" /> Riepilogo Attività
-                </CardTitle>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Eventi Correnti:</span>
-                    <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingEvents ? "..." : events.length}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Eventi Passati:</span>
-                    <Badge className="bg-gray-600 text-white px-3 py-1 text-lg font-bold">{loadingPastEvents ? "..." : pastEvents.length}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Immagini in Galleria:</span>
-                    <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingImages ? "..." : galleryImages.length + Object.values(eventGalleryImages).flat().length}</Badge>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </TabsContent>
+  <TabsContent value="overview" className="mt-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card className="p-6 bg-gradient-to-br from-black to-gray-800 text-white rounded-lg shadow-xl">
+        <CardTitle className="text-3xl font-bold mb-2">Benvenuto!</CardTitle>
+        <CardDescription className="text-gray-300 mb-4">
+          Questa è la tua dashboard amministratore. Utilizza le schede qui above per gestire i tuoi eventi, le iscrizioni e le gallerie fotografiche.
+        </CardDescription>
+        <Button
+          onClick={() => setShowNewEventForm(true)}
+          className="bg-white text-black hover:bg-gray-200 font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
+        >
+          <PlusIcon className="w-5 h-5" /> Crea Nuovo Evento
+        </Button>
+      </Card>
+
+      <Card className="p-6 bg-white rounded-lg shadow-xl border border-gray-200">
+        <CardTitle className="text-2xl font-bold text-black mb-4 flex items-center gap-2">
+          <ActivityIcon className="w-6 h-6 text-gray-600" /> Riepilogo Attività
+        </CardTitle>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+            <span className="text-gray-700 font-medium">Eventi Correnti:</span>
+            <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingEvents ? "..." : events.length}</Badge>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+            <span className="text-gray-700 font-medium">Eventi Passati:</span>
+            <Badge className="bg-gray-600 text-white px-3 py-1 text-lg font-bold">{loadingPastEvents ? "..." : pastEvents.length}</Badge>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+            <span className="text-gray-700 font-medium">Immagini in Galleria:</span>
+            <Badge className="bg-black text-white px-3 py-1 text-lg font-bold">{loadingImages ? "..." : galleryImages.length + Object.values(eventGalleryImages).flat().length}</Badge>
+          </div>
+        </div>
+      </Card>
+    </div>
+  </TabsContent>
 
           {/* Tab Eventi Correnti */}
           <TabsContent value="currentEvents" className="mt-6">
