@@ -2026,31 +2026,104 @@ yPos += 8
       showNotification("File fattura o registrazione non selezionati.", "warning");
       return;
     }
-
+  
     try {
       const filePath = `fatture/${selectedRegistration.id_evento_fk}/${selectedRegistration.id}_${invoiceFile.name}`;
+  
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("doc")
         .upload(filePath, invoiceFile, {
           cacheControl: "3600",
           upsert: true,
         });
-
+  
       if (uploadError) {
         throw new Error(`Errore durante il caricamento della fattura: ${uploadError.message}`);
       }
-
-      // Optionally, send email via a Supabase Function or direct email service if available
-      // For now, we'll just confirm upload.
-      showNotification("Fattura caricata con successo e email inviata (simulato)!", "success");
+  
+      // Scarica il file appena caricato (come Blob)
+      const { data: fileBlob, error: downloadError } = await supabase.storage
+        .from("doc")
+        .download(filePath);
+  
+      if (downloadError || !fileBlob) {
+        throw new Error("Impossibile scaricare la fattura per allegarla.");
+      }
+  
+      // Converte il Blob in base64
+      const arrayBuffer = await fileBlob.arrayBuffer();
+      const base64String = btoa(
+        String.fromCharCode(...new Uint8Array(arrayBuffer))
+      );
+  
+      const email = selectedRegistration.indirizzo_email;
+      if (!email) {
+        throw new Error("Email non presente nella registrazione selezionata.");
+      }
+  
+      // Costruisci soggetto e corpo personalizzati
+      const subject = `Fattura per ${selectedRegistration.nome} ${selectedRegistration.cognome} - Evento: ${selectedEventForRegistrations.titolo}`;
+  
+      const htmlBody = `
+        <p>Ciao <strong>${selectedRegistration.nome} ${selectedRegistration.cognome}</strong>,</p>
+        <p>Grazie per aver partecipato all'evento <strong>${selectedEventForRegistrations.titolo}</strong>.</p>
+        <p>In allegato trovi la tua fattura <strong>${invoiceFile.name}</strong>.</p>
+        <p>Per qualsiasi domanda, non esitare a contattarci.</p>
+        <p>Buona giornata!</p>
+        <p>Il team di AldebaranDrive</p>
+      `;
+  
+      // Invia email con allegato
+      const emailResponse = await fetch('/api/resendFatturaApi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          subject,
+          htmlBody,
+          filename: invoiceFile.name,
+          base64: base64String,
+        }),
+      });
+  
+      const contentType = emailResponse.headers.get("content-type");
+      let emailResult;
+      if (contentType && contentType.includes("application/json")) {
+        emailResult = await emailResponse.json();
+      } else {
+        const text = await emailResponse.text();
+        throw new Error("Risposta API non valida: " + text);
+      }
+  
+      if (!emailResponse.ok) {
+        throw new Error(emailResult?.error || "Errore durante l'invio dell'email");
+      }
+  
+      showNotification("Fattura inviata via email con successo!", "success");
       setShowInvoiceUpload(false);
       setInvoiceFile(null);
       setSelectedRegistration(null);
+  
+      // Settare a true verificato
+      const { data, error } = await supabase
+        .from('guidatore')
+        .update({ verificato: true })
+        .eq('id', selectedRegistration.id);
+  
+      if (error) {
+        console.error('Errore aggiornamento guidatore:', error);
+      } else {
+        console.log('Guidatore aggiornato:', data);
+      }
+  
     } catch (error) {
-      console.error("Errore nel caricamento o invio fattura:", error);
-      showNotification("Errore nel caricamento o invio fattura: " + error.message, "error");
+      console.error("Errore invio fattura:", error);
+      showNotification("Errore: " + error.message, "error");
     }
   };
+  
+  
+  
 
   const openDocumentInModal = async (documentPath, type, isPassenger = false) => {
     if (!documentPath) {
@@ -2605,4 +2678,3 @@ yPos += 8
     </div>
   )
 }
-
