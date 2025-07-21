@@ -546,6 +546,9 @@ export default function Home() {
         }
       }
 
+      // Invio della mail di conferma
+      handleConfirmationMail(guidatoreInserito.indirizzo_email);
+
       alert("Iscrizione completata con successo!")
       setShowForm(false)
 
@@ -580,6 +583,29 @@ export default function Home() {
       alert("Si è verificato un errore durante l'iscrizione: " + (err.message || "Verifica i dati inseriti e riprova."))
     }
   }
+
+  // Funzione per l'invio della mail conferma iscrizione
+  async function handleConfirmationMail(email) {
+    try {
+      const res = await fetch('/api/resendApi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        alert('Email inviata!');
+      } else {
+        alert('Errore:', data.error);
+      }
+    } catch (err) {
+      alert('Errore di rete:', err);
+    }
+  }
+  
+  
 
   return (
     <>
