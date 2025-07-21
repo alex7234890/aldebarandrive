@@ -19,6 +19,3 @@
 
 - [ ] **Dashboard - lista iscritti**: 
 - [ ] **Responsive mobile**: Disabilitare zoom e scale su dispositivi mobili
-
-
-sistemare anno immatricolazione auto
