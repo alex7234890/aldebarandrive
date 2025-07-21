@@ -803,7 +803,7 @@ const RegistrationsModal = ({
                                       variant="outline"
                                       size="sm"
                                       className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
-                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "jpg", true)}
+                                      onClick={() => openDocumentInModal(pass.documento_retro, "jpg", true)}
                                     >
                                       <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
                                     </Button>
