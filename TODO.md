@@ -10,9 +10,6 @@
 
 - [ ] **Fattura via email**: Implementare invio automatico della fattura all’utente
 - [ ] **Conferma iscrizione**: Inviare email di conferma all’atto dell’iscrizione
-- [ ] **Gestione post-invio fattura**: Una volta inviata la fattura:
-  - Cambiare colore dell’utente a verde
-  - Visualizzare spunta "Verificato"
 
 ## 👤 Sezione Utente
 
@@ -20,13 +17,7 @@
 
 ## 🖥️ Interfaccia Utente
 
-- [ ] **Dashboard - lista iscritti**: Rendere la lista minimale, mostrando solo:
-  - Nome e cognome del guidatore
-  - Numero passeggeri
-  - Quota selezionata
-  - Spunta **verde** se fattura inviata, **rossa** se non ancora inviata
-- [ ] **Login UI**: Migliorare l’interfaccia grafica della schermata di login
-- [ ] **Visibilità programma evento**: Migliorare la leggibilità all’interno della card evento
+- [ ] **Dashboard - lista iscritti**: 
 - [ ] **Responsive mobile**: Disabilitare zoom e scale su dispositivi mobili
 - [ ] **Scheda browser**:
   - Inserire logo favicon
