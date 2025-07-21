@@ -8,8 +8,8 @@
 
 ## 📧 Gestione Email
 
-- [ ] **Fattura via email**: Implementare invio automatico della fattura all’utente
-- [ ] **Conferma iscrizione**: Inviare email di conferma all’atto dell’iscrizione
+- [x] **Fattura via email**: Implementare invio automatico della fattura all’utente
+- [x] **Conferma iscrizione**: Inviare email di conferma all’atto dell’iscrizione
 
 ## 👤 Sezione Utente
 
