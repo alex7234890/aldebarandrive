@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,6 +35,8 @@ import {
   CheckCircleIcon,
   SendIcon,
   SparklesIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   TrendingUpIcon,
   ActivityIcon,
   PaperclipIcon,
@@ -506,13 +508,19 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
                 <UploadIcon className="w-4 h-4" />
                 Seleziona Fattura (PDF)
               </Label>
-              <Input
-                id="invoice-upload"
-                type="file"
-                onChange={(e) => setInvoiceFile(e.target.files[0])}
-                accept=".pdf"
-                className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200 transition-colors"
-              />
+            <label
+  htmlFor="invoice-upload"
+  className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
+>
+  <span className="text-base font-medium text-black">Carica fattura (PDF)</span>
+  <Input
+    id="invoice-upload"
+    type="file"
+    onChange={(e) => setInvoiceFile(e.target.files[0])}
+    accept=".pdf"
+    className="hidden"
+  />
+</label>
             </div>
 
             {invoiceFile && (
@@ -561,190 +569,276 @@ const RegistrationsModal = ({
   handleOpenInvoiceUpload,
   openDocumentInModal,
   onClose,
-}) => (
-  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-    <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-black text-white rounded-t-lg p-6">
-        <div>
-          <CardTitle className="text-2xl sm:text-3xl font-bold">
-            Iscrizioni per: {selectedEventForRegistrations?.titolo}
-          </CardTitle>
-          <CardDescription className="text-gray-300 mt-2 text-base sm:text-lg">
-            Gestisci le iscrizioni e genera documenti
-          </CardDescription>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="rounded-full text-white hover:bg-gray-800 transition-colors"
-        >
-          <XIcon className="h-6 w-6 sm:h-7 sm:w-7" />
-        </Button>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-6">
-        {loadingRegistrations ? (
-          <div className="flex flex-col justify-center items-center h-64 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-            <p className="text-xl text-gray-500">Caricamento iscrizioni...</p>
+}) => {
+  const [expandedRegistrations, setExpandedRegistrations] = React.useState(new Set());
+
+  const toggleExpanded = (regId) => {
+    const newExpanded = new Set(expandedRegistrations);
+    if (newExpanded.has(regId)) {
+      newExpanded.delete(regId);
+    } else {
+      newExpanded.add(regId);
+    }
+    setExpandedRegistrations(newExpanded);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 animate-fade-in">
+      <Card className="w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
+        <CardHeader className="flex flex-row items-start sm:items-center justify-between space-y-0 pb-3 sm:pb-4 bg-black text-white rounded-t-lg p-3 sm:p-6">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg sm:text-2xl lg:text-3xl font-bold leading-tight">
+              Iscrizioni per: {selectedEventForRegistrations?.titolo}
+            </CardTitle>
+            <CardDescription className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg">
+              Gestisci le iscrizioni e genera documenti
+            </CardDescription>
           </div>
-        ) : registrations.length === 0 ? (
-          <div className="text-center py-16">
-            <AlertCircleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <div className="text-2xl text-gray-500">Nessuna iscrizione trovata per questo evento</div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {registrations.map((reg, index) => (
-              <Card key={reg.id} className="shadow-lg border border-gray-300 bg-white rounded-lg overflow-hidden">
-                <div className="border-l-4 border-black">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-xl sm:text-2xl font-bold text-black flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-full flex items-center justify-center">
-                          <UserIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        {reg.nome} {reg.cognome}
-                      </div>
-                      <Badge variant="secondary" className="bg-gray-200 text-black px-3 py-1 self-start sm:ml-auto">
-                        #{index + 1}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Informazioni Guidatore */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <MailIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-gray-500">Email</p>
-                          <p className="font-semibold truncate">{reg.indirizzo_email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <PhoneIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-gray-500">Telefono</p>
-                          <p className="font-semibold">{reg.telefono}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <FileTextIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-gray-500">Codice Fiscale</p>
-                          <p className="font-semibold text-xs sm:text-sm">{reg.codice_fiscale}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <CalendarIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-gray-500">Data Nascita</p>
-                          <p className="font-semibold">{reg.data_nascita}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <TrendingUpIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-gray-500">Quota</p>
-                          <Badge className="bg-black text-white">{reg.quota}</Badge>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                        <AlertCircleIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-gray-500">Intolleranze</p>
-                          <p className="font-semibold text-sm">{reg.intolleranze || "Nessuna"}</p>
-                        </div>
-                      </div>
-                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                      <PaperclipIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm text-gray-500">Numero patente</p>
-                        <p className="font-semibold text-sm">{reg.Patente}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                      <CalendarIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm text-gray-500">Scadenza patente</p>
-                        <p className="font-semibold text-sm">{reg.PatenteS}</p>
-                      </div>
-                    </div>
-                    </div>
-                     
-
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
-                      <MapPinIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm text-gray-500">Indirizzo</p>
-                        <p className="font-semibold text-sm">{reg.indirizzo}</p>
-                      </div>
-                    </div>
-                  
-                   
-
-                    {/* Documenti Guidatore */}
-                    <div className="flex flex-wrap gap-3">
-                      {reg.documento_fronte && (
-                        <Button
-                          variant="outline"
-                          onClick={() => openDocumentInModal(reg.documento_fronte, "jpg", false)}
-                          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
-                        >
-                          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
-                        </Button>
-                      )}
-                      {reg.documento_retro && (
-                        <Button
-                          variant="outline"
-                          onClick={() => openDocumentInModal(reg.documento_retro, "jpg", false)}
-                          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm"
-                        >
-                          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
-                        </Button>
-                      )}
-                    </div>
-
-                    <Separator className="my-4" />
-
-                    {/* Informazioni Auto (solo per guidatori) */}
-                    {reg.auto_marca && (
-                      <>
-                        <div>
-                          <h4 className="text-lg sm:text-xl font-bold text-black mb-4 flex items-center gap-2">
-                            <CarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-                            Dettagli Auto
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Marca</p>
-                              <p className="font-semibold">{reg.auto_marca}</p>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Modello</p>
-                              <p className="font-semibold">{reg.auto_modello}</p>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Targa</p>
-                              <p className="font-semibold">{reg.auto_targa}</p>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Posti Auto</p>
-                              <p className="font-semibold">{reg.posti_auto}</p>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">Colore Auto</p>
-                              <p className="font-semibold">{reg.auto_colore}</p>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                              <p className="text-sm text-gray-500">anno immatricolazione</p>
-                              <p className="font-semibold">{reg.auto_immatricolazione}</p>
-                            </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="rounded-full text-white hover:bg-gray-800 transition-colors ml-2 flex-shrink-0"
+          >
+            <XIcon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
+          </Button>
+        </CardHeader>
+        
+        <CardContent className="p-3 sm:p-4 lg:p-6">
+          {loadingRegistrations ? (
+            <div className="flex flex-col justify-center items-center h-48 sm:h-64 space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-black"></div>
+              <p className="text-lg sm:text-xl text-gray-500">Caricamento iscrizioni...</p>
+            </div>
+          ) : registrations.length === 0 ? (
+            <div className="text-center py-12 sm:py-16">
+              <AlertCircleIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+              <div className="text-xl sm:text-2xl text-gray-500 px-4">Nessuna iscrizione trovata per questo evento</div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {registrations.map((reg, index) => {
+                const totalPartecipanti = 1 + (reg.passeggeri ? reg.passeggeri.length : 0);
+                const fatturaInviata = reg.verificato || false;
+                const isExpanded = expandedRegistrations.has(reg.id);
+                
+                return (
+                  <Card key={reg.id} className="shadow-sm border border-gray-200 bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <CardContent className="p-3 sm:p-4">
+                      {/* Vista minimale - Layout mobile first */}
+                      <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                        
+                        {/* Nome Guidatore e numero */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+                            <UserIcon className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-bold text-base sm:text-lg text-black truncate">
+                              {reg.nome} {reg.cognome}
+                            </h3>
+                            <p className="text-sm text-gray-500">#{index + 1}</p>
                           </div>
                         </div>
-                        <Separator className="my-4" />
-                      </>
-                    )}
+                        
+                        {/* Info partecipanti e status - layout mobile */}
+                        <div className="flex items-center justify-between sm:flex-col sm:items-end sm:gap-2">
+                          {/* Numero Partecipanti */}
+                          <div className="flex items-center gap-2">
+                            <UsersIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                            <span className="font-semibold text-base sm:text-lg">{totalPartecipanti}</span>
+                            <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">
+                              {totalPartecipanti === 1 ? 'partecipante' : 'partecipanti'}
+                            </span>
+                          </div>
+                          
+                          {/* Status Fattura */}
+                          <div className="flex items-center gap-2">
+                            {fatturaInviata ? (
+                              <div className="flex items-center gap-1 sm:gap-2 text-green-600">
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                  <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
+                                </div>
+                                <span className="text-xs sm:text-sm font-medium">Inviata</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 sm:gap-2 text-red-600">
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-red-100 flex items-center justify-center">
+                                  <XIcon className="w-3 h-3 sm:w-4 sm:h-4 text-red-600" />
+                                </div>
+                                <span className="text-xs sm:text-sm font-medium">Mancante</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Azioni - sempre in basso su mobile */}
+                      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100 sm:border-t-0 sm:pt-0 sm:mt-0 sm:ml-auto sm:flex-shrink-0">
+                        <Button
+                          onClick={() => toggleExpanded(reg.id)}
+                          variant="outline"
+                          className="border-gray-300 hover:bg-gray-50 text-xs sm:text-sm flex-1 sm:flex-none"
+                          size="sm"
+                        >
+                          {isExpanded ? <ChevronUpIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> : <ChevronDownIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />}
+                          {isExpanded ? 'Riduci' : 'Dettagli'}
+                        </Button>
+                        
+                        <Button
+                          onClick={() => handleGenerateIndividualPdf(reg, selectedEventForRegistrations)}
+                          className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all duration-200 text-xs sm:text-sm flex-1 sm:flex-none"
+                          size="sm"
+                        >
+                          <DownloadIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
+                          <span className="hidden sm:inline">Esporta </span>PDF
+                        </Button>
+                        
+                        {!fatturaInviata && (
+                          <Button
+                            onClick={() => handleOpenInvoiceUpload(reg)}
+                            className="bg-gray-600 hover:bg-gray-700 text-white shadow-sm transition-all duration-200 text-xs sm:text-sm flex-1 sm:flex-none"
+                            size="sm"
+                          >
+                            <UploadIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
+                            <span className="hidden sm:inline">Carica </span>Fattura
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Vista dettagliata espandibile */}
+                      {isExpanded && (
+                        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+                          {/* Informazioni Guidatore */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <MailIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">Email</p>
+                                <p className="font-semibold text-sm break-all">{reg.indirizzo_email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <PhoneIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">Telefono</p>
+                                <p className="font-semibold text-sm">{reg.telefono}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <FileTextIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">Codice Fiscale</p>
+                                <p className="font-semibold text-xs break-all">{reg.codice_fiscale}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">Data Nascita</p>
+                                <p className="font-semibold text-sm">{reg.data_nascita}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <TrendingUpIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">Quota</p>
+                                <Badge className="bg-black text-white text-xs">{reg.quota}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <AlertCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">Intolleranze</p>
+                                <p className="font-semibold text-sm">{reg.intolleranze || "Nessuna"}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <PaperclipIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">Numero patente</p>
+                                <p className="font-semibold text-sm break-all">{reg.Patente}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">Scadenza patente</p>
+                                <p className="font-semibold text-sm">{reg.PatenteS}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Indirizzo - Elemento a larghezza piena */}
+                          <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300 mb-4 sm:mb-6">
+                            <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm text-gray-500">Indirizzo</p>
+                              <p className="font-semibold text-sm break-words">{reg.indirizzo}</p>
+                            </div>
+                          </div>
+
+                          {/* Documenti Guidatore */}
+                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
+                            {reg.documento_fronte && (
+                              <Button
+                                variant="outline"
+                                onClick={() => openDocumentInModal(reg.documento_fronte, "jpg", false)}
+                                className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm flex-1 sm:flex-none"
+                                size="sm"
+                              >
+                                <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
+                              </Button>
+                            )}
+                            {reg.documento_retro && (
+                              <Button
+                                variant="outline"
+                                onClick={() => openDocumentInModal(reg.documento_retro, "jpg", false)}
+                                className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm flex-1 sm:flex-none"
+                                size="sm"
+                              >
+                                <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* Informazioni Auto */}
+                          {reg.auto_marca && (
+                            <>
+                              <div className="mb-4 sm:mb-6">
+                                <h4 className="text-base sm:text-lg lg:text-xl font-bold text-black mb-3 sm:mb-4 flex items-center gap-2">
+                                  <CarIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
+                                  Dettagli Auto
+                                </h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <p className="text-xs sm:text-sm text-gray-500">Marca</p>
+                                    <p className="font-semibold text-sm break-words">{reg.auto_marca}</p>
+                                  </div>
+                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <p className="text-xs sm:text-sm text-gray-500">Modello</p>
+                                    <p className="font-semibold text-sm break-words">{reg.auto_modello}</p>
+                                  </div>
+                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <p className="text-xs sm:text-sm text-gray-500">Targa</p>
+                                    <p className="font-semibold text-sm break-all">{reg.auto_targa}</p>
+                                  </div>
+                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <p className="text-xs sm:text-sm text-gray-500">Posti Auto</p>
+                                    <p className="font-semibold text-sm">{reg.posti_auto}</p>
+                                  </div>
+                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <p className="text-xs sm:text-sm text-gray-500">Colore</p>
+                                    <p className="font-semibold text-sm break-words">{reg.auto_colore}</p>
+                                  </div>
+                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <p className="text-xs sm:text-sm text-gray-500">Anno</p>
+                                    <p className="font-semibold text-sm">{reg.auto_immatricolazione}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          )}
 
                     {/* Passeggeri */}
                     {reg.passeggeri && reg.passeggeri.length > 0 && (
@@ -798,12 +892,12 @@ const RegistrationsModal = ({
                                       <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
                                     </Button>
                                   )}
-                                  {pass.documento_retro && (
+                                  {pass.docuemnto_retro && (
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
-                                      onClick={() => openDocumentInModal(pass.documento_retro, "jpg", true)}
+                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "jpg", true)}
                                     >
                                       <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
                                     </Button>
@@ -1807,7 +1901,7 @@ yPos += 8
     yPos = addWrappedText('La presente liberatoria/autorizzazione potrà essere revocata in ogni tempo con comunicazione scritta da inviare via posta comune o e-mail', margin, yPos, maxWidth)
     yPos += 10
     
-    yPos = addWrappedText(`IL GUIDATORE (inserire Cognome e nome): ${registration.cognome} ${registration.nome}`, margin, yPos, maxWidth)
+    yPos = addWrappedText(`IL GUIDATORE : ${registration.cognome} ${registration.nome}`, margin, yPos, maxWidth)
     yPos += 8
     doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
     yPos += 8

@@ -1177,7 +1177,7 @@ export default function Home() {
                           id="guidatore-patente"
                           type="text"
                           name="guidatorePatente"
-                          placeholder="Es. Via Roma 1, Milano"
+                          placeholder="Es. XX000XX"
                           value={formData.guidatorePatente}
                           onChange={handleInputChange}
                           className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
