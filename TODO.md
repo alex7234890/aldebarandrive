@@ -19,7 +19,6 @@
 
 - [ ] **Dashboard - lista iscritti**: 
 - [ ] **Responsive mobile**: Disabilitare zoom e scale su dispositivi mobili
-- [ ] **Scheda browser**:
-  - Inserire logo favicon
-  - Impostare un titolo coerente con il nome del sito
 
+
+sistemare anno immatricolazione auto

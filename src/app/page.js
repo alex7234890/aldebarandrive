@@ -26,7 +26,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [passeggeri, setPasseggeri] = useState([])
-  const [isMobileMenuOpen, setIsMobileMenu] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [images, setImages] = useState([])
   const [selectedImage, setSelectedImage] = useState(null)
   const [showImageModal, setShowImageModal] = useState(false)
@@ -1399,7 +1399,7 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* Upload documenti passeggero */}
+          {/* Upload documenti passeggero */}
                         <div className="mt-4 space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1418,7 +1418,7 @@ export default function Home() {
                                 className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
                               >
                                 <UploadIcon className="w-4 h-4" />
-                                Carica da PC
+                                {isMobile ? "Carica" : "Carica da PC"}
                               </label>
                               {isMobile && (
                                 <Button
@@ -1462,7 +1462,7 @@ export default function Home() {
                                 className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
                               >
                                 <UploadIcon className="w-4 h-4" />
-                                Carica da PC
+                                {isMobile ? "Carica" : "Carica da PC"}
                               </label>
                               {isMobile && (
                                 <Button
@@ -1635,23 +1635,32 @@ export default function Home() {
                           required
                         />
                       </div>
-                      <div>
-                        <label
-                          htmlFor="auto-immatricolazione"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Anno immatricolazione *
-                        </label>
-                        <input
-                          id="auto-immatricolazione"
-                          type="date"
-                          name="autoImmatricolazione"
-                          value={formData.autoImmatricolazione}
-                          onChange={handleInputChange}
-                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
-                          required
-                        />
-                      </div>
+            <div>
+  <label
+    htmlFor="auto-immatricolazione"
+    className="block text-sm font-medium text-gray-700 mb-1"
+  >
+    Anno immatricolazione *
+  </label>
+  <select
+    id="auto-immatricolazione"
+    name="autoImmatricolazione"
+    value={formData.autoImmatricolazione}
+    onChange={handleInputChange}
+    required
+    className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full bg-white"
+  >
+    <option value="">Seleziona anno</option>
+    {Array.from({ length: 100 }, (_, i) => {
+      const year = new Date().getFullYear() - i;
+      return (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      );
+    })}
+  </select>
+</div>
                     </div>
                   </div>
 
@@ -1742,9 +1751,6 @@ export default function Home() {
       <p>
         <strong>Causale:</strong> Iscrizione evento {selectedEvent?.titolo} – {formData.guidatoreCognome} {formData.guidatoreNome}
       </p>
-      <p>
-        <strong> Esempio causale:</strong>   Mario Rossi – Supercar for Passion – Quota 1
-    </p>
     </div>
     <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
       <p className="text-sm text-yellow-800">
