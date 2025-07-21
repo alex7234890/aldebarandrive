@@ -37,6 +37,7 @@ import {
   SparklesIcon,
   TrendingUpIcon,
   ActivityIcon,
+  PaperclipIcon,
 } from "lucide-react"
 import jsPDF from "jspdf"
 import { supabase } from "@/lib/supabaseClient"
@@ -82,16 +83,7 @@ const EventFormModal = ({
       return false
     }
     // Ensure participants and auto numbers are positive integers
-    const partecipantiNum = Number(newEvent.partecipanti);
-    if (isNaN(partecipantiNum) || !Number.isInteger(partecipantiNum) || partecipantiNum <= 0) {
-      showNotification("Il numero massimo di partecipanti deve essere un numero intero positivo.", "warning")
-      return false
-    }
-    const numeroautoNum = Number(newEvent.numeroauto);
-    if (isNaN(numeroautoNum) || !Number.isInteger(numeroautoNum) || numeroautoNum <= 0) {
-      showNotification("Il numero massimo di auto deve essere un numero intero positivo.", "warning")
-      return false
-    }
+    
 
     // Validate quotas
     for (const quota of newEvent.quote) {
@@ -231,39 +223,7 @@ const EventFormModal = ({
                 />
               </div>
 
-              <div>
-                <Label htmlFor="partecipanti" className="text-base font-semibold text-black flex items-center gap-2">
-                  <UsersIcon className="w-4 h-4" />
-                  Max Partecipanti
-                </Label>
-                <Input
-                  id="partecipanti"
-                  name="partecipanti"
-                  type="number"
-                  value={newEvent.partecipanti}
-                  onChange={handleNewEventChange}
-                  required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
-                  min="1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="numeroauto" className="text-base font-semibold text-black flex items-center gap-2">
-                  <CarIcon className="w-4 h-4" />
-                  Max Auto
-                </Label>
-                <Input
-                  id="numeroauto"
-                  name="numeroauto"
-                  type="number"
-                  value={newEvent.numeroauto}
-                  onChange={handleNewEventChange}
-                  required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
-                  min="1"
-                />
-              </div>
+    
 
               <div className="md:col-span-2">
                 <Label htmlFor="programma" className="text-base font-semibold text-black flex items-center gap-2">
@@ -696,7 +656,22 @@ const RegistrationsModal = ({
                           <p className="font-semibold text-sm">{reg.intolleranze || "Nessuna"}</p>
                         </div>
                       </div>
+                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                      <PaperclipIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-500">Numero patente</p>
+                        <p className="font-semibold text-sm">{reg.Patente}</p>
+                      </div>
                     </div>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                      <CalendarIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-500">Scadenza patente</p>
+                        <p className="font-semibold text-sm">{reg.PatenteS}</p>
+                      </div>
+                    </div>
+                    </div>
+                     
 
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
                       <MapPinIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
@@ -705,6 +680,8 @@ const RegistrationsModal = ({
                         <p className="font-semibold text-sm">{reg.indirizzo}</p>
                       </div>
                     </div>
+                  
+                   
 
                     {/* Documenti Guidatore */}
                     <div className="flex flex-wrap gap-3">
@@ -754,6 +731,14 @@ const RegistrationsModal = ({
                             <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
                               <p className="text-sm text-gray-500">Posti Auto</p>
                               <p className="font-semibold">{reg.posti_auto}</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <p className="text-sm text-gray-500">Colore Auto</p>
+                              <p className="font-semibold">{reg.auto_colore}</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <p className="text-sm text-gray-500">anno immatricolazione</p>
+                              <p className="font-semibold">{reg.auto_immatricolazione}</p>
                             </div>
                           </div>
                         </div>
@@ -964,8 +949,6 @@ export default function AdminDashboard() {
     data: "",
     orario: "",
     luogo: "",
-    partecipanti: "",
-    numeroauto: "",
     programma: "",
     quote: [{ titolo: "", descrizione: "", prezzo: "" }],
   })
@@ -1175,8 +1158,7 @@ export default function AdminDashboard() {
           data: newEvent.data,
           orario: newEvent.orario,
           luogo: newEvent.luogo.trim(),
-          partecipanti: Number.parseInt(newEvent.partecipanti),
-          numeroauto: Number.parseInt(newEvent.numeroauto),
+         
           passato: false,
           quote: quotesJson,
           programma: newEvent.programma.trim() || null,
@@ -1196,8 +1178,7 @@ export default function AdminDashboard() {
         data: "",
         orario: "",
         luogo: "",
-        partecipanti: "",
-        numeroauto: "",
+       
         programma: "",
         quote: [{ titolo: "", descrizione: "", prezzo: "" }],
       })
@@ -1221,8 +1202,7 @@ export default function AdminDashboard() {
       data: event.data,
       orario: event.orario,
       luogo: event.luogo,
-      partecipanti: event.partecipanti,
-      numeroauto: event.numeroauto,
+   
       programma: event.programma || "",
       quote: quotesArray,
     })
@@ -1253,8 +1233,6 @@ export default function AdminDashboard() {
           data: newEvent.data,
           orario: newEvent.orario,
           luogo: newEvent.luogo.trim(),
-          partecipanti: Number.parseInt(newEvent.partecipanti),
-          numeroauto: Number.parseInt(newEvent.numeroauto),
           programma: newEvent.programma.trim() || null,
           quote: quotesJson,
         })
@@ -1275,8 +1253,7 @@ export default function AdminDashboard() {
         data: "",
         orario: "",
         luogo: "",
-        partecipanti: "",
-        numeroauto: "",
+    
         programma: "",
         quote: [{ titolo: "", descrizione: "", prezzo: "" }],
       })
@@ -1617,7 +1594,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     yPos += 8
     doc.text(`Codice Fiscale: ${registration.codice_fiscale}`, margin, yPos)
     yPos += 8
-    yPos = addWrappedText('Patente di guida n._______________________     Scadenza______________', margin, yPos, maxWidth)
+    yPos = addWrappedText(`Patente di guida n.: ${registration.Patente}   Scadenza:${registration.PatenteS}  `, margin, yPos, maxWidth)
     yPos += 3
     doc.text(`Cellulare: ${registration.telefono}`, margin, yPos)
     doc.text(`e-mail: ${registration.indirizzo_email}`, margin + 90, yPos)
@@ -1655,7 +1632,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     yPos += 8
     
     doc.setFont(undefined, 'normal')
-    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione: __________  Colore: _____________  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
+    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione:${registration.AnnoImmatricolazione}  Colore: ${registration.autoColore}  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
     yPos += 10
     
     // Chiede/chiedono
@@ -2052,8 +2029,7 @@ yPos += 8
               data: "",
               orario: "",
               luogo: "",
-              partecipanti: "",
-              numeroauto: "",
+        
               programma: "",
               quote: [{ titolo: "", descrizione: "", prezzo: "" }],
             })
@@ -2080,8 +2056,7 @@ yPos += 8
               data: "",
               orario: "",
               luogo: "",
-              partecipanti: "",
-              numeroauto: "",
+             
               programma: "",
               quote: [{ titolo: "", descrizione: "", prezzo: "" }],
             })
@@ -2308,14 +2283,8 @@ yPos += 8
                           <ClockIcon className="w-4 h-4 text-gray-500" />
                           <span>{event.orario}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <UsersIcon className="w-4 h-4 text-gray-500" />
-                          <span>Max Partecipanti: {event.partecipanti}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CarIcon className="w-4 h-4 text-gray-500" />
-                          <span>Max Auto: {event.numeroauto}</span>
-                        </div>
+                        
+      
                       </div>
                       <div className="flex flex-wrap gap-2 mb-4">
                         {Object.values(event.quote || {}).map((quota, idx) => (

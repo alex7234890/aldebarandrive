@@ -1,14 +1,5 @@
 # To-Do List
 
-## 🔧 Modifiche ai Form
-
-- [ ] **Form di iscrizione**: Aggiungere i seguenti campi obbligatori:
-  - Colore auto
-  - Anno immatricolazione
-  - Numero patente
-  - Data di scadenza patente
-  - Rimuovere max auto e max partecipanti
-
 ## 🖼️ Gestione Eventi
 
 - [ ] **Modifica evento**: Aggiungere la possibilità di caricare un'immagine di copertina per l'evento

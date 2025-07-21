@@ -60,10 +60,14 @@ export default function Home() {
     guidatoreIndirizzo: "",
     guidatoreCellulare: "",
     guidatoreEmail: "",
+    guidatorePatente: "",
+    guidatorePatenteScadenza:"",
     guidatoreDocumentoFronte: null,
     guidatoreDocumentoRetro: null,
     // Dati auto
     autoMarca: "",
+    autoColore:"",
+    autoImmatricolazione:"",
     autoModello: "",
     autoTarga: "",
     postiAuto: 4,
@@ -465,9 +469,13 @@ export default function Home() {
           indirizzo: formData.guidatoreIndirizzo,
           indirizzo_email: formData.guidatoreEmail,
           telefono: formData.guidatoreCellulare,
+          Patente: formData.guidatorePatente,
+          PatenteS: formData.guidatorePatenteScadenza,
           documento_fronte: guidatoreFrontePath,
           documento_retro: guidatoreRetroPath,
           auto_marca: formData.autoMarca,
+          auto_colore: formData.autoColore,
+          auto_immatricolazione: formData.autoImmatricolazione,
           auto_modello: formData.autoModello,
           auto_targa: formData.autoTarga,
           posti_auto: formData.postiAuto,
@@ -550,9 +558,13 @@ export default function Home() {
         guidatoreIndirizzo: "",
         guidatoreCellulare: "",
         guidatoreEmail: "",
+        guidatorePatente:"",
+        guidatorePatenteScadenza:"",
         guidatoreDocumentoFronte: null,
         guidatoreDocumentoRetro: null,
         autoMarca: "",
+        autoColore:"",
+        autoImmatricolazione:"",
         autoModello: "",
         autoTarga: "",
         postiAuto: 4,
@@ -713,9 +725,6 @@ export default function Home() {
                         </p>
                         <p className="flex items-center gap-2">
                           <MapPinIcon className="w-4 h-4 text-black" /> {evento.luogo}
-                        </p>
-                        <p className="flex items-center gap-2">
-                          <UsersIcon className="w-4 h-4 text-black" /> {evento.partecipanti} posti disponibili
                         </p>
                       </div>
 
@@ -1129,6 +1138,38 @@ export default function Home() {
                           name="guidatoreEmail"
                           placeholder="Es. mario.rossi@example.com"
                           value={formData.guidatoreEmail}
+                          onChange={handleInputChange}
+                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
+                          required
+                        />
+                      </div>
+                       <div>
+                        <label htmlFor="guidatore-patente" className="block text-sm font-medium text-gray-700 mb-1">
+                          Numero patente *
+                        </label>
+                        <input
+                          id="guidatore-patente"
+                          type="text"
+                          name="guidatorePatente"
+                          placeholder="Es. Via Roma 1, Milano"
+                          value={formData.guidatorePatente}
+                          onChange={handleInputChange}
+                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
+                          required
+                        />
+                      </div>
+                       <div>
+                        <label
+                          htmlFor="guidatore-patente-scadenza"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          Scadenza Patente *
+                        </label>
+                        <input
+                          id="guidatore-patente-scadenza"
+                          type="date"
+                          name="guidatorePatenteScadenza"
+                          value={formData.guidatorePatenteScadenza}
                           onChange={handleInputChange}
                           className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                           required
@@ -1579,6 +1620,38 @@ export default function Home() {
                           required
                         />
                       </div>
+                      <div>
+                        <label htmlFor="auto-colore" className="block text-sm font-medium text-gray-700 mb-1">
+                          Colore *
+                        </label>
+                        <input
+                          id="auto-colore"
+                          type="text"
+                          name="autoColore"
+                          placeholder="Es. blu metallizzata"
+                          value={formData.autoColore}
+                          onChange={handleInputChange}
+                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="auto-immatricolazione"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          Anno immatricolazione *
+                        </label>
+                        <input
+                          id="auto-immatricolazione"
+                          type="date"
+                          name="autoImmatricolazione"
+                          value={formData.autoImmatricolazione}
+                          onChange={handleInputChange}
+                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1791,7 +1864,7 @@ export default function Home() {
                   Specializzata nell'organizzazione di eventi a due e quattro ruote, offrendo un servizio completo per
                   tutti gli appassionati di motori.
                 </p>
-                <p className="text-gray-400 text-sm">P.IVA: 12345678901</p>
+                <p className="text-gray-400 text-sm">P.IVA: 02254520591</p>
               </div>
               {/* Informazioni di Contatto */}
               <div>
@@ -1799,11 +1872,11 @@ export default function Home() {
                 <div className="space-y-3 text-gray-300">
                   <p className="flex items-center gap-2">
                     <MapPinIcon className="w-4 h-4" />
-                    Via Roma 123, 20121 Milano (MI)
+                    Via dell'acero, 17 - 56022 - Castelfranco di sotto (PI)
                   </p>
                   <p className="flex items-center gap-2">
                     <span className="w-4 h-4 flex items-center justify-center">📞</span>
-                    +39 02 1234567
+                    +39 392.019.1272 +39 344.6853.979
                   </p>
                   <p className="flex items-center gap-2">
                     <span className="w-4 h-4 flex items-center justify-center">📧</span>
