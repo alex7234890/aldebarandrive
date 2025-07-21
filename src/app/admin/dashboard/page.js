@@ -840,86 +840,103 @@ const RegistrationsModal = ({
                             </>
                           )}
 
-                          {/* Passeggeri */}
-                          {reg.passeggeri && reg.passeggeri.length > 0 && (
-                            <div>
-                              <h4 className="text-base sm:text-lg lg:text-xl font-bold text-black mb-3 sm:mb-4 flex items-center gap-2">
-                                <UsersIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
-                                Passeggeri ({reg.passeggeri.length})
-                              </h4>
-                              <div className="space-y-4">
-                                {reg.passeggeri.map((pass, pIndex) => (
-                                  <div key={pIndex} className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-300 shadow-sm">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-                                      <h5 className="font-bold text-sm sm:text-base lg:text-lg text-black break-words">
-                                        {pass.nome} {pass.cognome}
-                                      </h5>
-                                      <Badge variant="outline" className="bg-gray-200 self-start sm:self-auto text-xs">
-                                        #{pIndex + 1}
-                                      </Badge>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
-                                      <div className="break-words">
-                                        <span className="text-gray-500">CF:</span>{" "}
-                                        <span className="font-semibold break-all">{pass.codice_fiscale}</span>
-                                      </div>
-                                      <div>
-                                        <span className="text-gray-500">Data Nascita:</span>{" "}
-                                        <span className="font-semibold">{pass.data_nascita}</span>
-                                      </div>
-                                      <div className="break-words">
-                                        <span className="text-gray-500">Email:</span>{" "}
-                                        <span className="font-semibold break-all">{pass.indirizzo_email}</span>
-                                      </div>
-                                      <div>
-                                        <span className="text-gray-500">Telefono:</span>{" "}
-                                        <span className="font-semibold">{pass.telefono}</span>
-                                      </div>
-                                      <div className="sm:col-span-2 break-words">
-                                        <span className="text-gray-500">Intolleranze:</span>{" "}
-                                        <span className="font-semibold">{pass.intolleranze || "Nessuna"}</span>
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                                      {pass.documento_fronte && (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs flex-1 sm:flex-none"
-                                          onClick={() => openDocumentInModal(pass.documento_fronte, "jpg", true)}
-                                        >
-                                          <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
-                                        </Button>
-                                      )}
-                                      {pass.docuemnto_retro && (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs flex-1 sm:flex-none"
-                                          onClick={() => openDocumentInModal(pass.docuemnto_retro, "jpg", true)}
-                                        >
-                                          <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
-                                        </Button>
-                                      )}
-                                    </div>
+                    {/* Passeggeri */}
+                    {reg.passeggeri && reg.passeggeri.length > 0 && (
+                      <>
+                        <div>
+                          <h4 className="text-lg sm:text-xl font-bold text-black mb-4 flex items-center gap-2">
+                            <UsersIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+                            Passeggeri ({reg.passeggeri.length})
+                          </h4>
+                          <div className="space-y-4">
+                            {reg.passeggeri.map((pass, pIndex) => (
+                              <div key={pIndex} className="p-4 bg-gray-50 rounded-lg border border-gray-300 shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+                                  <h5 className="font-bold text-base sm:text-lg text-black">
+                                    {pass.nome} {pass.cognome}
+                                  </h5>
+                                  <Badge variant="outline" className="bg-gray-200 self-start sm:self-auto">
+                                    #{pIndex + 1}
+                                  </Badge>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                                  <div>
+                                    <span className="text-gray-500">CF:</span>{" "}
+                                    <span className="font-semibold break-all">{pass.codice_fiscale}</span>
                                   </div>
-                                ))}
+                                  <div>
+                                    <span className="text-gray-500">Data Nascita:</span>{" "}
+                                    <span className="font-semibold">{pass.data_nascita}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Email:</span>{" "}
+                                    <span className="font-semibold break-all">{pass.indirizzo_email}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Telefono:</span>{" "}
+                                    <span className="font-semibold">{pass.telefono}</span>
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <span className="text-gray-500">Intolleranze:</span>{" "}
+                                    <span className="font-semibold">{pass.intolleranze || "Nessuna"}</span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {pass.documento_fronte && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
+                                      onClick={() => openDocumentInModal(pass.documento_fronte, "jpg", true)}
+                                    >
+                                      <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
+                                    </Button>
+                                  )}
+                                  {pass.docuemnto_retro && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs"
+                                      onClick={() => openDocumentInModal(pass.docuemnto_retro, "jpg", true)}
+                                    >
+                                      <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            ))}
+                          </div>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+                        <Separator className="my-4" />
+                      </>
+                    )}
+
+                    {/* Azioni */}
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        onClick={() => handleGenerateIndividualPdf(reg, selectedEventForRegistrations)}
+                        className="bg-black hover:bg-gray-800 text-white shadow-lg transition-all duration-200 text-sm"
+                      >
+                        <DownloadIcon className="mr-2 h-4 w-4" /> Esporta PDF
+                      </Button>
+                      <Button
+                        onClick={() => handleOpenInvoiceUpload(reg)}
+                        className="bg-gray-600 hover:bg-gray-700 text-white shadow-lg transition-all duration-200 text-sm"
+                      >
+                        <UploadIcon className="mr-2 h-4 w-4" /> Carica Fattura
+                      </Button>
+                    </div>
+                  </CardContent>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  </div>
+)
+
 // Modal per visualizzare documenti
 const DocumentViewerModal = ({ currentDocumentUrl, currentDocumentType, onClose }) => (
   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
