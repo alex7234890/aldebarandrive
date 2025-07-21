@@ -546,6 +546,9 @@ export default function Home() {
         }
       }
 
+      // Invio della mail di conferma
+      handleConfirmationMail(0, formData.guidatoreEmail, formData, passeggeri, selectedEvent);
+
       alert("Iscrizione completata con successo!")
       setShowForm(false)
 
@@ -580,6 +583,34 @@ export default function Home() {
       alert("Si è verificato un errore durante l'iscrizione: " + (err.message || "Verifica i dati inseriti e riprova."))
     }
   }
+
+  // Funzione per l'invio della mail conferma iscrizione
+  async function handleConfirmationMail(type, email, formData, passeggeri, selectedEvent) {
+    try {
+      const res = await fetch('/api/resendApi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          formData,         // Dati del guidatore e dell'auto
+          passeggeri,       // Dati dei passeggeri
+          selectedEvent     // Dati dell'evento selezionato
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Email di conferma inviata con successo!');
+      } else {
+        alert('Errore nell\'invio dell\'email di conferma: ' + data.error);
+      }
+    } catch (err) {
+      alert('Errore di rete durante l\'invio dell\'email: ' + err.message);
+    }
+  }
+  
+  
 
   return (
     <>
