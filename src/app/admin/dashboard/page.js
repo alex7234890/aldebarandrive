@@ -798,7 +798,7 @@ const RegistrationsModal = ({
                                       <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
                                     </Button>
                                   )}
-                                  {pass.docuemnto_retro && (
+                                  {pass.documento_retro && (
                                     <Button
                                       variant="outline"
                                       size="sm"
