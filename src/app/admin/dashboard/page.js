@@ -230,14 +230,21 @@ const EventFormModal = ({
                   <ImageIcon className="w-4 h-4" />
                   Immagine di Copertina (opzionale)
                 </Label>
+            
+                 <label
+                htmlFor="invoice-upload"
+                className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
+              >
+                <span className="text-base font-medium text-black">Carica fattura (PDF)</span>
                 <Input
-                  id="copertina"
+                   id="copertina"
                   name="copertina"
                   type="file"
                   accept="image/*"
                   onChange={handleNewEventChange}
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200"
+                  className="hidden"
                 />
+              </label>
                 <p className="text-sm text-gray-500 mt-1">
                   Seleziona un'immagine che rappresenti l'evento. Verrà salvata nel bucket doc/eventi/id_evento.
                 </p>
