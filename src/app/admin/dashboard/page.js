@@ -42,6 +42,7 @@ import {
   PaperclipIcon,
 } from "lucide-react"
 import jsPDF from "jspdf"
+import ReactMarkdown from 'react-markdown';
 import { supabase } from "@/lib/supabaseClient"
 
 // Helper per mostrare notifiche all'utente
@@ -162,20 +163,36 @@ const EventFormModal = ({
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="descrizione" className="text-base font-semibold text-black flex items-center gap-2">
-                  <FileTextIcon className="w-4 h-4" />
-                  Descrizione
-                </Label>
-                <Textarea
-                  id="descrizione"
-                  name="descrizione"
-                  value={newEvent.descrizione}
-                  onChange={handleNewEventChange}
-                  required
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 min-h-[120px] transition-colors"
-                  placeholder="Descrivi l'evento in dettaglio"
-                />
-              </div>
+  <Label
+    htmlFor="descrizione"
+    className="text-base font-semibold text-black flex items-center gap-2"
+  >
+    <FileTextIcon className="w-4 h-4" />
+    Descrizione
+  </Label>
+
+  <Textarea
+    id="descrizione"
+    name="descrizione"
+    value={newEvent.descrizione}
+    onChange={handleNewEventChange}
+    required
+    className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 min-h-[120px] transition-colors"
+    placeholder="Descrivi l'evento in dettaglio. Usa **grassetto** per evidenziare."
+  />
+
+  {/* ANTEPRIMA */}
+ {newEvent.descrizione && (
+  <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+    <h4 className="font-semibold mb-2 text-sm text-gray-600">Anteprima:</h4>
+    <div className="prose prose-sm">
+      <ReactMarkdown>{newEvent.descrizione}</ReactMarkdown>
+    </div>
+  </div>
+)}
+
+</div>
+
 
               <div>
                 <Label htmlFor="data" className="text-base font-semibold text-black flex items-center gap-2">

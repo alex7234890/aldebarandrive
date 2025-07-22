@@ -1032,11 +1032,11 @@ export default function Home() {
           <div className="container mx-auto px-6 py-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <div className="relative w-28 h-28 md:w-32 md:h-32">
+                <div className="relative w-72 h-28 md:w-32 md:h-32">
                   <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
                 </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-white">AldebaranDrive</h1>
+                 {/*} <h1 className="text-2xl md:text-3xl font-bold text-white">AldebaranDrive</h1>*/}
                 </div>
               </div>
               <nav className="hidden md:flex gap-8 text-lg font-medium items-center">
@@ -2325,7 +2325,7 @@ export default function Home() {
                   <div className="relative w-16 h-16">
                     <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
                   </div>
-                  <h3 className="text-xl font-bold">AldebaranDrive</h3>
+                 <h3 className="text-xl font-bold">AldebaranDrive</h3>
                 </div>
                 <p className="text-gray-300 mb-4">
                   Specializzata nell'organizzazione di eventi a due e quattro ruote, offrendo un servizio completo per
