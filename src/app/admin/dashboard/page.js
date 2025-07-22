@@ -527,18 +527,18 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
                 Seleziona Fattura (PDF)
               </Label>
             <label
-  htmlFor="invoice-upload"
-  className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
->
-  <span className="text-base font-medium text-black">Carica fattura (PDF)</span>
-  <Input
-    id="invoice-upload"
-    type="file"
-    onChange={(e) => setInvoiceFile(e.target.files[0])}
-    accept=".pdf"
-    className="hidden"
-  />
-</label>
+                htmlFor="invoice-upload"
+                className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
+              >
+                <span className="text-base font-medium text-black">Carica fattura (PDF)</span>
+                <Input
+                  id="invoice-upload"
+                  type="file"
+                  onChange={(e) => setInvoiceFile(e.target.files[0])}
+                  accept=".pdf"
+                  className="hidden"
+                />
+              </label>
             </div>
 
             {invoiceFile && (
