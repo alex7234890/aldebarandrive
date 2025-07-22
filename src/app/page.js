@@ -28,6 +28,7 @@ export default function Home() {
   const [passeggeri, setPasseggeri] = useState([])
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [images, setImages] = useState([])
+  const [cover, setCover] = useState({});
   const [selectedImage, setSelectedImage] = useState(null)
   const [showImageModal, setShowImageModal] = useState(false)
   const [showProgramModal, setShowProgramModal] = useState(false)
@@ -134,6 +135,49 @@ export default function Home() {
 
         setEventiPassati(passati)
         setEventi(futuri)
+
+        // Caricamento delle immagini di copertina degli eventi
+        const fetchImagesEvents = async () => {
+          try {
+            // Crea un oggetto per mappare gli eventi con le loro immagini di copertina
+            const coverImages = {}
+            
+            // Per ogni evento, genera il signed URL della copertina se esiste
+            for (const evento of data) {
+              if (evento.copertina) {
+                const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+                const lower = evento.copertina.toLowerCase()
+                
+                // Verifica se il path della copertina è valido
+                if (validExtensions.some((ext) => lower.endsWith(ext)) &&
+                    !lower.includes("placeholder") &&
+                    !lower.includes("immagine1") &&
+                    !lower.startsWith(".")) {
+                  
+                  try {
+                    const { data: signedUrl, error: urlError } = await supabase.storage
+                      .from("doc")
+                      .createSignedUrl(evento.copertina, 60 * 60) // validità 1h
+                    
+                    if (!urlError && signedUrl?.signedUrl) {
+                      coverImages[evento.id] = signedUrl.signedUrl
+                    }
+                  } catch (urlError) {
+                    console.error(`Errore URL per evento ${evento.id}:`, urlError)
+                  }
+                }
+              }
+            }
+            
+            setCover(coverImages)
+          } catch (error) {
+            console.error("Errore nel caricamento delle copertine:", error)
+          }
+        }
+
+        // Chiama la funzione per caricare le immagini di copertina
+        await fetchImagesEvents()
+
       } catch (error) {
         console.error("Errore nel caricamento degli eventi:", error)
       } finally {
@@ -734,7 +778,7 @@ export default function Home() {
                     {/* Immagine evento */}
                     <div className="relative h-48 bg-gray-200 overflow-hidden">
                       <Image
-                        src={evento.immagine || "/hero.png"}
+                        src={cover[evento.id] || "/hero.png"}
                         alt={evento.titolo}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"

@@ -225,6 +225,24 @@ const EventFormModal = ({
                 />
               </div>
 
+              <div className="md:col-span-2">
+                <Label htmlFor="copertina" className="text-base font-semibold text-black flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  Immagine di Copertina (opzionale)
+                </Label>
+                <Input
+                  id="copertina"
+                  name="copertina"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleNewEventChange}
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Seleziona un'immagine che rappresenti l'evento. Verrà salvata nel bucket doc/eventi/id_evento.
+                </p>
+              </div>
+
     
 
               <div className="md:col-span-2">
@@ -1028,6 +1046,7 @@ export default function AdminDashboard() {
     luogo: "",
     programma: "",
     quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+    copertina: null,
   })
 
   const [showImageUpload, setShowImageUpload] = useState(false)
@@ -1196,8 +1215,12 @@ export default function AdminDashboard() {
 
   // FUNZIONI DI GESTIONE EVENTI
   const handleNewEventChange = (e) => {
-    const { name, value } = e.target
-    setNewEvent((prev) => ({ ...prev, [name]: value }))
+    const { name, value, type, files } = e.target
+    if (type === 'file' && name === 'copertina') {
+      setNewEvent((prev) => ({ ...prev, [name]: files[0] }))
+    } else {
+      setNewEvent((prev) => ({ ...prev, [name]: value }))
+    }
   }
 
   const addQuota = () => {
@@ -1227,6 +1250,7 @@ export default function AdminDashboard() {
         }
       })
 
+      // Prima crea l'evento per ottenere l'ID
       const { data, error } = await supabase
         .from("evento")
         .insert({
@@ -1235,7 +1259,6 @@ export default function AdminDashboard() {
           data: newEvent.data,
           orario: newEvent.orario,
           luogo: newEvent.luogo.trim(),
-         
           passato: false,
           quote: quotesJson,
           programma: newEvent.programma.trim() || null,
@@ -1247,6 +1270,39 @@ export default function AdminDashboard() {
         throw error
       }
 
+      // Se c'è un'immagine di copertina, caricala
+      if (newEvent.copertina) {
+        try {
+          const fileExtension = newEvent.copertina.name.split('.').pop()
+          const fileName = `copertina.${fileExtension}`
+          const filePath = `eventi/${data.id}/${fileName}`
+
+          const { error: uploadError } = await supabase.storage
+            .from("doc")
+            .upload(filePath, newEvent.copertina, {
+              cacheControl: "3600",
+              upsert: true,
+            })
+
+          if (uploadError) {
+            throw new Error(`Errore nel caricamento dell'immagine di copertina: ${uploadError.message}`)
+          }
+
+          // Aggiorna l'evento con il path dell'immagine di copertina
+          const { error: updateError } = await supabase
+            .from("evento")
+            .update({ copertina: filePath })
+            .eq("id", data.id)
+
+          if (updateError) {
+            throw new Error(`Errore nell'aggiornamento del path della copertina: ${updateError.message}`)
+          }
+        } catch (uploadError) {
+          console.error("Errore durante l'upload della copertina:", uploadError)
+          showNotification("Evento creato ma errore nel caricamento della copertina: " + uploadError.message, "warning")
+        }
+      }
+
       showNotification("Evento creato con successo!", "success")
       setShowNewEventForm(false)
       setNewEvent({
@@ -1255,9 +1311,9 @@ export default function AdminDashboard() {
         data: "",
         orario: "",
         luogo: "",
-       
         programma: "",
         quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+        copertina: null,
       })
       fetchEventsAndImages()
     } catch (error) {
@@ -1279,9 +1335,9 @@ export default function AdminDashboard() {
       data: event.data,
       orario: event.orario,
       luogo: event.luogo,
-   
       programma: event.programma || "",
       quote: quotesArray,
+      copertina: null, // Reset file input for editing
     })
     setShowEditEventForm(true)
   }
@@ -1302,6 +1358,33 @@ export default function AdminDashboard() {
         }
       })
 
+      let copertinePath = editingEvent.copertina // Mantieni la copertina esistente se non viene caricata una nuova
+
+      // Se c'è una nuova immagine di copertina, caricala
+      if (newEvent.copertina) {
+        try {
+          const fileExtension = newEvent.copertina.name.split('.').pop()
+          const fileName = `copertina.${fileExtension}`
+          const filePath = `eventi/${editingEvent.id}/${fileName}`
+
+          const { error: uploadError } = await supabase.storage
+            .from("doc")
+            .upload(filePath, newEvent.copertina, {
+              cacheControl: "3600",
+              upsert: true,
+            })
+
+          if (uploadError) {
+            throw new Error(`Errore nel caricamento dell'immagine di copertina: ${uploadError.message}`)
+          }
+
+          copertinePath = filePath
+        } catch (uploadError) {
+          console.error("Errore durante l'upload della copertina:", uploadError)
+          showNotification("Errore nel caricamento della nuova copertina: " + uploadError.message, "warning")
+        }
+      }
+
       const { data, error } = await supabase
         .from("evento")
         .update({
@@ -1312,6 +1395,7 @@ export default function AdminDashboard() {
           luogo: newEvent.luogo.trim(),
           programma: newEvent.programma.trim() || null,
           quote: quotesJson,
+          copertina: copertinePath,
         })
         .eq("id", editingEvent.id)
         .select()
@@ -1330,9 +1414,9 @@ export default function AdminDashboard() {
         data: "",
         orario: "",
         luogo: "",
-    
         programma: "",
         quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+        copertina: null,
       })
       fetchEventsAndImages()
     } catch (error) {
@@ -2179,9 +2263,9 @@ yPos += 8
               data: "",
               orario: "",
               luogo: "",
-        
               programma: "",
               quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+              copertina: null,
             })
           }}
         />
@@ -2206,9 +2290,9 @@ yPos += 8
               data: "",
               orario: "",
               luogo: "",
-             
               programma: "",
               quote: [{ titolo: "", descrizione: "", prezzo: "" }],
+              copertina: null,
             })
           }}
         />
