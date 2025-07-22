@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
   try {
     const data = await resend.emails.send({
-      from: 'onboarding@resend.dev',  // Cambia con il tuo mittente verificato
+      from: 'onboarding@resend.dev', // deve essere un dominio verificato
       to,
       subject: subject || 'Fattura evento',
       html: htmlBody,
@@ -31,6 +31,12 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, data });
   } catch (err) {
     console.error("Errore invio email:", err);
-    return res.status(500).json({ error: 'Errore durante l\'invio della mail' });
+
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: 'Errore durante l\'invio della mail',
+        details: err?.message || 'Errore sconosciuto'
+      });
+    }
   }
 }

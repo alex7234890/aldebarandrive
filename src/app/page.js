@@ -712,23 +712,31 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          formData,         // Dati del guidatore e dell'auto
-          passeggeri,       // Dati dei passeggeri
-          selectedEvent     // Dati dell'evento selezionato
+          formData,
+          passeggeri,
+          selectedEvent
         }),
       });
-
-      const data = await res.json();
-
+  
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonError) {
+        const text = await res.text(); // fallback se non è JSON
+        console.error('Risposta non JSON:', text);
+        throw new Error('Risposta non valida dal server');
+      }
+  
       if (res.ok) {
         alert('Email di conferma inviata con successo!');
       } else {
-        alert('Errore nell\'invio dell\'email di conferma: ' + data.error);
+        alert('Errore nell\'invio dell\'email di conferma: ' + (data?.error || 'Errore sconosciuto'));
       }
     } catch (err) {
       alert('Errore di rete durante l\'invio dell\'email: ' + err.message);
     }
   }
+  
   
   
 
