@@ -776,19 +776,21 @@ export default function Home() {
                     className="bg-white border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:border-black group"
                   >
                     {/* Immagine evento */}
-                    <div className="relative h-48 bg-gray-200 overflow-hidden">
-                      <Image
-                        src={cover[evento.id] || "/hero.png"}
-                        alt={evento.titolo}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <div className="text-xs font-bold bg-black text-white px-3 py-1 rounded-full">
-                          {evento.tipo || "Evento"}
-                        </div>
-                      </div>
-                    </div>
+                    <div className="relative aspect-[3/2] bg-gray-200 overflow-hidden">
+  <Image
+    src={cover[evento.id] || "/hero.png"}
+    alt={evento.titolo}
+    fill
+    className="object-cover group-hover:scale-105 transition-transform duration-300"
+    sizes="(max-width: 768px) 100vw, 50vw"
+  />
+  <div className="absolute top-4 left-4">
+    <div className="text-xs font-bold bg-black text-white px-3 py-1 rounded-full">
+      {evento.tipo || "Evento"}
+    </div>
+  </div>
+</div>
+
 
                     <div className="p-6 flex flex-col">
                       <h3 className="text-xl font-bold mb-3 text-black">{evento.titolo}</h3>
