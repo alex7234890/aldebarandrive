@@ -1813,7 +1813,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     yPos += 8
     
     doc.setFont(undefined, 'normal')
-    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione:${registration.AnnoImmatricolazione}  Colore: ${registration.autoColore}  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
+    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione:${registration.auto_immatricolazione}  Colore: ${registration.autoColore}  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
     yPos += 10
     
     // Chiede/chiedono

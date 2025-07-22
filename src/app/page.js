@@ -3,7 +3,6 @@
 // Import delle librerie e componenti necessari
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import YearSelector from "@/components/ui/YearSelector"; 
 import {
   CalendarDaysIcon,
   MapPinIcon,
@@ -33,7 +32,6 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState(null)
   const [showImageModal, setShowImageModal] = useState(false)
   const [showProgramModal, setShowProgramModal] = useState(false)
-  const [invoiceYear, setInvoiceYear] = useState('');
 
   // Stati per il caricamento e la categorizzazione degli eventi
   const [eventi, setEventi] = useState([])
@@ -116,8 +114,8 @@ export default function Home() {
         const passati = []
 
         data.forEach((evento) => {
-          //const eventDate = new Date(`${evento.data}T${evento.orario}`)
-          if (evento.passato) {
+          const eventDate = new Date(`${evento.data}T${evento.orario}`)
+          if (eventDate < now) {
             passati.push(evento)
           } else {
             // Parse the 'quote' JSON string if it exists
@@ -778,21 +776,19 @@ export default function Home() {
                     className="bg-white border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:border-black group"
                   >
                     {/* Immagine evento */}
-                    <div className="relative aspect-[3/2] bg-gray-200 overflow-hidden">
-  <Image
-    src={cover[evento.id] || "/hero.png"}
-    alt={evento.titolo}
-    fill
-    className="object-cover group-hover:scale-105 transition-transform duration-300"
-    sizes="(max-width: 768px) 100vw, 50vw"
-  />
-  <div className="absolute top-4 left-4">
-    <div className="text-xs font-bold bg-black text-white px-3 py-1 rounded-full">
-      {evento.tipo || "Evento"}
-    </div>
-  </div>
-</div>
-
+                    <div className="relative h-48 bg-gray-200 overflow-hidden">
+                      <Image
+                        src={cover[evento.id] || "/hero.png"}
+                        alt={evento.titolo}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <div className="text-xs font-bold bg-black text-white px-3 py-1 rounded-full">
+                          {evento.tipo || "Evento"}
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="p-6 flex flex-col">
                       <h3 className="text-xl font-bold mb-3 text-black">{evento.titolo}</h3>
@@ -1721,7 +1717,24 @@ export default function Home() {
   >
     Anno immatricolazione *
   </label>
- <YearSelector invoiceYear={invoiceYear} setInvoiceYear={setInvoiceYear} />
+  <select
+  id="auto-immatricolazione"
+  name="autoImmatricolazione"
+  value={formData.autoImmatricolazione}
+  onChange={handleInputChange}
+  required
+  className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full bg-white"
+>
+  <option value="">Seleziona anno</option>
+  {Array.from({ length: 2025 - 1930 + 1 }, (_, i) => {
+    const year = 1930 + i;
+    return (
+      <option key={year} value={year}>
+        {year}
+      </option>
+    );
+  })}
+</select>
 
 </div>
                     </div>
