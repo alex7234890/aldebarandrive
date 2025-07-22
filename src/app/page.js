@@ -40,10 +40,6 @@ export default function Home() {
   const [loadingEventi, setLoadingEventi] = useState(true)
   const [loadingGalleria, setLoadingGalleria] = useState(true)
 
-  // Nuovo stato per le immagini degli eventi passati
-  const [eventiPassatiImmagini, setEventiPassatiImmagini] = useState({})
-  const [loadingEventiPassatiImmagini, setLoadingEventiPassatiImmagini] = useState(true)
-
   // Stati per la camera
   const [isMobile, setIsMobile] = useState(false)
   const [cameraStream, setCameraStream] = useState(null)
@@ -100,69 +96,6 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // Nuova funzione per caricare le immagini degli eventi passati dal database
-  const fetchEventiPassatiImmagini = async () => {
-    setLoadingEventiPassatiImmagini(true)
-    try {
-      // Ottieni tutti gli eventi passati
-      const { data: eventiPassatiData, error: eventiError } = await supabase
-        .from("evento")
-        .select("id, titolo")
-        .eq("passato", true)
-
-      if (eventiError) {
-        console.error("Errore durante il fetch degli eventi passati:", eventiError)
-        return
-      }
-
-      // Per ogni evento passato, ottieni le sue immagini
-      const immaginiPerEvento = {}
-      
-      for (const evento of eventiPassatiData) {
-        const { data: immaginiData, error: immaginiError } = await supabase
-          .from("eventoimmagine")
-          .select("path, descrizione")
-          .eq("id_evento_fk", evento.id)
-
-        if (immaginiError) {
-          console.error(`Errore durante il fetch delle immagini per evento ${evento.id}:`, immaginiError)
-          continue
-        }
-
-        // Genera signed URLs per le immagini
-        const immaginiConUrl = []
-        for (const immagine of immaginiData) {
-          if (immagine.path) {
-            try {
-              const { data: signedUrl, error: urlError } = await supabase.storage
-                .from("doc")
-                .createSignedUrl(immagine.path, 60 * 60) // validità 1h
-
-              if (!urlError && signedUrl?.signedUrl) {
-                immaginiConUrl.push({
-                  url: signedUrl.signedUrl,
-                  descrizione: immagine.descrizione || `Immagine evento ${evento.titolo}`
-                })
-              }
-            } catch (urlError) {
-              console.error(`Errore URL per immagine ${immagine.path}:`, urlError)
-            }
-          }
-        }
-
-        if (immaginiConUrl.length > 0) {
-          immaginiPerEvento[evento.id] = immaginiConUrl
-        }
-      }
-
-      setEventiPassatiImmagini(immaginiPerEvento)
-    } catch (error) {
-      console.error("Errore nel caricamento delle immagini degli eventi passati:", error)
-    } finally {
-      setLoadingEventiPassatiImmagini(false)
-    }
-  }
-
   // useEffect per il caricamento degli eventi futuri e passati all'avvio della pagina
   useEffect(() => {
     const fetchEventi = async () => {
@@ -181,13 +114,8 @@ export default function Home() {
         const passati = []
 
         data.forEach((evento) => {
-<<<<<<< HEAD
           const eventDate = new Date(`${evento.data}T${evento.orario}`)
           if (eventDate < now) {
-=======
-          // const eventDate = new Date(`${evento.data}T${evento.orario}`)
-          if (evento.passato) {
->>>>>>> cc4122a8f88506adce564fdc9b40c8539f23dcc1
             passati.push(evento)
           } else {
             // Parse the 'quote' JSON string if it exists
@@ -309,8 +237,6 @@ export default function Home() {
 
     fetchEventi()
     fetchImages()
-    // Carica le immagini degli eventi passati dal database
-    fetchEventiPassatiImmagini()
   }, [])
 
   // useEffect per la gestione della fotocamera basato sull'esempio funzionante
@@ -1049,68 +975,45 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SEZIONE GALLERIA EVENTI PASSATI MIGLIORATA CON IMMAGINI DAL DATABASE */}
+        {/* SEZIONE GALLERIA EVENTI PASSATI MIGLIORATA */}
         <section id="galleria-eventi" className="px-6 py-20 bg-gray-100">
           <div className="container mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">Galleria Eventi Passati</h2>
             <p className="text-center text-gray-600 mb-12 text-lg">Rivivi le emozioni dei nostri eventi precedenti</p>
-            
-            {loadingEventiPassatiImmagini ? (
-              <div className="text-center text-gray-700 text-lg">Caricamento immagini eventi passati...</div>
-            ) : eventiPassati.length === 0 ? (
-              <div className="text-center text-gray-700 text-lg">Nessun evento passato disponibile.</div>
-            ) : (
-              <div className="space-y-16">
-                {eventiPassati.map((evento) => (
-                  <div key={evento.id} className="bg-white rounded-2xl p-8 shadow-lg">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-2 h-12 bg-gradient-to-b from-red-500 via-white to-green-500 rounded-full"></div>
-                      <div>
-                        <h3 className="text-2xl font-semibold text-black">{evento.titolo}</h3>
-                        <p className="text-gray-600">{new Date(evento.data).toLocaleDateString()}</p>
-                      </div>
+            <div className="space-y-16">
+              {eventiPassati.map((evento) => (
+                <div key={evento.id} className="bg-white rounded-2xl p-8 shadow-lg">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-2 h-12 bg-gradient-to-b from-red-500 via-white to-green-500 rounded-full"></div>
+                    <div>
+                      <h3 className="text-2xl font-semibold text-black">{evento.titolo}</h3>
+                      <p className="text-gray-600">{new Date(evento.data).toLocaleDateString()}</p>
                     </div>
-                    
-                    {/* Mostra le immagini dal database se disponibili, altrimenti placeholder */}
-                    {eventiPassatiImmagini[evento.id] && eventiPassatiImmagini[evento.id].length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                        {eventiPassatiImmagini[evento.id].map((immagine, j) => (
-                          <div
-                            key={j}
-                            className="group relative aspect-square overflow-hidden rounded-xl bg-gray-200 hover:shadow-xl transition-all duration-500 cursor-pointer"
-                            onClick={() => handleImageClick(immagine.url)}
-                          >
-                            <img
-                              src={immagine.url}
-                              alt={immagine.descrizione}
-                              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <div className="absolute bottom-4 left-4 text-white">
-                                <p className="text-sm font-medium">Foto {j + 1}</p>
-                              </div>
-                            </div>
-                            {/* Icona zoom su hover */}
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
-                              <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
-                                <span className="text-lg">🔍</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <div className="text-4xl mb-4">📸</div>
-                        <p className="text-gray-600 text-lg">Nessuna immagine disponibile per questo evento</p>
-                        <p className="text-gray-500 text-sm mt-2">Le foto verranno caricate presto!</p>
-                      </div>
-                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                    {[...Array(5)].map((_, j) => (
+                      <div
+                        key={j}
+                        className="group relative aspect-square overflow-hidden rounded-xl bg-gray-200 hover:shadow-xl transition-all duration-500"
+                      >
+                        <Image
+                          src="/placeholder.svg?height=600&width=600"
+                          alt={`Evento ${evento.id} - Foto ${j + 1}`}
+                          width={600}
+                          height={600}
+                          className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="absolute bottom-4 left-4 text-white">
+                            <p className="text-sm font-medium">Foto {j + 1}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -1397,7 +1300,7 @@ export default function Home() {
 
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
-      Documento di Identità Guidatore - Retro *
+      Documento di identità Guidatore - Retro *
     </label>
     <div className="flex flex-wrap gap-2">
       <input
@@ -1815,7 +1718,6 @@ export default function Home() {
     Anno immatricolazione *
   </label>
   <select
-<<<<<<< HEAD
   id="auto-immatricolazione"
   name="autoImmatricolazione"
   value={formData.autoImmatricolazione}
@@ -1834,25 +1736,6 @@ export default function Home() {
   })}
 </select>
 
-=======
-    id="auto-immatricolazione"
-    name="autoImmatricolazione"
-    value={formData.autoImmatricolazione}
-    onChange={handleInputChange}
-    required
-    className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full bg-white"
-  >
-    <option value="">Seleziona anno</option>
-    {Array.from({ length: 100 }, (_, i) => {
-      const year = new Date().getFullYear() - i;
-      return (
-        <option key={year} value={year}>
-          {year}
-        </option>
-      );
-    })}
-  </select>
->>>>>>> cc4122a8f88506adce564fdc9b40c8539f23dcc1
 </div>
                     </div>
                   </div>
@@ -1936,7 +1819,7 @@ export default function Home() {
         <strong>BIC/SWIFT:</strong>ICRAITRR910
       </p>
       <p>
-        <strong>Banca:</strong> BANCO FIORENTINO – MUGELLO – IMPRUNETA – SIGNA - CRED. COOP. SOCIETA' COOPERATIVA
+        <strong>Banca:</strong> BANCO FIORENTINO – MUGELLO – IMPRUNETA – SIGNA - CRED. COOP. SOCIETA’ COOPERATIVA
       </p>
       <p>
         <strong>Intestatario:</strong>MARLAN SRL
@@ -1947,7 +1830,7 @@ export default function Home() {
     </div>
     <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
       <p className="text-sm text-yellow-800">
-        <strong>Importante:</strong> Usa esattamente la causale indicata per facilitare l'identificazione del pagamento.
+        <strong>Importante:</strong> Usa esattamente la causale indicata per facilitare l’identificazione del pagamento.
       </p>
     </div>
     <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
@@ -2143,4 +2026,3 @@ export default function Home() {
     </>
   )
 }
-
