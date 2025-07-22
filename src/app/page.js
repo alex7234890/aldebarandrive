@@ -1,3 +1,4 @@
+
 "use client"
 
 // Import delle librerie e componenti necessari
@@ -19,6 +20,76 @@ import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import Head from "next/head"
+
+// Funzioni di validazione avanzate
+const validateCodiceFiscale = (cf) => {
+  if (!cf) return { valid: false, message: "Il codice fiscale è obbligatorio" };
+  const cfUpper = cf.toUpperCase().trim();
+  if (cfUpper.length !== 16) {
+    return { valid: false, message: "Il codice fiscale deve essere di 16 caratteri" };
+  }
+  if (!/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1}$/.test(cfUpper)) {
+    return { valid: false, message: "Il formato del codice fiscale non è valido" };
+  }
+  return { valid: true, message: "" };
+};
+
+const validatePhone = (phone) => {
+  if (!phone) return { valid: false, message: "Il numero di telefono è obbligatorio" };
+  const cleanPhone = phone.replace(/\s+/g, '');
+  if (!/^(\+39)?[0-9]{8,11}$/.test(cleanPhone)) {
+    return { valid: false, message: "Il numero di telefono non è valido (es. 3331234567)" };
+  }
+  return { valid: true, message: "" };
+};
+
+const validateEmail = (email) => {
+  if (!email) return { valid: false, message: "L'email è obbligatoria" };
+  const emailLower = email.toLowerCase().trim();
+  if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(emailLower)) {
+    return { valid: false, message: "L'indirizzo email non è valido" };
+  }
+  return { valid: true, message: "" };
+};
+
+const validatePatente = (patente) => {
+  if (!patente) return { valid: false, message: "Il numero di patente è obbligatorio" };
+  const patenteUpper = patente.toUpperCase().trim();
+  if (!/^[A-Z]{2}[0-9]{6,7}[A-Z]{1,2}$/.test(patenteUpper)) {
+    return { valid: false, message: "Il formato della patente non è valido (es. AB123456C)" };
+  }
+  return { valid: true, message: "" };
+};
+
+const validateTarga = (targa) => {
+  if (!targa) return { valid: false, message: "La targa è obbligatoria" };
+  const targaUpper = targa.toUpperCase().trim();
+  if (!/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/.test(targaUpper)) {
+    return { valid: false, message: "Il formato della targa non è valido (es. AB123CD)" };
+  }
+  return { valid: true, message: "" };
+};
+
+const validateRequiredField = (value, fieldName) => {
+  if (!value || value.toString().trim() === '') {
+    return { valid: false, message: `${fieldName} è obbligatorio` };
+  }
+  return { valid: true, message: "" };
+};
+
+const validateDate = (date, fieldName) => {
+  if (!date) return { valid: false, message: `${fieldName} è obbligatoria` };
+  const selectedDate = new Date(date);
+  const today = new Date();
+  if (fieldName.includes('Nascita') && selectedDate >= today) {
+    return { valid: false, message: "La data di nascita deve essere nel passato" };
+  }
+  if (fieldName.includes('Scadenza') && selectedDate <= today) {
+    return { valid: false, message: "La data di scadenza deve essere nel futuro" };
+  }
+  return { valid: true, message: "" };
+};
+
 
 // Componente principale della pagina di iscrizione
 export default function Home() {
@@ -52,6 +123,10 @@ export default function Home() {
   const [isCameraActive, setIsCameraActive] = useState(false)
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
+
+  // Stati per la gestione degli errori di validazione
+  const [validationErrors, setValidationErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Stato per i dati del form di iscrizione
   const [formData, setFormData] = useState({
@@ -422,10 +497,32 @@ export default function Home() {
   // FUNZIONI DI GESTIONE DEL FORM
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
+    let finalValue = type === "checkbox" ? checked : value;
+
+    // Trasforma in maiuscolo per i campi specificati
+    if (['guidatoreCodiceFiscale', 'guidatorePatente', 'autoTarga'].includes(name)) {
+      finalValue = finalValue.toUpperCase();
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: finalValue,
     }))
+  }
+
+  const handlePasseggeroChange = (index, field, value, type = 'text', checked = false) => {
+    const newPasseggeri = [...passeggeri]
+    let finalValue = type === "checkbox" ? checked : value;
+
+    if (['codiceFiscale'].includes(field)) {
+      finalValue = finalValue.toUpperCase();
+    }
+
+    newPasseggeri[index] = {
+      ...newPasseggeri[index],
+      [field]: finalValue,
+    }
+    setPasseggeri(newPasseggeri)
   }
 
   const handleFileUpload = (e, fieldName, index = null) => {
@@ -494,14 +591,7 @@ export default function Home() {
     setPasseggeri((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handlePasseggeroChange = (index, field, value) => {
-    const newPasseggeri = [...passeggeri]
-    newPasseggeri[index] = {
-      ...newPasseggeri[index],
-      [field]: value,
-    }
-    setPasseggeri(newPasseggeri)
-  }
+
 
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl)
@@ -538,171 +628,363 @@ export default function Home() {
 
   const handleSubmitRegistration = async () => {
     if (!selectedEvent) {
-      alert("Nessun evento selezionato per l'iscrizione.")
-      return
+        alert("Nessun evento selezionato per l'iscrizione.");
+        return;
     }
+
+    setIsSubmitting(true);
+    setValidationErrors({});
+
     try {
-      // Upload documenti guidatore
-      let guidatoreFrontePath = null
-      let guidatoreRetroPath = null
-
-      if (formData.guidatoreDocumentoFronte) {
-        const fronteFileName = `${formData.guidatoreCodiceFiscale}_${Date.now()}_fronte.${formData.guidatoreDocumentoFronte.name.split(".").pop()}`
-        const { data: docFronte, error: uploadFronteErr } = await supabase.storage
-          .from("doc")
-          .upload(`guidatori/${fronteFileName}`, formData.guidatoreDocumentoFronte, {
-            cacheControl: "3600",
-            upsert: false,
-          })
-        if (uploadFronteErr) {
-          console.error("Errore caricamento fronte:", uploadFronteErr)
-          alert("Errore durante il caricamento del fronte del documento: " + uploadFronteErr.message)
-          return
+        // Validazione completa dei dati del guidatore
+        const guidatoreErrors = {};
+        
+        const cognomeValidation = validateRequiredField(formData.guidatoreCognome, "Cognome");
+        if (!cognomeValidation.valid) guidatoreErrors.guidatoreCognome = cognomeValidation.message;
+        
+        const nomeValidation = validateRequiredField(formData.guidatoreNome, "Nome");
+        if (!nomeValidation.valid) guidatoreErrors.guidatoreNome = nomeValidation.message;
+        
+        // CORREZIONE: Validazione rigorosa del codice fiscale
+        const cfValidation = validateCodiceFiscale(formData.guidatoreCodiceFiscale);
+        if (!cfValidation.valid) {
+            guidatoreErrors.guidatoreCodiceFiscale = cfValidation.message;
+            console.error("Errore validazione CF guidatore:", cfValidation.message, "CF:", formData.guidatoreCodiceFiscale);
         }
-        guidatoreFrontePath = docFronte.path
-      }
+        
+        const phoneValidation = validatePhone(formData.guidatoreCellulare);
+        if (!phoneValidation.valid) guidatoreErrors.guidatoreCellulare = phoneValidation.message;
+        
+        const emailValidation = validateEmail(formData.guidatoreEmail);
+        if (!emailValidation.valid) guidatoreErrors.guidatoreEmail = emailValidation.message;
+        
+        /* const patenteValidation = validatePatente(formData.guidatorePatente);
+        if (!patenteValidation.valid) guidatoreErrors.guidatorePatente = patenteValidation.message;*/
+        
+        const dataNascitaValidation = validateDate(formData.guidatoreDataNascita, "Data di Nascita");
+        if (!dataNascitaValidation.valid) guidatoreErrors.guidatoreDataNascita = dataNascitaValidation.message;
+        
+        const patenteScadenzaValidation = validateDate(formData.guidatorePatenteScadenza, "Scadenza Patente");
+        if (!patenteScadenzaValidation.valid) guidatoreErrors.guidatorePatenteScadenza = patenteScadenzaValidation.message;
+        
+        const indirizzoValidation = validateRequiredField(formData.guidatoreIndirizzo, "Indirizzo");
+        if (!indirizzoValidation.valid) guidatoreErrors.guidatoreIndirizzo = indirizzoValidation.message;
 
-      if (formData.guidatoreDocumentoRetro) {
-        const retroFileName = `${formData.guidatoreCodiceFiscale}_${Date.now()}_retro.${formData.guidatoreDocumentoRetro.name.split(".").pop()}`
-        const { data: docRetro, error: uploadRetroErr } = await supabase.storage
-          .from("doc")
-          .upload(`guidatori/${retroFileName}`, formData.guidatoreDocumentoRetro, {
-            cacheControl: "3600",
-            upsert: false,
-          })
-        if (uploadRetroErr) {
-          console.error("Errore caricamento retro:", uploadRetroErr)
-          alert("Errore durante il caricamento del retro del documento: " + uploadRetroErr.message)
-          return
-        }
-        guidatoreRetroPath = docRetro.path
-      }
-
-      // Inserimento guidatore
-      const { data: guidatoreInserito, error: insertErr } = await supabase
-        .from("guidatore")
-        .insert({
-          nome: formData.guidatoreNome,
-          cognome: formData.guidatoreCognome,
-          data_nascita: formData.guidatoreDataNascita,
-          codice_fiscale: formData.guidatoreCodiceFiscale,
-          indirizzo: formData.guidatoreIndirizzo,
-          indirizzo_email: formData.guidatoreEmail,
-          telefono: formData.guidatoreCellulare,
-          Patente: formData.guidatorePatente,
-          PatenteS: formData.guidatorePatenteScadenza,
-          documento_fronte: guidatoreFrontePath,
-          documento_retro: guidatoreRetroPath,
-          auto_marca: formData.autoMarca,
-          auto_colore: formData.autoColore,
-          auto_immatricolazione: formData.autoImmatricolazione,
-          auto_modello: formData.autoModello,
-          auto_targa: formData.autoTarga,
-          posti_auto: formData.postiAuto,
-          intolleranze: formData.guidatoreEsigenzeAlimentari ? formData.guidatoreIntolleranze : null,
-          id_evento_fk: selectedEvent.id,
-          quota: formData.quotaSelezionata,
-          verificato: false,
-        })
-        .select()
-        .single()
-
-      if (insertErr) {
-        console.error("Errore inserimento guidatore:", insertErr)
-        throw insertErr
-      }
-
-      const guidatoreId = guidatoreInserito.id
-
-      // Upload e inserimento passeggeri
-      for (let i = 0; i < passeggeri.length; i++) {
-        const p = passeggeri[i]
-        let passeggeroFrontePath = null
-        let passeggeroRetroPath = null
-
-        if (p.documentoFronte) {
-          const fronteFileName = `${p.codiceFiscale}_${Date.now()}_fronte.${p.documentoFronte.name.split(".").pop()}`
-          const { data: docFronte, error: pFronteErr } = await supabase.storage
-            .from("doc")
-            .upload(`passeggeri/${fronteFileName}`, p.documentoFronte, { cacheControl: "3600", upsert: false })
-          if (pFronteErr) {
-            console.error(`Errore fronte passeggero ${i + 1}:`, pFronteErr)
-            continue
-          }
-          passeggeroFrontePath = docFronte.path
+        // Controllo GDPR rigoroso
+        if (!formData.guidatoreAutorizzaTrattamento) {
+            guidatoreErrors.guidatoreAutorizzaTrattamento = "È obbligatorio autorizzare il trattamento dei dati personali (GDPR)";
         }
 
-        if (p.documentoRetro) {
-          const retroFileName = `${p.codiceFiscale}_${Date.now()}_retro.${p.documentoRetro.name.split(".").pop()}`
-          const { data: docRetro, error: pRetroErr } = await supabase.storage
-            .from("doc")
-            .upload(`passeggeri/${retroFileName}`, p.documentoRetro, { cacheControl: "3600", upsert: false })
-          if (pRetroErr) {
-            console.error(`Errore retro passeggero ${i + 1}:`, pRetroErr)
-            continue
-          }
-          passeggeroRetroPath = docRetro.path
+        // Validazione dati auto
+        const targaValidation = validateTarga(formData.autoTarga);
+        if (!targaValidation.valid) guidatoreErrors.autoTarga = targaValidation.message;
+        
+        const marcaValidation = validateRequiredField(formData.autoMarca, "Marca Auto");
+        if (!marcaValidation.valid) guidatoreErrors.autoMarca = marcaValidation.message;
+        
+        const modelloValidation = validateRequiredField(formData.autoModello, "Modello Auto");
+        if (!modelloValidation.valid) guidatoreErrors.autoModello = modelloValidation.message;
+        
+        const coloreValidation = validateRequiredField(formData.autoColore, "Colore Auto");
+        if (!coloreValidation.valid) guidatoreErrors.autoColore = coloreValidation.message;
+        
+        const immatricolazioneValidation = validateRequiredField(formData.autoImmatricolazione, "Anno Immatricolazione");
+        if (!immatricolazioneValidation.valid) guidatoreErrors.autoImmatricolazione = immatricolazioneValidation.message;
+
+        // Controllo quota selezionata
+        if (!formData.quotaSelezionata) {
+            guidatoreErrors.quotaSelezionata = "È obbligatorio selezionare un pacchetto di partecipazione";
         }
 
-        const { error: pInsertErr } = await supabase.from("passeggero").insert({
-          nome: p.nome,
-          cognome: p.cognome,
-          data_nascita: p.dataNascita,
-          codice_fiscale: p.codiceFiscale,
-          indirizzo: p.indirizzo,
-          indirizzo_email: p.email,
-          telefono: p.cellulare,
-          documento_fronte: passeggeroFrontePath,
-          documento_retro: passeggeroRetroPath,
-          intolleranze: p.esigenzeAlimentari ? p.intolleranze : null,
-          id_guidatore_fk: guidatoreId,
-          id_evento_fk: selectedEvent.id,
-          verificato: false,
-        })
-
-        if (pInsertErr) {
-          console.error(`Errore inserimento passeggero ${i + 1}:`, pInsertErr)
-          throw pInsertErr
+        // Controllo documenti obbligatori
+        if (!formData.guidatoreDocumentoFronte) {
+            guidatoreErrors.guidatoreDocumentoFronte = "Il documento di identità fronte è obbligatorio";
         }
-      }
+        if (!formData.guidatoreDocumentoRetro) {
+            guidatoreErrors.guidatoreDocumentoRetro = "Il documento di identità retro è obbligatorio";
+        }
 
-      // Invio della mail di conferma
-      handleConfirmationMail(0, formData.guidatoreEmail, formData, passeggeri, selectedEvent);
+        // Validazione passeggeri
+        const passeggeriErrors = {};
+        for (let i = 0; i < passeggeri.length; i++) {
+            const p = passeggeri[i];
+            
+            const pCognomeValidation = validateRequiredField(p.cognome, "Cognome");
+            if (!pCognomeValidation.valid) passeggeriErrors[`cognome_${i}`] = pCognomeValidation.message;
+            
+            const pNomeValidation = validateRequiredField(p.nome, "Nome");
+            if (!pNomeValidation.valid) passeggeriErrors[`nome_${i}`] = pNomeValidation.message;
+            
+            // CORREZIONE: Validazione rigorosa del codice fiscale per passeggeri
+            const pCfValidation = validateCodiceFiscale(p.codiceFiscale);
+            if (!pCfValidation.valid) {
+                passeggeriErrors[`codiceFiscale_${i}`] = pCfValidation.message;
+                console.error(`Errore validazione CF passeggero ${i + 1}:`, pCfValidation.message, "CF:", p.codiceFiscale);
+            }
+            
+            const pPhoneValidation = validatePhone(p.cellulare);
+            if (!pPhoneValidation.valid) passeggeriErrors[`cellulare_${i}`] = pPhoneValidation.message;
+            
+            const pEmailValidation = validateEmail(p.email);
+            if (!pEmailValidation.valid) passeggeriErrors[`email_${i}`] = pEmailValidation.message;
+            
+            const pDataNascitaValidation = validateDate(p.dataNascita, "Data di Nascita");
+            if (!pDataNascitaValidation.valid) passeggeriErrors[`dataNascita_${i}`] = pDataNascitaValidation.message;
+            
+            const pIndirizzoValidation = validateRequiredField(p.indirizzo, "Indirizzo");
+            if (!pIndirizzoValidation.valid) passeggeriErrors[`indirizzo_${i}`] = pIndirizzoValidation.message;
 
-      alert("Iscrizione completata con successo!")
-      setShowForm(false)
+            // Controllo GDPR rigoroso per passeggeri
+            if (!p.autorizzaTrattamento) {
+                passeggeriErrors[`autorizzaTrattamento_${i}`] = `Il passeggero ${i + 1} deve autorizzare il trattamento dei dati personali (GDPR)`;
+            }
 
-      // Reset form
-      setFormData({
-        guidatoreCognome: "",
-        guidatoreNome: "",
-        guidatoreCodiceFiscale: "",
-        guidatoreDataNascita: "",
-        guidatoreIndirizzo: "",
-        guidatoreCellulare: "",
-        guidatoreEmail: "",
-        guidatorePatente:"",
-        guidatorePatenteScadenza:"",
-        guidatoreDocumentoFronte: null,
-        guidatoreDocumentoRetro: null,
-        autoMarca: "",
-        autoColore:"",
-        autoImmatricolazione:"",
-        autoModello: "",
-        autoTarga: "",
-        postiAuto: 4,
-        quotaSelezionata: "",
-        guidatoreEsigenzeAlimentari: false,
-        guidatoreIntolleranze: "",
-        guidatoreAutorizzaFoto: true,
-        guidatoreAutorizzaTrattamento: true,
-      })
-      setPasseggeri([])
+            // Controllo documenti passeggeri
+            if (!p.documentoFronte) {
+                passeggeriErrors[`documentoFronte_${i}`] = `Documento fronte del passeggero ${i + 1} è obbligatorio`;
+            }
+            if (!p.documentoRetro) {
+                passeggeriErrors[`documentoRetro_${i}`] = `Documento retro del passeggero ${i + 1} è obbligatorio`;
+            }
+        }
+
+        // Combina tutti gli errori
+        const allErrors = { ...guidatoreErrors, ...passeggeriErrors };
+        
+        // CORREZIONE: Controllo più rigoroso degli errori
+        if (Object.keys(allErrors).length > 0) {
+            setValidationErrors(allErrors);
+            console.error("Errori di validazione trovati:", allErrors);
+            
+            // Mostra un messaggio più dettagliato
+            const errorMessages = Object.values(allErrors);
+            const firstError = errorMessages[0];
+            alert(`Errore di validazione: ${firstError}\n\nTotale errori trovati: ${errorMessages.length}. Controlla tutti i campi evidenziati.`);
+            
+            setIsSubmitting(false);
+            return;
+        }
+
+        // Log per debug - verifica che non ci siano errori
+        console.log("Validazione completata con successo. Nessun errore trovato.");
+        console.log("CF Guidatore:", formData.guidatoreCodiceFiscale, "Lunghezza:", formData.guidatoreCodiceFiscale?.length);
+
+        // Se tutti i controlli sono superati, procedi con l'inserimento atomico
+        let guidatoreId = null;
+        const passeggeriInseritiIds = [];
+        const documentiCaricati = [];
+
+        try {
+            // Inizia transazione logica - inserimento guidatore
+            const guidatoreDataForDb = {
+                nome: formData.guidatoreNome.trim(),
+                cognome: formData.guidatoreCognome.trim(),
+                data_nascita: formData.guidatoreDataNascita,
+                codice_fiscale: formData.guidatoreCodiceFiscale.toUpperCase().trim(),
+                indirizzo: formData.guidatoreIndirizzo.trim(),
+                indirizzo_email: formData.guidatoreEmail.toLowerCase().trim(),
+                telefono: formData.guidatoreCellulare.replace(/\s+/g, ''),
+                Patente: formData.guidatorePatente.toUpperCase().trim(),
+                PatenteS: formData.guidatorePatenteScadenza,
+                auto_marca: formData.autoMarca.trim(),
+                auto_colore: formData.autoColore.trim(),
+                auto_immatricolazione: formData.autoImmatricolazione,
+                auto_modello: formData.autoModello.trim(),
+                auto_targa: formData.autoTarga.toUpperCase().trim(),
+                posti_auto: parseInt(formData.postiAuto),
+                intolleranze: formData.guidatoreEsigenzeAlimentari ? formData.guidatoreIntolleranze.trim() : null,
+                id_evento_fk: selectedEvent.id,
+                quota: formData.quotaSelezionata,
+                verificato: false,
+            };
+
+            const { data: guidatoreInserito, error: insertErr } = await supabase
+                .from("guidatore")
+                .insert(guidatoreDataForDb)
+                .select()
+                .single();
+
+            if (insertErr) {
+                console.error("Errore inserimento guidatore:", insertErr);
+                throw new Error("Errore durante l'inserimento del guidatore: " + insertErr.message);
+            }
+
+            guidatoreId = guidatoreInserito.id;
+
+            // Upload documenti guidatore
+            let guidatoreFrontePath = null;
+            let guidatoreRetroPath = null;
+
+            if (formData.guidatoreDocumentoFronte) {
+                const fronteFileName = `${formData.guidatoreCodiceFiscale.toUpperCase()}_${Date.now()}_fronte.${formData.guidatoreDocumentoFronte.name.split(".").pop()}`;
+                const { data: docFronte, error: uploadFronteErr } = await supabase.storage
+                    .from("doc")
+                    .upload(`guidatori/${fronteFileName}`, formData.guidatoreDocumentoFronte, {
+                        cacheControl: "3600",
+                        upsert: false,
+                    });
+                if (uploadFronteErr) {
+                    throw new Error("Errore durante il caricamento del documento fronte: " + uploadFronteErr.message);
+                }
+                guidatoreFrontePath = docFronte.path;
+                documentiCaricati.push(guidatoreFrontePath);
+            }
+
+            if (formData.guidatoreDocumentoRetro) {
+                const retroFileName = `${formData.guidatoreCodiceFiscale.toUpperCase()}_${Date.now()}_retro.${formData.guidatoreDocumentoRetro.name.split(".").pop()}`;
+                const { data: docRetro, error: uploadRetroErr } = await supabase.storage
+                    .from("doc")
+                    .upload(`guidatori/${retroFileName}`, formData.guidatoreDocumentoRetro, {
+                        cacheControl: "3600",
+                        upsert: false,
+                    });
+                if (uploadRetroErr) {
+                    throw new Error("Errore durante il caricamento del documento retro: " + uploadRetroErr.message);
+                }
+                guidatoreRetroPath = docRetro.path;
+                documentiCaricati.push(guidatoreRetroPath);
+            }
+            
+            // Aggiorna il guidatore con i path dei documenti
+            const { error: updateError } = await supabase
+                .from('guidatore')
+                .update({ documento_fronte: guidatoreFrontePath, documento_retro: guidatoreRetroPath })
+                .match({ id: guidatoreId });
+
+            if (updateError) {
+                throw new Error("Errore durante l'aggiornamento dei documenti del guidatore: " + updateError.message);
+            }
+
+            // Inserimento passeggeri
+            for (let i = 0; i < passeggeri.length; i++) {
+                const p = passeggeri[i];
+                let passeggeroFrontePath = null;
+                let passeggeroRetroPath = null;
+
+                if (p.documentoFronte) {
+                    const fronteFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_fronte.${p.documentoFronte.name.split(".").pop()}`;
+                    const { data: docFronte, error: pFronteErr } = await supabase.storage
+                        .from("doc")
+                        .upload(`passeggeri/${fronteFileName}`, p.documentoFronte, { cacheControl: "3600", upsert: false });
+                    if (pFronteErr) {
+                        throw new Error(`Errore upload documento fronte passeggero ${i + 1}: ` + pFronteErr.message);
+                    }
+                    passeggeroFrontePath = docFronte.path;
+                    documentiCaricati.push(passeggeroFrontePath);
+                }
+
+                if (p.documentoRetro) {
+                    const retroFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_retro.${p.documentoRetro.name.split(".").pop()}`;
+                    const { data: docRetro, error: pRetroErr } = await supabase.storage
+                        .from("doc")
+                        .upload(`passeggeri/${retroFileName}`, p.documentoRetro, { cacheControl: "3600", upsert: false });
+                    if (pRetroErr) {
+                        throw new Error(`Errore upload documento retro passeggero ${i + 1}: ` + pRetroErr.message);
+                    }
+                    passeggeroRetroPath = docRetro.path;
+                    documentiCaricati.push(passeggeroRetroPath);
+                }
+
+                const { data: pInserito, error: pInsertErr } = await supabase.from("passeggero").insert({
+                    nome: p.nome.trim(),
+                    cognome: p.cognome.trim(),
+                    data_nascita: p.dataNascita,
+                    codice_fiscale: p.codiceFiscale.toUpperCase().trim(),
+                    indirizzo: p.indirizzo.trim(),
+                    indirizzo_email: p.email.toLowerCase().trim(),
+                    telefono: p.cellulare.replace(/\s+/g, ''),
+                    documento_fronte: passeggeroFrontePath,
+                    documento_retro: passeggeroRetroPath,
+                    intolleranze: p.esigenzeAlimentari ? p.intolleranze.trim() : null,
+                    id_guidatore_fk: guidatoreId,
+                    id_evento_fk: selectedEvent.id,
+                    verificato: false,
+                }).select().single();
+
+                if (pInsertErr) {
+                    throw new Error(`Errore inserimento passeggero ${i + 1}: ` + pInsertErr.message);
+                }
+                passeggeriInseritiIds.push(pInserito.id);
+            }
+
+            // Se tutto è andato a buon fine, invia email di conferma
+            try {
+                await handleConfirmationMail(0, formData.guidatoreEmail, formData, passeggeri, selectedEvent);
+            } catch (emailError) {
+                console.warn("Errore invio email di conferma:", emailError);
+                // Non bloccare il processo per errori email
+            }
+
+            alert("Iscrizione completata con successo!");
+            setShowForm(false);
+            
+            // Reset form
+            setFormData({
+                guidatoreCognome: "",
+                guidatoreNome: "",
+                guidatoreCodiceFiscale: "",
+                guidatoreDataNascita: "",
+                guidatoreIndirizzo: "",
+                guidatoreCellulare: "",
+                guidatoreEmail: "",
+                guidatorePatente: "",
+                guidatorePatenteScadenza: "",
+                guidatoreDocumentoFronte: null,
+                guidatoreDocumentoRetro: null,
+                autoMarca: "",
+                autoColore: "",
+                autoImmatricolazione: "",
+                autoModello: "",
+                autoTarga: "",
+                postiAuto: 4,
+                quotaSelezionata: "",
+                guidatoreEsigenzeAlimentari: false,
+                guidatoreIntolleranze: "",
+                guidatoreAutorizzaFoto: true,
+                guidatoreAutorizzaTrattamento: true,
+            });
+            setPasseggeri([]);
+            setValidationErrors({});
+
+        } catch (transactionError) {
+            console.error("Errore durante la transazione, avvio rollback:", transactionError);
+            
+            // Rollback completo
+            if (guidatoreId) {
+                try {
+                    await supabase.from('guidatore').delete().match({ id: guidatoreId });
+                } catch (rollbackError) {
+                    console.error("Errore durante il rollback del guidatore:", rollbackError);
+                }
+            }
+            
+            if (passeggeriInseritiIds.length > 0) {
+                try {
+                    await supabase.from('passeggero').delete().in('id', passeggeriInseritiIds);
+                } catch (rollbackError) {
+                    console.error("Errore durante il rollback dei passeggeri:", rollbackError);
+                }
+            }
+            
+            // Rimuovi tutti i documenti caricati
+            if (documentiCaricati.length > 0) {
+                try {
+                    await supabase.storage.from('doc').remove(documentiCaricati);
+                } catch (rollbackError) {
+                    console.error("Errore durante il rollback dei documenti:", rollbackError);
+                }
+            }
+
+            throw transactionError;
+        }
+
     } catch (err) {
-      console.error("Errore durante la registrazione:", err.message || err)
-      alert("Si è verificato un errore durante l'iscrizione: " + (err.message || "Verifica i dati inseriti e riprova."))
+        console.error("Errore durante la registrazione:", err);
+        alert("Si è verificato un errore durante l'iscrizione: " + (err.message || "Verifica i dati inseriti e riprova."));
+    } finally {
+        setIsSubmitting(false);
     }
-  }
+};
 
   // Funzione per l'invio della mail conferma iscrizione
   async function handleConfirmationMail(type, email, formData, passeggeri, selectedEvent) {
@@ -1224,9 +1506,16 @@ export default function Home() {
                           placeholder="Es. Rossi"
                           value={formData.guidatoreCognome}
                           onChange={handleInputChange}
-                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
+                          className={`border-2 p-3 rounded-lg focus:outline-none w-full ${
+                            validationErrors.guidatoreCognome 
+                              ? 'border-red-500 bg-red-50 focus:border-red-600' 
+                              : 'border-gray-300 focus:border-black'
+                          }`}
                           required
                         />
+                        {validationErrors.guidatoreCognome && (
+                          <p className="text-red-600 text-sm mt-1">{validationErrors.guidatoreCognome}</p>
+                        )}
                       </div>
                       <div>
                         <label htmlFor="guidatore-nome" className="block text-sm font-medium text-gray-700 mb-1">
@@ -1257,9 +1546,16 @@ export default function Home() {
                           placeholder="Es. RSSMRA80A01H501U"
                           value={formData.guidatoreCodiceFiscale}
                           onChange={handleInputChange}
-                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
+                          className={`border-2 p-3 rounded-lg focus:outline-none w-full ${
+                            validationErrors.guidatoreCodiceFiscale 
+                              ? 'border-red-500 bg-red-50 focus:border-red-600' 
+                              : 'border-gray-300 focus:border-black'
+                          }`}
                           required
                         />
+                        {validationErrors.guidatoreCodiceFiscale && (
+                          <p className="text-red-600 text-sm mt-1 font-semibold">{validationErrors.guidatoreCodiceFiscale}</p>
+                        )}
                       </div>
                       <div>
                         <label
@@ -1680,7 +1976,7 @@ export default function Home() {
                               <input
                                 type="checkbox"
                                 checked={passeggero.esigenzeAlimentari}
-                                onChange={(e) => handlePasseggeroChange(index, "esigenzeAlimentari", e.target.checked)}
+                                onChange={(e) => handlePasseggeroChange(index, "esigenzeAlimentari", e.target.checked, 'checkbox', e.target.checked)}
                                 className="mr-2"
                               />
                               Ho esigenze alimentari particolari
@@ -1708,7 +2004,7 @@ export default function Home() {
                             <input
                               type="checkbox"
                               checked={passeggero.autorizzaFoto}
-                              onChange={(e) => handlePasseggeroChange(index, "autorizzaFoto", e.target.checked)}
+                              onChange={(e) => handlePasseggeroChange(index, "autorizzaFoto", e.target.checked, 'checkbox', e.target.checked)}
                               className="mr-2"
                             />
                             Autorizzo la pubblicazione di foto/video in cui sono presente
@@ -1717,7 +2013,7 @@ export default function Home() {
                             <input
                               type="checkbox"
                               checked={passeggero.autorizzaTrattamento}
-                              onChange={(e) => handlePasseggeroChange(index, "autorizzaTrattamento", e.target.checked)}
+                              onChange={(e) => handlePasseggeroChange(index, "autorizzaTrattamento", e.target.checked, 'checkbox', e.target.checked)}
                               className="mr-2"
                               required
                             />
@@ -2131,3 +2427,5 @@ export default function Home() {
     </>
   )
 }
+
+
