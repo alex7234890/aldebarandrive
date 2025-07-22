@@ -410,14 +410,27 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
                 <UploadIcon className="w-4 h-4" />
                 Seleziona File Immagine
               </Label>
-              <Input
-                id="image-upload"
-                type="file"
-                multiple
-                onChange={handleImageUploadFiles}
-                accept="image/*"
-                className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200 transition-colors"
-              />
+
+              
+
+              <label
+                htmlFor="invoice-upload"
+                className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
+              >
+                <span className="text-base font-medium text-black">Seleziona file immagine</span>
+                <Input
+                  id="image-upload"
+                  name="galleria"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUploadFiles}
+                  className="hidden"
+                />
+              </label>
+
+
+
+
             </div>
 
             {uploadFiles.length > 0 && (
