@@ -1240,108 +1240,93 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SEZIONE GALLERIA GENERALE MIGLIORATA */}
-        <section
-          id="galleria-foto"
-          className="px-6 py-20 bg-gradient-to-br from-gray-900 via-black to-gray-800 relative overflow-hidden"
-        >
-          {/* Sfondo animato racing */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 via-white to-red-500 race-stripe"></div>
-            <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-white to-green-500 race-stripe"></div>
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"></div>
-          </div>
+       {/* SEZIONE GALLERIA GENERALE MIGLIORATA */}
+<section
+  id="galleria-foto"
+  className="px-6 py-20 bg-black relative overflow-hidden"
+>
+  {/* Sfondo rimosso: niente racing stripe */}
+  {/* Nessuna decorazione racing qui */}
 
-          <div className="container mx-auto relative z-10">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">🏁 Galleria Generale 🏁</h2>
-              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                I momenti più emozionanti dei nostri eventi motoristici
-              </p>
-              <div className="w-24 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 mx-auto mt-4 rounded-full"></div>
-            </div>
+  <div className="container mx-auto relative z-10">
+    <div className="text-center mb-12">
+      <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">🏁 Galleria Generale 🏁</h2>
+      <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+        I momenti più emozionanti dei nostri eventi motoristici
+      </p>
+      <div className="w-24 h-1 bg-white mx-auto mt-4 rounded-full"></div>
+    </div>
 
-            {loadingGalleria ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {[...Array(15)].map((_, index) => (
-                  <div
-                    key={index}
-                    className="aspect-square rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 animate-pulse relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : images.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-4">🏎️</div>
-                <p className="text-gray-300 text-xl">Nessuna immagine disponibile al momento</p>
-                <p className="text-gray-400 text-sm mt-2">Le foto degli eventi verranno caricate presto!</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {images.map((url, index) => (
-                  <div
-                    key={index}
-                    className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer transform transition-all duration-500 hover:scale-105 hover:z-10"
-                    onClick={() => handleImageClick(url)}
-                  >
-                    {/* Immagine principale sempre visibile */}
-                    <img
-                      src={url || "/placeholder.svg"}
-                      alt={`Galleria foto ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      loading="lazy"
-                      onLoad={(e) => {
-                        e.target.classList.add("loaded")
-                      }}
-                      style={{
-                        filter: "brightness(0.9) contrast(1.1)",
-                      }}
-                    />
-
-                    {/* Overlay gradiente sempre visibile ma sottile */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-
-                    {/* Effetto racing stripes su hover */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-white to-red-500"></div>
-                      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-white to-green-500"></div>
-                    </div>
-
-                    {/* Icona zoom su hover */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
-                      <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
-                        <span className="text-2xl">🔍</span>
-                      </div>
-                    </div>
-
-                    {/* Numero foto in basso */}
-                    <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      #{index + 1}
-                    </div>
-
-                    {/* Effetto riflesso racing */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                    {/* Bordo racing su hover */}
-                    <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/50 rounded-xl transition-all duration-300"></div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Decorazioni racing in fondo */}
-            <div className="flex justify-center items-center mt-12 space-x-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-white rounded-full racing-flag"></div>
-              <div className="text-white text-lg font-bold">🏁 ALDEBARANDRIVE 🏁</div>
-              <div className="w-8 h-8 bg-gradient-to-r from-white to-red-500 rounded-full racing-flag"></div>
+    {loadingGalleria ? (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {[...Array(15)].map((_, index) => (
+          <div
+            key={index}
+            className="aspect-square rounded-xl bg-gray-800 animate-pulse relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             </div>
           </div>
-        </section>
+        ))}
+      </div>
+    ) : images.length === 0 ? (
+      <div className="text-center py-16">
+        <div className="text-6xl mb-4">🏎️</div>
+        <p className="text-gray-300 text-xl">Nessuna immagine disponibile al momento</p>
+        <p className="text-gray-400 text-sm mt-2">Le foto degli eventi verranno caricate presto!</p>
+      </div>
+    ) : (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {images.map((url, index) => (
+          <div
+            key={index}
+            className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer transform transition-all duration-500 hover:scale-105 hover:z-10"
+            onClick={() => handleImageClick(url)}
+          >
+            <img
+              src={url || "/placeholder.svg"}
+              alt={`Galleria foto ${index + 1}`}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              loading="lazy"
+              onLoad={(e) => {
+                e.target.classList.add("loaded")
+              }}
+              style={{
+                filter: "brightness(0.9) contrast(1.1)",
+              }}
+            />
+
+            {/* Overlay gradiente sempre visibile ma sottile */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+
+            {/* Icona zoom su hover */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
+              <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
+                <span className="text-2xl">🔍</span>
+              </div>
+            </div>
+
+            {/* Numero foto in basso */}
+            <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              #{index + 1}
+            </div>
+
+            {/* Effetto riflesso racing */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+            {/* Bordo su hover */}
+            <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/50 rounded-xl transition-all duration-300"></div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* Sezione finale racing rimossa */}
+  </div>
+</section>
+
 
         {/* SEZIONE GALLERIA EVENTI PASSATI MIGLIORATA */}
         <section id="galleria-eventi" className="px-6 py-20 bg-gray-100">
