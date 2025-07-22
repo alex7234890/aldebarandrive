@@ -235,7 +235,7 @@ const EventFormModal = ({
                 htmlFor="invoice-upload"
                 className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
               >
-                <span className="text-base font-medium text-black">Carica Immagine</span>
+                <span className="text-base font-medium text-black">Carica fattura (PDF)</span>
                 <Input
                    id="copertina"
                   name="copertina"
@@ -1163,13 +1163,15 @@ export default function AdminDashboard() {
       }
 
 
-      // Fetch immagini eventi passati
+      // Fetch immagini eventi passati dalla tabella eventoimmagine
       const eventImagesMap = {}
       for (const event of passati) {
         try {
-          const { data: imagesData, error: eventImagesError } = await supabase.storage
-            .from("doc")
-            .list(`eventi/${event.id}`, { sortBy: { column: "name", order: "asc" } })
+          const { data: imagesData, error: eventImagesError } = await supabase
+            .from("eventoimmagine")
+            .select("*")
+            .eq("id_evento_fk", event.id)
+            .order("id", { ascending: true })
 
           if (eventImagesError) {
             console.warn(`Errore nel recupero immagini per evento ${event.id}:`, eventImagesError.message)
@@ -1177,22 +1179,26 @@ export default function AdminDashboard() {
           } else {
             eventImagesMap[event.id] = (
               await Promise.all(
-                imagesData
-                  .filter((item) => item.name !== ".emptyFolderPlaceholder")
-                  .map(async (item) => {
-                    try {
-                      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                        .from("doc")
-                        .createSignedUrl(`eventi/${event.id}/${item.name}`, 3600)
-                      if (signedUrlError) {
-                        throw new Error(`Errore generazione URL firmato per eventi/${event.id}/${item.name}: ${signedUrlError.message}`)
-                      }
-                      return { id: item.id, url: signedUrlData.signedUrl, alt: item.name, evento: event.titolo, path: `eventi/${event.id}/${item.name}` }
-                    } catch (signedUrlGenError) {
-                      console.error(signedUrlGenError.message);
-                      return null;
+                imagesData.map(async (imageRecord) => {
+                  try {
+                    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                      .from("doc")
+                      .createSignedUrl(imageRecord.path, 3600)
+                    if (signedUrlError) {
+                      throw new Error(`Errore generazione URL firmato per ${imageRecord.path}: ${signedUrlError.message}`)
                     }
-                  })
+                    return { 
+                      id: imageRecord.id, 
+                      url: signedUrlData.signedUrl, 
+                      alt: imageRecord.descrizione || imageRecord.path.split('/').pop(), 
+                      evento: event.titolo, 
+                      path: imageRecord.path 
+                    }
+                  } catch (signedUrlGenError) {
+                    console.error(signedUrlGenError.message);
+                    return null;
+                  }
+                })
               )
             ).filter(Boolean)
           }
@@ -1603,6 +1609,28 @@ export default function AdminDashboard() {
         } else {
           console.log(`File "${file.name}" caricato con successo in "${uploadFolderPath}".`, data);
           successfulUploadsCount++;
+
+          // Se è un upload per un evento, salva i metadati nella tabella eventoimmagine
+          if (uploadTarget.type === "event" && uploadTarget.eventId) {
+            try {
+              const { error: dbError } = await supabase
+                .from("eventoimmagine")
+                .insert({
+                  id_evento_fk: uploadTarget.eventId,
+                  path: `${uploadFolderPath}/${file.name}`,
+                  descrizione: file.name
+                });
+
+              if (dbError) {
+                console.error(`Errore nel salvare i metadati dell'immagine ${file.name} nel database:`, dbError.message);
+                // Non consideriamo questo un errore fatale, l'immagine è comunque caricata
+              } else {
+                console.log(`Metadati dell'immagine ${file.name} salvati nel database con successo.`);
+              }
+            } catch (dbError) {
+              console.error(`Errore nel salvare i metadati dell'immagine ${file.name}:`, dbError.message);
+            }
+          }
         }
       } catch (error) {
         console.error(`Errore nel caricamento di "${file.name}":`, error.message);
@@ -1629,12 +1657,33 @@ export default function AdminDashboard() {
       return;
     }
     try {
+      // Elimina il file dal storage
       const { error } = await supabase.storage
         .from("doc")
         .remove([imagePath]);
 
       if (error) {
         throw error;
+      }
+
+      // Se l'immagine appartiene a un evento, elimina anche il record dalla tabella eventoimmagine
+      if (imagePath.startsWith("eventi/")) {
+        try {
+          const { error: dbError } = await supabase
+            .from("eventoimmagine")
+            .delete()
+            .eq("path", imagePath);
+
+          if (dbError) {
+            console.error(`Errore nell'eliminazione del record dell'immagine dal database:`, dbError.message);
+            showNotification("Immagine eliminata dal storage ma errore nell'eliminazione dal database: " + dbError.message, "warning");
+          } else {
+            console.log(`Record dell'immagine eliminato dal database con successo.`);
+          }
+        } catch (dbError) {
+          console.error(`Errore nell'eliminazione del record dell'immagine:`, dbError.message);
+          showNotification("Immagine eliminata dal storage ma errore nell'eliminazione dal database: " + dbError.message, "warning");
+        }
       }
 
       showNotification("Immagine eliminata con successo!", "success");
@@ -2420,7 +2469,7 @@ yPos += 8
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-  <TabsList className="grid w-full grid-cols-4 bg-gray-200 rounded-lg h-16 sm:h-20 p-1 sm:p-2 shadow-lg border border-gray-300 mb-8">
+  <TabsList className="grid w-full grid-cols-5 bg-gray-200 rounded-lg h-16 sm:h-20 p-1 sm:p-2 shadow-lg border border-gray-300 mb-8">
 
     <TabsTrigger 
       value="overview" 
@@ -2445,6 +2494,14 @@ yPos += 8
       <ClockIcon className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-1" />
       <span className="hidden sm:inline">Eventi Passati</span>
       <span className="sm:hidden text-xs mt-1">Passati</span>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="eventGallery" 
+      className="text-xs sm:text-base font-semibold px-1 sm:px-3 py-2 data-[state=active]:bg-black data-[state=active]:text-white rounded-md transition-colors duration-200 flex flex-col sm:flex-row items-center justify-center"
+    >
+      <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-1" />
+      <span className="hidden sm:inline">Gallerie Eventi</span>
+      <span className="sm:hidden text-xs mt-1">Eventi</span>
     </TabsTrigger>
     <TabsTrigger 
       value="generalGallery" 
