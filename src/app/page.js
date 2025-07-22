@@ -15,6 +15,7 @@ import {
   CameraIcon,
   FileTextIcon,
 } from "lucide-react"
+import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
@@ -2325,7 +2326,7 @@ export default function Home() {
                   <div className="relative w-16 h-16">
                     <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
                   </div>
-                 <h3 className="text-xl font-bold">AldebaranDrive</h3>
+                  <h3 className="text-xl font-bold">AldebaranDrive</h3>
                 </div>
                 <p className="text-gray-300 mb-4">
                   Specializzata nell'organizzazione di eventi a due e quattro ruote, offrendo un servizio completo per
@@ -2373,21 +2374,38 @@ export default function Home() {
                   </a>
                 </div>
 
-                {/* Admin Login nel Footer */}
-                <Link href="/admin/login">
-                  <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
-                    <LogInIcon className="w-4 h-4" />
-                    Admin Login
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            {/* Copyright */}
-            <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
-              <p>&copy; 2024 AldebaranDrive. Tutti i diritti riservati.</p>
-            </div>
-          </div>
-        </footer>
+        <Link href="/admin/login">
+          <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
+            <LogInIcon className="w-4 h-4" />
+            Admin Login
+          </Button>
+        </Link>
+      </div>
+
+      {/* Sezione Social */}
+      <div>
+        <h4 className="text-lg font-semibold mb-4">Social</h4>
+        <div className="flex space-x-4">
+          <a href="https://www.facebook.com/profile.php?id=61574983770764" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+            <FaFacebook className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
+          </a>
+          <a href="https://instagram.com/aldebaran.drive" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <FaInstagram className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
+          </a>
+          <a href="https://tiktok.com/@aldebaran.drive" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+            <FaTiktok className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {/* Copyright */}
+    <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+      <p>&copy; 2025 AldebaranDrive. Tutti i diritti riservati.</p>
+    </div>
+  </div>
+</footer>
+
 
         {/* MODAL VISUALIZZAZIONE IMMAGINI */}
         {showImageModal && selectedImage && (

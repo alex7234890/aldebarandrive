@@ -26,7 +26,11 @@
     "path": "^0.12.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+<<<<<<< HEAD
     "react-markdown": "^10.1.0",
+=======
+    "react-icons": "^5.5.0",
+>>>>>>> 9e9b99d8d02ddf2a3c8300292c78f332aaef5e8a
     "resend": "^4.7.0",
     "tailwind-merge": "^3.3.1"
   },
