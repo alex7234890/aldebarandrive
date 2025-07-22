@@ -114,8 +114,8 @@ export default function Home() {
         const passati = []
 
         data.forEach((evento) => {
-          const eventDate = new Date(`${evento.data}T${evento.orario}`)
-          if (eventDate < now) {
+          //const eventDate = new Date(`${evento.data}T${evento.orario}`)
+          if (evento.passato) {
             passati.push(evento)
           } else {
             // Parse the 'quote' JSON string if it exists
