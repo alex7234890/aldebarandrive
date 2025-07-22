@@ -3,6 +3,7 @@
 // Import delle librerie e componenti necessari
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import YearSelector from "@/components/ui/YearSelector"; 
 import {
   CalendarDaysIcon,
   MapPinIcon,
@@ -32,6 +33,7 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState(null)
   const [showImageModal, setShowImageModal] = useState(false)
   const [showProgramModal, setShowProgramModal] = useState(false)
+  const [invoiceYear, setInvoiceYear] = useState('');
 
   // Stati per il caricamento e la categorizzazione degli eventi
   const [eventi, setEventi] = useState([])
@@ -1717,24 +1719,8 @@ export default function Home() {
   >
     Anno immatricolazione *
   </label>
-  <select
-    id="auto-immatricolazione"
-    name="autoImmatricolazione"
-    value={formData.autoImmatricolazione}
-    onChange={handleInputChange}
-    required
-    className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full bg-white"
-  >
-    <option value="">Seleziona anno</option>
-    {Array.from({ length: 100 }, (_, i) => {
-      const year = new Date().getFullYear() - i;
-      return (
-        <option key={year} value={year}>
-          {year}
-        </option>
-      );
-    })}
-  </select>
+ <YearSelector invoiceYear={invoiceYear} setInvoiceYear={setInvoiceYear} />
+
 </div>
                     </div>
                   </div>
