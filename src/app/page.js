@@ -36,9 +36,11 @@ export default function Home() {
   // Stati per il caricamento e la categorizzazione degli eventi
   const [eventi, setEventi] = useState([])
   const [eventiPassati, setEventiPassati] = useState([])
+  const [eventiPassatiImmagini, setEventiPassatiImmagini] = useState({})
   const [loadingEventiPassati, setLoadingEventiPassati] = useState(true)
   const [loadingEventi, setLoadingEventi] = useState(true)
   const [loadingGalleria, setLoadingGalleria] = useState(true)
+  const [loadingEventiPassatiImmagini, setLoadingEventiPassatiImmagini] = useState(true)
 
   // Stati per la camera
   const [isMobile, setIsMobile] = useState(false)
@@ -114,8 +116,7 @@ export default function Home() {
         const passati = []
 
         data.forEach((evento) => {
-          const eventDate = new Date(`${evento.data}T${evento.orario}`)
-          if (eventDate < now) {
+          if (evento.passato) {
             passati.push(evento)
           } else {
             // Parse the 'quote' JSON string if it exists
@@ -235,8 +236,83 @@ export default function Home() {
       }
     }
 
+    const fetchEventiPassatiImmagini = async () => {
+      setLoadingEventiPassatiImmagini(true)
+      try {
+        // Prima ottieni tutti gli eventi passati
+        const { data: eventiPassatiData, error: eventiError } = await supabase
+          .from("evento")
+          .select("*")
+          .eq("passato", true)
+          .order("data", { ascending: false })
+
+        if (eventiError) {
+          console.error("Errore nel recupero eventi passati:", eventiError)
+          return
+        }
+
+        const immaginiPerEvento = {}
+
+        // Per ogni evento passato, recupera le immagini dalla tabella eventoimmagine
+        for (const evento of eventiPassatiData) {
+          try {
+            const { data: immaginiData, error: immaginiError } = await supabase
+              .from("eventoimmagine")
+              .select("*")
+              .eq("id_evento_fk", evento.id)
+              .order("id", { ascending: true })
+
+            if (immaginiError) {
+              console.warn(`Errore nel recupero immagini per evento ${evento.id}:`, immaginiError.message)
+              immaginiPerEvento[evento.id] = []
+              continue
+            }
+
+            // Genera signed URLs per ogni immagine
+            const immaginiConUrl = await Promise.all(
+              immaginiData.map(async (immagine) => {
+                try {
+                  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                    .from("doc")
+                    .createSignedUrl(immagine.path, 3600) // 1 ora di validità
+
+                  if (signedUrlError) {
+                    console.error(`Errore generazione URL per ${immagine.path}:`, signedUrlError.message)
+                    return null
+                  }
+
+                  return {
+                    id: immagine.id,
+                    url: signedUrlData.signedUrl,
+                    alt: immagine.descrizione || immagine.path.split('/').pop(),
+                    path: immagine.path
+                  }
+                } catch (urlError) {
+                  console.error(`Errore nel processare l'immagine ${immagine.id}:`, urlError)
+                  return null
+                }
+              })
+            )
+
+            // Filtra le immagini valide
+            immaginiPerEvento[evento.id] = immaginiConUrl.filter(Boolean)
+          } catch (eventoError) {
+            console.error(`Errore nel processare l'evento ${evento.id}:`, eventoError)
+            immaginiPerEvento[evento.id] = []
+          }
+        }
+
+        setEventiPassatiImmagini(immaginiPerEvento)
+      } catch (error) {
+        console.error("Errore nel caricamento immagini eventi passati:", error)
+      } finally {
+        setLoadingEventiPassatiImmagini(false)
+      }
+    }
+
     fetchEventi()
     fetchImages()
+    fetchEventiPassatiImmagini()
   }, [])
 
   // useEffect per la gestione della fotocamera basato sull'esempio funzionante
@@ -776,19 +852,21 @@ export default function Home() {
                     className="bg-white border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:border-black group"
                   >
                     {/* Immagine evento */}
-                    <div className="relative h-48 bg-gray-200 overflow-hidden">
+                    <div className="relative aspect-[3/2] bg-gray-200 overflow-hidden">
                       <Image
-                        src={cover[evento.id] || "/hero.png"}
-                        alt={evento.titolo}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <div className="text-xs font-bold bg-black text-white px-3 py-1 rounded-full">
-                          {evento.tipo || "Evento"}
+                          src={cover[evento.id] || "/hero.png"}
+                          alt={evento.titolo}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                        />
+                        <div className="absolute top-4 left-4">
+                          <div className="text-xs font-bold bg-black text-white px-3 py-1 rounded-full">
+                            {evento.tipo || "Evento"}
+                          </div>
                         </div>
-                      </div>
                     </div>
+
 
                     <div className="p-6 flex flex-col">
                       <h3 className="text-xl font-bold mb-3 text-black">{evento.titolo}</h3>
@@ -980,40 +1058,59 @@ export default function Home() {
           <div className="container mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">Galleria Eventi Passati</h2>
             <p className="text-center text-gray-600 mb-12 text-lg">Rivivi le emozioni dei nostri eventi precedenti</p>
-            <div className="space-y-16">
-              {eventiPassati.map((evento) => (
-                <div key={evento.id} className="bg-white rounded-2xl p-8 shadow-lg">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-2 h-12 bg-gradient-to-b from-red-500 via-white to-green-500 rounded-full"></div>
-                    <div>
-                      <h3 className="text-2xl font-semibold text-black">{evento.titolo}</h3>
-                      <p className="text-gray-600">{new Date(evento.data).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                    {[...Array(5)].map((_, j) => (
-                      <div
-                        key={j}
-                        className="group relative aspect-square overflow-hidden rounded-xl bg-gray-200 hover:shadow-xl transition-all duration-500"
-                      >
-                        <Image
-                          src="/placeholder.svg?height=600&width=600"
-                          alt={`Evento ${evento.id} - Foto ${j + 1}`}
-                          width={600}
-                          height={600}
-                          className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="absolute bottom-4 left-4 text-white">
-                            <p className="text-sm font-medium">Foto {j + 1}</p>
-                          </div>
+            
+            {loadingEventiPassatiImmagini ? (
+              <div className="text-center text-gray-700 text-lg">Caricamento gallerie eventi...</div>
+            ) : Object.keys(eventiPassatiImmagini).length === 0 || Object.values(eventiPassatiImmagini).every(arr => arr.length === 0) ? (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">🏎️</div>
+                <p className="text-gray-600 text-xl">Nessuna galleria eventi disponibile al momento</p>
+                <p className="text-gray-500 text-sm mt-2">Le foto degli eventi passati verranno caricate presto!</p>
+              </div>
+            ) : (
+              <div className="space-y-16">
+                {eventiPassati
+                  .filter(evento => eventiPassatiImmagini[evento.id] && eventiPassatiImmagini[evento.id].length > 0)
+                  .map((evento) => (
+                    <div key={evento.id} className="bg-white rounded-2xl p-8 shadow-lg">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-2 h-12 bg-gradient-to-b from-red-500 via-white to-green-500 rounded-full"></div>
+                        <div>
+                          <h3 className="text-2xl font-semibold text-black">{evento.titolo}</h3>
+                          <p className="text-gray-600">{new Date(evento.data).toLocaleDateString()}</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                        {eventiPassatiImmagini[evento.id].map((immagine, index) => (
+                          <div
+                            key={immagine.id}
+                            className="group relative aspect-square overflow-hidden rounded-xl bg-gray-200 hover:shadow-xl transition-all duration-500 cursor-pointer"
+                            onClick={() => handleImageClick(immagine.url)}
+                          >
+                            <img
+                              src={immagine.url}
+                              alt={immagine.alt}
+                              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div className="absolute bottom-4 left-4 text-white">
+                                <p className="text-sm font-medium">Foto {index + 1}</p>
+                              </div>
+                            </div>
+                            {/* Icona zoom su hover */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
+                              <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
+                                <span className="text-xl">🔍</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         </section>
 

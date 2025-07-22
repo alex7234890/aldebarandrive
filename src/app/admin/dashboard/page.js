@@ -232,10 +232,10 @@ const EventFormModal = ({
                 </Label>
             
                  <label
-                htmlFor="invoice-upload"
+                htmlFor="copertina"
                 className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
               >
-                <span className="text-base font-medium text-black">Carica fattura (PDF)</span>
+                <span className="text-base font-medium text-black">Carica immagine di copertina</span>
                 <Input
                    id="copertina"
                   name="copertina"
@@ -411,10 +411,8 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
                 Seleziona File Immagine
               </Label>
 
-              
-
               <label
-                htmlFor="invoice-upload"
+                htmlFor="image-upload"
                 className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
               >
                 <span className="text-base font-medium text-black">Seleziona file immagine</span>
@@ -423,14 +421,11 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
                   name="galleria"
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageUploadFiles}
                   className="hidden"
                 />
               </label>
-
-
-
-
             </div>
 
             {uploadFiles.length > 0 && (
@@ -1555,6 +1550,10 @@ export default function AdminDashboard() {
   }
 
   const handleMarkAsPast = async (eventId) => {
+    if (!confirm("Sei sicuro di voler segnare questo evento come passato? L'evento verrà spostato nella sezione eventi passati.")) {
+      return
+    }
+
     try {
       const { error } = await supabase
         .from("evento")
@@ -1569,6 +1568,28 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Errore nel contrassegnare l'evento come passato:", error)
       showNotification("Errore nel contrassegnare l'evento come passato: " + error.message, "error")
+    }
+  }
+
+  const handleRestoreToCurrent = async (eventId) => {
+    if (!confirm("Sei sicuro di voler ripristinare questo evento come corrente? L'evento verrà spostato nella sezione eventi correnti.")) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from("evento")
+        .update({ passato: false })
+        .eq("id", eventId)
+
+      if (error) {
+        throw error
+      }
+      showNotification("Evento ripristinato come corrente!", "success")
+      fetchEventsAndImages()
+    } catch (error) {
+      console.error("Errore nel ripristinare l'evento come corrente:", error)
+      showNotification("Errore nel ripristinare l'evento come corrente: " + error.message, "error")
     }
   }
 
@@ -1862,7 +1883,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     yPos += 8
     
     doc.setFont(undefined, 'normal')
-    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione:${registration.auto_immatricolazione}  Colore: ${registration.autoColore}  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
+    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione:${registration.AnnoImmatricolazione}  Colore: ${registration.autoColore}  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
     yPos += 10
     
     // Chiede/chiedono
@@ -2698,6 +2719,14 @@ yPos += 8
                         className="text-black border-gray-400 hover:bg-gray-100 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
                       >
                         <UsersIcon className="w-4 h-4" /> Iscrizioni
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRestoreToCurrent(event.id)}
+                        className="text-blue-600 border-blue-400 hover:bg-blue-50 flex items-center gap-2 text-xs sm:text-sm py-2 px-3"
+                      >
+                        <CheckIcon className="w-4 h-4" /> Ripristina a Corrente
                       </Button>
                       <Button
                         variant="outline"
