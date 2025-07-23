@@ -37,18 +37,16 @@ export default async function handler(req, res) {
       verificato: false
     };
 
-    const { data: inserted, error } = await supabase
+    const { error } = await supabase
       .from("guidatore")
-      .insert(encryptedGuidatore)
-      .select()
-      .single();
+      .insert(encryptedGuidatore);
 
     if (error) {
       console.error("Errore Supabase:", error.message);
       return res.status(500).json({ error: "Errore Supabase: " + error.message });
     }
 
-    res.status(201).json({ id: inserted.id });
+    res.status(201).json({ success: true });
   } catch (err) {
     console.error("Errore API:", err);
     res.status(500).json({ error: "Errore interno server" });
