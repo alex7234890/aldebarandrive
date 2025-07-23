@@ -2361,7 +2361,7 @@ export default function Home() {
                               className="mr-2"
                               required
                             />
-                            Autorizzo il trattamento dei dati personali (GDPR) *
+                            Autorizzo il trattamento dei dati personali (GDPR) * 
                           </label>
                         </div>
                       </div>
@@ -2808,7 +2808,11 @@ export default function Home() {
                   >
                     Galleria Foto
                   </a>
+                  <a href="/privacy_policy" className="underline hover:text-blue-600">
+                    Privacy Policy
+                  </a>
                 </div>
+                
 
                 <Link href="/admin/login">
                   <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
