@@ -289,7 +289,7 @@ export default function Home() {
                       coverImages[evento.id] = signedUrl.signedUrl;
                     }
                   } catch (urlError) {
-                    console.error(
+                    alert(
                       `Errore URL per evento ${evento.id}:`,
                       urlError,
                     );
