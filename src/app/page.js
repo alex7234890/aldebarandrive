@@ -20,6 +20,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import Head from "next/head";
 import ReactMarkdown from "react-markdown";
+import ExpandableText from "@/components/ui/ExpandableText";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 
 // Funzioni di validazione avanzate
@@ -1292,9 +1293,9 @@ export default function Home() {
                       <h3 className="text-xl font-bold mb-3 text-black">
                         {evento.titolo}
                       </h3>
-                      <div className="text-gray-600 mb-6 flex-grow">
+                     <ExpandableText>
                         <ReactMarkdown>{evento.descrizione}</ReactMarkdown>
-                      </div>
+                      </ExpandableText>
 
                       <div className="flex flex-col gap-3 text-sm text-gray-700 mb-6">
                         <p className="flex items-center gap-2">
