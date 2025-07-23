@@ -77,6 +77,10 @@ const EventFormModal = ({
       showNotification("La data dell'evento è obbligatoria.", "warning")
       return false
     }
+    if (!newEvent.fine) {
+      showNotification("La data di fine dell'evento è obbligatoria.", "warning")
+      return false
+    }
     if (!newEvent.orario) {
       showNotification("L'orario dell'evento è obbligatorio.", "warning")
       return false
@@ -204,6 +208,22 @@ const EventFormModal = ({
                   name="data"
                   type="date"
                   value={newEvent.data}
+                  onChange={handleNewEventChange}
+                  required
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="fine" className="text-base font-semibold text-black flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  Data di fine
+                </Label>
+                <Input
+                  id="fine"
+                  name="fine"
+                  type="date"
+                  value={newEvent.fine}
                   onChange={handleNewEventChange}
                   required
                   className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
@@ -1074,6 +1094,7 @@ export default function AdminDashboard() {
     titolo: "",
     descrizione: "",
     data: "",
+    fine:"",
     orario: "",
     luogo: "",
     programma: "",
@@ -1295,6 +1316,7 @@ export default function AdminDashboard() {
           titolo: newEvent.titolo.trim(),
           descrizione: newEvent.descrizione.trim(),
           data: newEvent.data,
+          fine: newEvent.fine,
           orario: newEvent.orario,
           luogo: newEvent.luogo.trim(),
           passato: false,
@@ -1347,6 +1369,7 @@ export default function AdminDashboard() {
         titolo: "",
         descrizione: "",
         data: "",
+        fine:"",
         orario: "",
         luogo: "",
         programma: "",
@@ -1371,6 +1394,7 @@ export default function AdminDashboard() {
       titolo: event.titolo,
       descrizione: event.descrizione,
       data: event.data,
+      fine: event.fine,
       orario: event.orario,
       luogo: event.luogo,
       programma: event.programma || "",
@@ -1429,6 +1453,7 @@ export default function AdminDashboard() {
           titolo: newEvent.titolo.trim(),
           descrizione: newEvent.descrizione.trim(),
           data: newEvent.data,
+          fine: newEvent.fine,
           orario: newEvent.orario,
           luogo: newEvent.luogo.trim(),
           programma: newEvent.programma.trim() || null,
@@ -1450,6 +1475,7 @@ export default function AdminDashboard() {
         titolo: "",
         descrizione: "",
         data: "",
+        fine:"",
         orario: "",
         luogo: "",
         programma: "",
@@ -1900,7 +1926,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     yPos += 8
     
     doc.setFont(undefined, 'normal')
-    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione:${registration.auto_immatricolazione}  Colore: ${registration.autoColore}  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
+    yPos = addWrappedText(`Modello: ${registration.auto_modello || '___________________'}  Anno immatricolazione:${registration.auto_immatricolazione}  Colore: ${registration.auto_colore}  Targa: ${registration.auto_targa || '__________'}`, margin, yPos, maxWidth)
     yPos += 10
     
     // Chiede/chiedono
@@ -2368,6 +2394,7 @@ yPos += 8
               titolo: "",
               descrizione: "",
               data: "",
+              fine: "",
               orario: "",
               luogo: "",
               programma: "",
@@ -2395,6 +2422,7 @@ yPos += 8
               titolo: "",
               descrizione: "",
               data: "",
+              fine:"",
               orario: "",
               luogo: "",
               programma: "",
@@ -2629,6 +2657,10 @@ yPos += 8
                           <span>{event.data}</span>
                         </div>
                         <div className="flex items-center gap-2">
+                          <CalendarIcon className="w-4 h-4 text-gray-500" />
+                          <span>{event.fine}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <ClockIcon className="w-4 h-4 text-gray-500" />
                           <span>{event.orario}</span>
                         </div>
@@ -2714,6 +2746,10 @@ yPos += 8
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="w-4 h-4 text-gray-500" />
                           <span>{event.data}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="w-4 h-4 text-gray-500" />
+                          <span>{event.fine}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <ClockIcon className="w-4 h-4 text-gray-500" />

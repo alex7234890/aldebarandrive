@@ -14,7 +14,5 @@
 
 - [ ] **Dashboard - lista iscritti**: 
 - [ ] **Responsive mobile**: Disabilitare zoom e scale su dispositivi mobili
-<<<<<<< HEAD
 
-=======
->>>>>>> 3073fc5a96d73eaa65c4465ca1fb52631d63426f
+guardare grandezza logo

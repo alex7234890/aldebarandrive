@@ -15,11 +15,12 @@ import {
   CameraIcon,
   FileTextIcon,
 } from "lucide-react"
-import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import Head from "next/head"
+import ReactMarkdown from 'react-markdown';
+
 
 // Funzioni di validazione avanzate
 const validateCodiceFiscale = (cf) => {
@@ -1032,14 +1033,15 @@ export default function Home() {
         <header className="bg-black shadow-lg border-b-2 border-gray-800">
           <div className="container mx-auto px-6 py-4">
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
+             <div className="flex items-center gap-4">
                 <div className="relative w-72 h-28 md:w-32 md:h-32">
                   <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
                 </div>
-                <div>
-                 {/*} <h1 className="text-2xl md:text-3xl font-bold text-white">AldebaranDrive</h1>*/}
+                <div className="hidden md:block">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white">AldebaranDrive</h1>
                 </div>
               </div>
+
               <nav className="hidden md:flex gap-8 text-lg font-medium items-center">
                 <a href="#chi-siamo" className="text-white hover:text-gray-200 transition-colors relative group">
                   Chi Siamo
@@ -1107,14 +1109,13 @@ export default function Home() {
         {/* SEZIONE HERO */}
         <section
           className="text-center px-4 py-20 bg-cover bg-center text-white relative"
-          style={{ backgroundImage: "url('/hero.png')" }}
+          style={{ backgroundImage: "url('/11.jpg')" }}
         >
           <div className="absolute inset-0 bg-black opacity-60"></div>
           <div className="relative z-10">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">Vivi la Passione</h1>
             <p className="text-gray-200 max-w-3xl mx-auto mb-8 text-lg md:text-xl">
-              Raduni per auto e moto. Unisciti alla nostra community di appassionati e scopri eventi unici in tutta
-              Italia.
+              Un’esperienza riservata a chi vive la strada come un privilegio. 
             </p>
             <Button className="bg-white text-black hover:bg-gray-200 px-8 py-4 text-lg font-semibold relative group overflow-hidden">
               <span className="relative z-10">Scopri i Prossimi Eventi</span>
@@ -1160,17 +1161,18 @@ export default function Home() {
 
                     <div className="p-6 flex flex-col">
                       <h3 className="text-xl font-bold mb-3 text-black">{evento.titolo}</h3>
-                      <p className="text-gray-600 mb-6 flex-grow">{evento.descrizione}</p>
+                      <div className="text-gray-600 mb-6 flex-grow">
+                        <ReactMarkdown>{evento.descrizione}</ReactMarkdown>
+                      </div>
+
                       <div className="flex flex-col gap-3 text-sm text-gray-700 mb-6">
                         <p className="flex items-center gap-2">
-                          <CalendarDaysIcon className="w-4 h-4 text-black" />
-                          {new Date(evento.data).toLocaleDateString()}
+                          <CalendarDaysIcon className="w-4 h-4 text-black" /> Dal {new Date(evento.data).toLocaleDateString()} al {new Date(evento.fine).toLocaleDateString()}
                         </p>
                         <p className="flex items-center gap-2">
                           <MapPinIcon className="w-4 h-4 text-black" /> {evento.luogo}
                         </p>
                       </div>
-
                       <div className="flex flex-col gap-3">
                         <Button
                           onClick={() => handleShowProgram(evento)}
@@ -2326,7 +2328,7 @@ export default function Home() {
                   <div className="relative w-16 h-16">
                     <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
                   </div>
-                  <h3 className="text-xl font-bold">AldebaranDrive</h3>
+                 <h3 className="text-xl font-bold">AldebaranDrive</h3>
                 </div>
                 <p className="text-gray-300 mb-4">
                   Specializzata nell'organizzazione di eventi a due e quattro ruote, offrendo un servizio completo per
@@ -2374,38 +2376,21 @@ export default function Home() {
                   </a>
                 </div>
 
-        <Link href="/admin/login">
-          <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
-            <LogInIcon className="w-4 h-4" />
-            Admin Login
-          </Button>
-        </Link>
-      </div>
-
-      {/* Sezione Social */}
-      <div>
-        <h4 className="text-lg font-semibold mb-4">Social</h4>
-        <div className="flex space-x-4">
-          <a href="https://www.facebook.com/profile.php?id=61574983770764" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <FaFacebook className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-          <a href="https://instagram.com/aldebaran.drive" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <FaInstagram className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-          <a href="https://tiktok.com/@aldebaran.drive" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-            <FaTiktok className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-        </div>
-      </div>
-    </div>
-
-    {/* Copyright */}
-    <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
-      <p>&copy; 2025 AldebaranDrive. Tutti i diritti riservati.</p>
-    </div>
-  </div>
-</footer>
-
+                {/* Admin Login nel Footer */}
+                <Link href="/admin/login">
+                  <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
+                    <LogInIcon className="w-4 h-4" />
+                    Admin Login
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            {/* Copyright */}
+            <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+              <p>&copy; 2024 AldebaranDrive. Tutti i diritti riservati.</p>
+            </div>
+          </div>
+        </footer>
 
         {/* MODAL VISUALIZZAZIONE IMMAGINI */}
         {showImageModal && selectedImage && (
