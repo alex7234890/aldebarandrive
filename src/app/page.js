@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
 // Import delle librerie e componenti necessari
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import {
   CalendarDaysIcon,
   MapPinIcon,
@@ -14,33 +14,46 @@ import {
   MenuIcon,
   CameraIcon,
   FileTextIcon,
-} from "lucide-react"
-import { useEffect, useState, useRef } from "react"
-import Link from "next/link"
-import { supabase } from "@/lib/supabaseClient"
-import Head from "next/head"
-import ReactMarkdown from 'react-markdown';
+} from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import Head from "next/head";
+import ReactMarkdown from "react-markdown";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
-
 
 // Funzioni di validazione avanzate
 const validateCodiceFiscale = (cf) => {
   if (!cf) return { valid: false, message: "Il codice fiscale è obbligatorio" };
   const cfUpper = cf.toUpperCase().trim();
   if (cfUpper.length !== 16) {
-    return { valid: false, message: "Il codice fiscale deve essere di 16 caratteri" };
+    return {
+      valid: false,
+      message: "Il codice fiscale deve essere di 16 caratteri",
+    };
   }
-  if (!/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1}$/.test(cfUpper)) {
-    return { valid: false, message: "Il formato del codice fiscale non è valido" };
+  if (
+    !/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1}$/.test(
+      cfUpper,
+    )
+  ) {
+    return {
+      valid: false,
+      message: "Il formato del codice fiscale non è valido",
+    };
   }
   return { valid: true, message: "" };
 };
 
 const validatePhone = (phone) => {
-  if (!phone) return { valid: false, message: "Il numero di telefono è obbligatorio" };
-  const cleanPhone = phone.replace(/\s+/g, '');
+  if (!phone)
+    return { valid: false, message: "Il numero di telefono è obbligatorio" };
+  const cleanPhone = phone.replace(/\s+/g, "");
   if (!/^(\+39)?[0-9]{8,11}$/.test(cleanPhone)) {
-    return { valid: false, message: "Il numero di telefono non è valido (es. 3331234567)" };
+    return {
+      valid: false,
+      message: "Il numero di telefono non è valido (es. 3331234567)",
+    };
   }
   return { valid: true, message: "" };
 };
@@ -55,10 +68,14 @@ const validateEmail = (email) => {
 };
 
 const validatePatente = (patente) => {
-  if (!patente) return { valid: false, message: "Il numero di patente è obbligatorio" };
+  if (!patente)
+    return { valid: false, message: "Il numero di patente è obbligatorio" };
   const patenteUpper = patente.toUpperCase().trim();
   if (!/^[A-Z]{2}[0-9]{6,7}[A-Z]{1,2}$/.test(patenteUpper)) {
-    return { valid: false, message: "Il formato della patente non è valido (es. AB123456C)" };
+    return {
+      valid: false,
+      message: "Il formato della patente non è valido (es. AB123456C)",
+    };
   }
   return { valid: true, message: "" };
 };
@@ -67,13 +84,16 @@ const validateTarga = (targa) => {
   if (!targa) return { valid: false, message: "La targa è obbligatoria" };
   const targaUpper = targa.toUpperCase().trim();
   if (!/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/.test(targaUpper)) {
-    return { valid: false, message: "Il formato della targa non è valido (es. AB123CD)" };
+    return {
+      valid: false,
+      message: "Il formato della targa non è valido (es. AB123CD)",
+    };
   }
   return { valid: true, message: "" };
 };
 
 const validateRequiredField = (value, fieldName) => {
-  if (!value || value.toString().trim() === '') {
+  if (!value || value.toString().trim() === "") {
     return { valid: false, message: `${fieldName} è obbligatorio` };
   }
   return { valid: true, message: "" };
@@ -83,52 +103,58 @@ const validateDate = (date, fieldName) => {
   if (!date) return { valid: false, message: `${fieldName} è obbligatoria` };
   const selectedDate = new Date(date);
   const today = new Date();
-  if (fieldName.includes('Nascita') && selectedDate >= today) {
-    return { valid: false, message: "La data di nascita deve essere nel passato" };
+  if (fieldName.includes("Nascita") && selectedDate >= today) {
+    return {
+      valid: false,
+      message: "La data di nascita deve essere nel passato",
+    };
   }
-  if (fieldName.includes('Scadenza') && selectedDate <= today) {
-    return { valid: false, message: "La data di scadenza deve essere nel futuro" };
+  if (fieldName.includes("Scadenza") && selectedDate <= today) {
+    return {
+      valid: false,
+      message: "La data di scadenza deve essere nel futuro",
+    };
   }
   return { valid: true, message: "" };
 };
 
-
 // Componente principale della pagina di iscrizione
 export default function Home() {
   // Stati per la gestione della UI e dei dati
-  const [showForm, setShowForm] = useState(false)
-  const [selectedEvent, setSelectedEvent] = useState(null)
-  const [passeggeri, setPasseggeri] = useState([])
+  const [showForm, setShowForm] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [passeggeri, setPasseggeri] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [images, setImages] = useState([])
+  const [images, setImages] = useState([]);
   const [cover, setCover] = useState({});
-  const [selectedImage, setSelectedImage] = useState(null)
-  const [showImageModal, setShowImageModal] = useState(false)
-  const [showProgramModal, setShowProgramModal] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showProgramModal, setShowProgramModal] = useState(false);
 
   // Stati per il caricamento e la categorizzazione degli eventi
-  const [eventi, setEventi] = useState([])
-  const [eventiPassati, setEventiPassati] = useState([])
-  const [eventiPassatiImmagini, setEventiPassatiImmagini] = useState({})
-  const [loadingEventiPassati, setLoadingEventiPassati] = useState(true)
-  const [loadingEventi, setLoadingEventi] = useState(true)
-  const [loadingGalleria, setLoadingGalleria] = useState(true)
-  const [loadingEventiPassatiImmagini, setLoadingEventiPassatiImmagini] = useState(true)
+  const [eventi, setEventi] = useState([]);
+  const [eventiPassati, setEventiPassati] = useState([]);
+  const [eventiPassatiImmagini, setEventiPassatiImmagini] = useState({});
+  const [loadingEventiPassati, setLoadingEventiPassati] = useState(true);
+  const [loadingEventi, setLoadingEventi] = useState(true);
+  const [loadingGalleria, setLoadingGalleria] = useState(true);
+  const [loadingEventiPassatiImmagini, setLoadingEventiPassatiImmagini] =
+    useState(true);
 
   // Stati per la camera
-  const [isMobile, setIsMobile] = useState(false)
-  const [cameraStream, setCameraStream] = useState(null)
-  const [showCamera, setShowCamera] = useState(false)
-  const [currentCameraField, setCurrentCameraField] = useState(null)
-  const [currentCameraIndex, setCurrentCameraIndex] = useState(null)
-  const [cameraType, setCameraType] = useState("front") // 'front' o 'back'
-  const [isCameraActive, setIsCameraActive] = useState(false)
-  const videoRef = useRef(null)
-  const canvasRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [currentCameraField, setCurrentCameraField] = useState(null);
+  const [currentCameraIndex, setCurrentCameraIndex] = useState(null);
+  const [cameraType, setCameraType] = useState("front"); // 'front' o 'back'
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   // Stati per la gestione degli errori di validazione
-  const [validationErrors, setValidationErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Stato per i dati del form di iscrizione
   const [formData, setFormData] = useState({
@@ -141,13 +167,13 @@ export default function Home() {
     guidatoreCellulare: "",
     guidatoreEmail: "",
     guidatorePatente: "",
-    guidatorePatenteScadenza:"",
+    guidatorePatenteScadenza: "",
     guidatoreDocumentoFronte: null,
     guidatoreDocumentoRetro: null,
     // Dati auto
     autoMarca: "",
-    autoColore:"",
-    autoImmatricolazione:"",
+    autoColore: "",
+    autoImmatricolazione: "",
     autoModello: "",
     autoTarga: "",
     postiAuto: 4,
@@ -159,176 +185,196 @@ export default function Home() {
     // Autorizzazioni del guidatore
     guidatoreAutorizzaFoto: true,
     guidatoreAutorizzaTrattamento: true,
-  })
+  });
 
   // Rileva se è mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(
         window.innerWidth <= 768 ||
-          /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
-      )
-    }
+          /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent,
+          ),
+      );
+    };
 
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // useEffect per il caricamento degli eventi futuri e passati all'avvio della pagina
   useEffect(() => {
     const fetchEventi = async () => {
-      setLoadingEventi(true)
-      setLoadingEventiPassati(true)
+      setLoadingEventi(true);
+      setLoadingEventiPassati(true);
       try {
-        const { data, error } = await supabase.from("evento").select("*").order("data", { ascending: true })
+        const { data, error } = await supabase
+          .from("evento")
+          .select("*")
+          .order("data", { ascending: true });
 
         if (error) {
-          console.error("Errore durante il fetch degli eventi:", error)
-          return
+          console.error("Errore durante il fetch degli eventi:", error);
+          return;
         }
 
-        const now = new Date()
-        const futuri = []
-        const passati = []
+        const now = new Date();
+        const futuri = [];
+        const passati = [];
 
         data.forEach((evento) => {
           if (evento.passato) {
-            passati.push(evento)
+            passati.push(evento);
           } else {
             // Parse the 'quote' JSON string if it exists
-            if (evento.quote && typeof evento.quote === 'string') {
-                try {
-                    evento.quote = JSON.parse(evento.quote);
-                } catch (jsonError) {
-                    console.error(`Error parsing quote JSON for event ${evento.id}:`, jsonError);
-                    evento.quote = {}; // Set to empty object if parsing fails
-                }
+            if (evento.quote && typeof evento.quote === "string") {
+              try {
+                evento.quote = JSON.parse(evento.quote);
+              } catch (jsonError) {
+                console.error(
+                  `Error parsing quote JSON for event ${evento.id}:`,
+                  jsonError,
+                );
+                evento.quote = {}; // Set to empty object if parsing fails
+              }
             } else if (!evento.quote) {
-                evento.quote = {}; // Ensure it's an object even if null/undefined
+              evento.quote = {}; // Ensure it's an object even if null/undefined
             }
-            futuri.push(evento)
+            futuri.push(evento);
           }
-        })
+        });
 
-        setEventiPassati(passati)
-        setEventi(futuri)
+        setEventiPassati(passati);
+        setEventi(futuri);
 
         // Caricamento delle immagini di copertina degli eventi
         const fetchImagesEvents = async () => {
           try {
             // Crea un oggetto per mappare gli eventi con le loro immagini di copertina
-            const coverImages = {}
-            
+            const coverImages = {};
+
             // Per ogni evento, genera il signed URL della copertina se esiste
             for (const evento of data) {
               if (evento.copertina) {
-                const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
-                const lower = evento.copertina.toLowerCase()
-                
+                const validExtensions = [
+                  ".jpg",
+                  ".jpeg",
+                  ".png",
+                  ".gif",
+                  ".webp",
+                ];
+                const lower = evento.copertina.toLowerCase();
+
                 // Verifica se il path della copertina è valido
-                if (validExtensions.some((ext) => lower.endsWith(ext)) &&
-                    !lower.includes("placeholder") &&
-                    !lower.includes("immagine1") &&
-                    !lower.startsWith(".")) {
-                  
+                if (
+                  validExtensions.some((ext) => lower.endsWith(ext)) &&
+                  !lower.includes("placeholder") &&
+                  !lower.includes("immagine1") &&
+                  !lower.startsWith(".")
+                ) {
                   try {
-                    const { data: signedUrl, error: urlError } = await supabase.storage
-                      .from("doc")
-                      .createSignedUrl(evento.copertina, 60 * 60) // validità 1h
-                    
+                    const { data: signedUrl, error: urlError } =
+                      await supabase.storage
+                        .from("doc")
+                        .createSignedUrl(evento.copertina, 60 * 60); // validità 1h
+
                     if (!urlError && signedUrl?.signedUrl) {
-                      coverImages[evento.id] = signedUrl.signedUrl
+                      coverImages[evento.id] = signedUrl.signedUrl;
                     }
                   } catch (urlError) {
-                    console.error(`Errore URL per evento ${evento.id}:`, urlError)
+                    console.error(
+                      `Errore URL per evento ${evento.id}:`,
+                      urlError,
+                    );
                   }
                 }
               }
             }
-            
-            setCover(coverImages)
+
+            setCover(coverImages);
           } catch (error) {
-            console.error("Errore nel caricamento delle copertine:", error)
+            console.error("Errore nel caricamento delle copertine:", error);
           }
-        }
+        };
 
         // Chiama la funzione per caricare le immagini di copertina
-        await fetchImagesEvents()
-
+        await fetchImagesEvents();
       } catch (error) {
-        console.error("Errore nel caricamento degli eventi:", error)
+        console.error("Errore nel caricamento degli eventi:", error);
       } finally {
-        setLoadingEventi(false)
-        setLoadingEventiPassati(false)
+        setLoadingEventi(false);
+        setLoadingEventiPassati(false);
       }
-    }
+    };
 
     const fetchImages = async () => {
-      setLoadingGalleria(true)
+      setLoadingGalleria(true);
       try {
-        const { data, error } = await supabase.storage.from("doc").list("galleria", {
-          limit: 100,
-          offset: 0,
-          sortBy: { column: "name", order: "asc" },
-        })
+        const { data, error } = await supabase.storage
+          .from("doc")
+          .list("galleria", {
+            limit: 100,
+            offset: 0,
+            sortBy: { column: "name", order: "asc" },
+          });
 
         if (error) {
-          console.error("Errore durante il caricamento delle immagini:", error)
-          return
+          console.error("Errore durante il caricamento delle immagini:", error);
+          return;
         }
 
-        const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+        const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
         const validImageFiles = data.filter(({ name, metadata }) => {
-          if (!name || metadata === null) return false
-          const lowerName = name.toLowerCase()
+          if (!name || metadata === null) return false;
+          const lowerName = name.toLowerCase();
           return (
             validExtensions.some((ext) => lowerName.endsWith(ext)) &&
             !lowerName.includes("placeholder") &&
             !lowerName.includes("immagine1") &&
             !lowerName.startsWith(".") &&
             name !== ".emptyFolderPlaceholder"
-          )
-        })
+          );
+        });
 
         const urls = await Promise.all(
           validImageFiles.map(async ({ name }) => {
             const { data: signedUrl, error: urlError } = await supabase.storage
               .from("doc")
-              .createSignedUrl(`galleria/${name}`, 60 * 60)
+              .createSignedUrl(`galleria/${name}`, 60 * 60);
             if (urlError) {
-              console.error(`Errore URL per ${name}:`, urlError)
-              return null
+              console.error(`Errore URL per ${name}:`, urlError);
+              return null;
             }
-            return signedUrl?.signedUrl ?? null
+            return signedUrl?.signedUrl ?? null;
           }),
-        )
+        );
 
-        setImages(urls.filter(Boolean))
+        setImages(urls.filter(Boolean));
       } catch (error) {
-        console.error("Errore nel caricamento della galleria:", error)
+        console.error("Errore nel caricamento della galleria:", error);
       } finally {
-        setLoadingGalleria(false)
+        setLoadingGalleria(false);
       }
-    }
+    };
 
     const fetchEventiPassatiImmagini = async () => {
-      setLoadingEventiPassatiImmagini(true)
+      setLoadingEventiPassatiImmagini(true);
       try {
         // Prima ottieni tutti gli eventi passati
         const { data: eventiPassatiData, error: eventiError } = await supabase
           .from("evento")
           .select("*")
           .eq("passato", true)
-          .order("data", { ascending: false })
+          .order("data", { ascending: false });
 
         if (eventiError) {
-          console.error("Errore nel recupero eventi passati:", eventiError)
-          return
+          console.error("Errore nel recupero eventi passati:", eventiError);
+          return;
         }
 
-        const immaginiPerEvento = {}
+        const immaginiPerEvento = {};
 
         // Per ogni evento passato, recupera le immagini dalla tabella eventoimmagine
         for (const evento of eventiPassatiData) {
@@ -337,60 +383,73 @@ export default function Home() {
               .from("eventoimmagine")
               .select("*")
               .eq("id_evento_fk", evento.id)
-              .order("id", { ascending: true })
+              .order("id", { ascending: true });
 
             if (immaginiError) {
-              console.warn(`Errore nel recupero immagini per evento ${evento.id}:`, immaginiError.message)
-              immaginiPerEvento[evento.id] = []
-              continue
+              console.warn(
+                `Errore nel recupero immagini per evento ${evento.id}:`,
+                immaginiError.message,
+              );
+              immaginiPerEvento[evento.id] = [];
+              continue;
             }
 
             // Genera signed URLs per ogni immagine
             const immaginiConUrl = await Promise.all(
               immaginiData.map(async (immagine) => {
                 try {
-                  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                    .from("doc")
-                    .createSignedUrl(immagine.path, 3600) // 1 ora di validità
+                  const { data: signedUrlData, error: signedUrlError } =
+                    await supabase.storage
+                      .from("doc")
+                      .createSignedUrl(immagine.path, 3600); // 1 ora di validità
 
                   if (signedUrlError) {
-                    console.error(`Errore generazione URL per ${immagine.path}:`, signedUrlError.message)
-                    return null
+                    console.error(
+                      `Errore generazione URL per ${immagine.path}:`,
+                      signedUrlError.message,
+                    );
+                    return null;
                   }
 
                   return {
                     id: immagine.id,
                     url: signedUrlData.signedUrl,
-                    alt: immagine.descrizione || immagine.path.split('/').pop(),
-                    path: immagine.path
-                  }
+                    alt: immagine.descrizione || immagine.path.split("/").pop(),
+                    path: immagine.path,
+                  };
                 } catch (urlError) {
-                  console.error(`Errore nel processare l'immagine ${immagine.id}:`, urlError)
-                  return null
+                  console.error(
+                    `Errore nel processare l'immagine ${immagine.id}:`,
+                    urlError,
+                  );
+                  return null;
                 }
-              })
-            )
+              }),
+            );
 
             // Filtra le immagini valide
-            immaginiPerEvento[evento.id] = immaginiConUrl.filter(Boolean)
+            immaginiPerEvento[evento.id] = immaginiConUrl.filter(Boolean);
           } catch (eventoError) {
-            console.error(`Errore nel processare l'evento ${evento.id}:`, eventoError)
-            immaginiPerEvento[evento.id] = []
+            console.error(
+              `Errore nel processare l'evento ${evento.id}:`,
+              eventoError,
+            );
+            immaginiPerEvento[evento.id] = [];
           }
         }
 
-        setEventiPassatiImmagini(immaginiPerEvento)
+        setEventiPassatiImmagini(immaginiPerEvento);
       } catch (error) {
-        console.error("Errore nel caricamento immagini eventi passati:", error)
+        console.error("Errore nel caricamento immagini eventi passati:", error);
       } finally {
-        setLoadingEventiPassatiImmagini(false)
+        setLoadingEventiPassatiImmagini(false);
       }
-    }
+    };
 
-    fetchEventi()
-    fetchImages()
-    fetchEventiPassatiImmagini()
-  }, [])
+    fetchEventi();
+    fetchImages();
+    fetchEventiPassatiImmagini();
+  }, []);
 
   // useEffect per la gestione della fotocamera basato sull'esempio funzionante
   useEffect(() => {
@@ -401,11 +460,12 @@ export default function Home() {
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
-      }
+      };
 
-      navigator.mediaDevices.getUserMedia(constraints)
+      navigator.mediaDevices
+        .getUserMedia(constraints)
         .then((stream) => {
-          setCameraStream(stream)
+          setCameraStream(stream);
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
@@ -413,14 +473,14 @@ export default function Home() {
         .catch((err) => {
           console.error("Errore nell'accesso alla fotocamera:", err);
           alert("Errore nell'accesso alla fotocamera: " + err.message);
-          setIsCameraActive(false)
-          setShowCamera(false)
+          setIsCameraActive(false);
+          setShowCamera(false);
         });
     } else {
       // Ferma lo stream se disattivato
       if (cameraStream) {
         cameraStream.getTracks().forEach((track) => track.stop());
-        setCameraStream(null)
+        setCameraStream(null);
       }
       if (videoRef.current && videoRef.current.srcObject) {
         const tracks = videoRef.current.srcObject.getTracks();
@@ -428,34 +488,36 @@ export default function Home() {
         videoRef.current.srcObject = null;
       }
     }
-  }, [isCameraActive, cameraType])
+  }, [isCameraActive, cameraType]);
 
   // Funzioni per la camera
   const startCamera = async (fieldName, index = null, type = "back") => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Il tuo browser non supporta l'accesso alla fotocamera. Prova ad aggiornare o usare un altro browser.")
-      return
+      alert(
+        "Il tuo browser non supporta l'accesso alla fotocamera. Prova ad aggiornare o usare un altro browser.",
+      );
+      return;
     }
 
-    setCurrentCameraField(fieldName)
-    setCurrentCameraIndex(index)
-    setCameraType(type)
-    setShowCamera(true)
-    setIsCameraActive(true)
-  }
+    setCurrentCameraField(fieldName);
+    setCurrentCameraIndex(index);
+    setCameraType(type);
+    setShowCamera(true);
+    setIsCameraActive(true);
+  };
 
   const stopCamera = () => {
-    setIsCameraActive(false)
-    setShowCamera(false)
-    setCurrentCameraField(null)
-    setCurrentCameraIndex(null)
-  }
+    setIsCameraActive(false);
+    setShowCamera(false);
+    setCurrentCameraField(null);
+    setCurrentCameraIndex(null);
+  };
 
   const capturePhoto = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (video && canvas) {
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext("2d");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -468,106 +530,118 @@ export default function Home() {
             return;
           }
 
-          const file = new File([blob], `${currentCameraField}_${cameraType}_${Date.now()}.jpg`, {
-            type: "image/jpeg",
-          })
+          const file = new File(
+            [blob],
+            `${currentCameraField}_${cameraType}_${Date.now()}.jpg`,
+            {
+              type: "image/jpeg",
+            },
+          );
 
           if (currentCameraIndex !== null) {
             // Per i passeggeri
-            const newPasseggeri = [...passeggeri]
+            const newPasseggeri = [...passeggeri];
             newPasseggeri[currentCameraIndex] = {
               ...newPasseggeri[currentCameraIndex],
               [currentCameraField]: file,
-            }
-            setPasseggeri(newPasseggeri)
+            };
+            setPasseggeri(newPasseggeri);
           } else {
             // Per il guidatore
             setFormData((prev) => ({
               ...prev,
               [currentCameraField]: file,
-            }))
+            }));
           }
 
-          stopCamera()
+          stopCamera();
         },
         "image/jpeg",
         0.8,
-      )
+      );
     }
-  }
+  };
 
   // FUNZIONI DI GESTIONE DEL FORM
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     let finalValue = type === "checkbox" ? checked : value;
 
     // Trasforma in maiuscolo per i campi specificati
-    if (['guidatoreCodiceFiscale', 'guidatorePatente', 'autoTarga'].includes(name)) {
+    if (
+      ["guidatoreCodiceFiscale", "guidatorePatente", "autoTarga"].includes(name)
+    ) {
       finalValue = finalValue.toUpperCase();
     }
 
     setFormData((prev) => ({
       ...prev,
       [name]: finalValue,
-    }))
-  }
+    }));
+  };
 
-  const handlePasseggeroChange = (index, field, value, type = 'text', checked = false) => {
-    const newPasseggeri = [...passeggeri]
+  const handlePasseggeroChange = (
+    index,
+    field,
+    value,
+    type = "text",
+    checked = false,
+  ) => {
+    const newPasseggeri = [...passeggeri];
     let finalValue = type === "checkbox" ? checked : value;
 
-    if (['codiceFiscale'].includes(field)) {
+    if (["codiceFiscale"].includes(field)) {
       finalValue = finalValue.toUpperCase();
     }
 
     newPasseggeri[index] = {
       ...newPasseggeri[index],
       [field]: finalValue,
-    }
-    setPasseggeri(newPasseggeri)
-  }
+    };
+    setPasseggeri(newPasseggeri);
+  };
 
   const handleFileUpload = (e, fieldName, index = null) => {
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (file) {
       if (index !== null) {
-        const newPasseggeri = [...passeggeri]
+        const newPasseggeri = [...passeggeri];
         newPasseggeri[index] = {
           ...newPasseggeri[index],
           [fieldName]: file,
-        }
-        setPasseggeri(newPasseggeri)
+        };
+        setPasseggeri(newPasseggeri);
       } else {
         setFormData((prev) => ({
           ...prev,
           [fieldName]: file,
-        }))
+        }));
       }
     }
-  }
+  };
 
   const removeFile = (fieldName, index = null) => {
     if (index !== null) {
-      const newPasseggeri = [...passeggeri]
+      const newPasseggeri = [...passeggeri];
       newPasseggeri[index] = {
         ...newPasseggeri[index],
         [fieldName]: null,
-      }
-      setPasseggeri(newPasseggeri)
+      };
+      setPasseggeri(newPasseggeri);
     } else {
       setFormData((prev) => ({
         ...prev,
         [fieldName]: null,
-      }))
+      }));
     }
-  }
+  };
 
   const aggiungiPasseggero = () => {
     if (formData.postiAuto > 0 && passeggeri.length >= formData.postiAuto - 1) {
       alert(
         `Non è possibile aggiungere più di ${formData.postiAuto - 1} passeggeri per un'auto con ${formData.postiAuto} posti (uno è per il guidatore).`,
-      )
-      return
+      );
+      return;
     }
     setPasseggeri((prev) => [
       ...prev,
@@ -586,483 +660,526 @@ export default function Home() {
         autorizzaFoto: true,
         autorizzaTrattamento: true,
       },
-    ])
-  }
+    ]);
+  };
 
   const rimuoviPasseggero = (index) => {
-    setPasseggeri((prev) => prev.filter((_, i) => i !== index))
-  }
-
-
+    setPasseggeri((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleImageClick = (imageUrl) => {
-    setSelectedImage(imageUrl)
-    setShowImageModal(true)
-  }
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
 
   const handleCloseImageModal = () => {
-    setSelectedImage(null)
-    setShowImageModal(false)
-  }
+    setSelectedImage(null);
+    setShowImageModal(false);
+  };
 
   const handleIscriviti = (evento) => {
-    setSelectedEvent(evento)
-    setShowForm(true)
+    setSelectedEvent(evento);
+    setShowForm(true);
     // Set the first available quote as selected by default, if any
     if (evento.quote && Object.keys(evento.quote).length > 0) {
-      const firstQuotaKey = Object.keys(evento.quote)[0]
+      const firstQuotaKey = Object.keys(evento.quote)[0];
       setFormData((prev) => ({
         ...prev,
         quotaSelezionata: firstQuotaKey,
-      }))
+      }));
     } else {
       setFormData((prev) => ({
         ...prev,
         quotaSelezionata: "", // No quote selected if none are available
-      }))
+      }));
     }
-  }
+  };
 
   const handleShowProgram = (evento) => {
-    setSelectedEvent(evento)
-    setShowProgramModal(true)
-  }
+    setSelectedEvent(evento);
+    setShowProgramModal(true);
+  };
 
   const handleSubmitRegistration = async () => {
     if (!selectedEvent) {
-        alert("Nessun evento selezionato per l'iscrizione.");
-        return;
+      alert("Nessun evento selezionato per l'iscrizione.");
+      return;
     }
 
     setIsSubmitting(true);
     setValidationErrors({});
 
     try {
-        // Validazione completa dei dati del guidatore
-        const guidatoreErrors = {};
-        
-        const cognomeValidation = validateRequiredField(formData.guidatoreCognome, "Cognome");
-        if (!cognomeValidation.valid) guidatoreErrors.guidatoreCognome = cognomeValidation.message;
-        
-        const nomeValidation = validateRequiredField(formData.guidatoreNome, "Nome");
-        if (!nomeValidation.valid) guidatoreErrors.guidatoreNome = nomeValidation.message;
-        
-        // CORREZIONE: Validazione rigorosa del codice fiscale
-        const cfValidation = validateCodiceFiscale(formData.guidatoreCodiceFiscale);
-        if (!cfValidation.valid) {
-            guidatoreErrors.guidatoreCodiceFiscale = cfValidation.message;
-            console.error("Errore validazione CF guidatore:", cfValidation.message, "CF:", formData.guidatoreCodiceFiscale);
-        }
-        
-        const phoneValidation = validatePhone(formData.guidatoreCellulare);
-        if (!phoneValidation.valid) guidatoreErrors.guidatoreCellulare = phoneValidation.message;
-        
-        const emailValidation = validateEmail(formData.guidatoreEmail);
-        if (!emailValidation.valid) guidatoreErrors.guidatoreEmail = emailValidation.message;
-        
-        /* const patenteValidation = validatePatente(formData.guidatorePatente);
-        if (!patenteValidation.valid) guidatoreErrors.guidatorePatente = patenteValidation.message;*/
-        
-        const dataNascitaValidation = validateDate(formData.guidatoreDataNascita, "Data di Nascita");
-        if (!dataNascitaValidation.valid) guidatoreErrors.guidatoreDataNascita = dataNascitaValidation.message;
-        
-        const patenteScadenzaValidation = validateDate(formData.guidatorePatenteScadenza, "Scadenza Patente");
-        if (!patenteScadenzaValidation.valid) guidatoreErrors.guidatorePatenteScadenza = patenteScadenzaValidation.message;
-        
-        const indirizzoValidation = validateRequiredField(formData.guidatoreIndirizzo, "Indirizzo");
-        if (!indirizzoValidation.valid) guidatoreErrors.guidatoreIndirizzo = indirizzoValidation.message;
+      // Validazione completa guidatore (come da tuo codice, la riporto sintetica)
+      const guidatoreErrors = {};
+      const cognomeValidation = validateRequiredField(
+        formData.guidatoreCognome,
+        "Cognome",
+      );
+      if (!cognomeValidation.valid)
+        guidatoreErrors.guidatoreCognome = cognomeValidation.message;
+      const nomeValidation = validateRequiredField(
+        formData.guidatoreNome,
+        "Nome",
+      );
+      if (!nomeValidation.valid)
+        guidatoreErrors.guidatoreNome = nomeValidation.message;
+      const cfValidation = validateCodiceFiscale(
+        formData.guidatoreCodiceFiscale,
+      );
+      if (!cfValidation.valid)
+        guidatoreErrors.guidatoreCodiceFiscale = cfValidation.message;
+      const phoneValidation = validatePhone(formData.guidatoreCellulare);
+      if (!phoneValidation.valid)
+        guidatoreErrors.guidatoreCellulare = phoneValidation.message;
+      const emailValidation = validateEmail(formData.guidatoreEmail);
+      if (!emailValidation.valid)
+        guidatoreErrors.guidatoreEmail = emailValidation.message;
+      const dataNascitaValidation = validateDate(
+        formData.guidatoreDataNascita,
+        "Data di Nascita",
+      );
+      if (!dataNascitaValidation.valid)
+        guidatoreErrors.guidatoreDataNascita = dataNascitaValidation.message;
+      const patenteScadenzaValidation = validateDate(
+        formData.guidatorePatenteScadenza,
+        "Scadenza Patente",
+      );
+      if (!patenteScadenzaValidation.valid)
+        guidatoreErrors.guidatorePatenteScadenza =
+          patenteScadenzaValidation.message;
+      const indirizzoValidation = validateRequiredField(
+        formData.guidatoreIndirizzo,
+        "Indirizzo",
+      );
+      if (!indirizzoValidation.valid)
+        guidatoreErrors.guidatoreIndirizzo = indirizzoValidation.message;
+      if (!formData.guidatoreAutorizzaTrattamento)
+        guidatoreErrors.guidatoreAutorizzaTrattamento =
+          "Obbligatorio autorizzare trattamento dati";
 
-        // Controllo GDPR rigoroso
-        if (!formData.guidatoreAutorizzaTrattamento) {
-            guidatoreErrors.guidatoreAutorizzaTrattamento = "È obbligatorio autorizzare il trattamento dei dati personali (GDPR)";
-        }
+      // Validazione dati auto
+      const targaValidation = validateTarga(formData.autoTarga);
+      if (!targaValidation.valid)
+        guidatoreErrors.autoTarga = targaValidation.message;
+      const marcaValidation = validateRequiredField(
+        formData.autoMarca,
+        "Marca Auto",
+      );
+      if (!marcaValidation.valid)
+        guidatoreErrors.autoMarca = marcaValidation.message;
+      const modelloValidation = validateRequiredField(
+        formData.autoModello,
+        "Modello Auto",
+      );
+      if (!modelloValidation.valid)
+        guidatoreErrors.autoModello = modelloValidation.message;
+      const coloreValidation = validateRequiredField(
+        formData.autoColore,
+        "Colore Auto",
+      );
+      if (!coloreValidation.valid)
+        guidatoreErrors.autoColore = coloreValidation.message;
+      const immatricolazioneValidation = validateRequiredField(
+        formData.autoImmatricolazione,
+        "Anno Immatricolazione",
+      );
+      if (!immatricolazioneValidation.valid)
+        guidatoreErrors.autoImmatricolazione =
+          immatricolazioneValidation.message;
 
-        // Validazione dati auto
-        const targaValidation = validateTarga(formData.autoTarga);
-        if (!targaValidation.valid) guidatoreErrors.autoTarga = targaValidation.message;
-        
-        const marcaValidation = validateRequiredField(formData.autoMarca, "Marca Auto");
-        if (!marcaValidation.valid) guidatoreErrors.autoMarca = marcaValidation.message;
-        
-        const modelloValidation = validateRequiredField(formData.autoModello, "Modello Auto");
-        if (!modelloValidation.valid) guidatoreErrors.autoModello = modelloValidation.message;
-        
-        const coloreValidation = validateRequiredField(formData.autoColore, "Colore Auto");
-        if (!coloreValidation.valid) guidatoreErrors.autoColore = coloreValidation.message;
-        
-        const immatricolazioneValidation = validateRequiredField(formData.autoImmatricolazione, "Anno Immatricolazione");
-        if (!immatricolazioneValidation.valid) guidatoreErrors.autoImmatricolazione = immatricolazioneValidation.message;
+      if (!formData.quotaSelezionata)
+        guidatoreErrors.quotaSelezionata =
+          "Seleziona un pacchetto di partecipazione";
+      if (!formData.guidatoreDocumentoFronte)
+        guidatoreErrors.guidatoreDocumentoFronte =
+          "Documento fronte obbligatorio";
+      if (!formData.guidatoreDocumentoRetro)
+        guidatoreErrors.guidatoreDocumentoRetro =
+          "Documento retro obbligatorio";
 
-        // Controllo quota selezionata
-        if (!formData.quotaSelezionata) {
-            guidatoreErrors.quotaSelezionata = "È obbligatorio selezionare un pacchetto di partecipazione";
-        }
+      // Validazione passeggeri
+      const passeggeriErrors = {};
+      passeggeri.forEach((p, i) => {
+        const pCognomeValidation = validateRequiredField(p.cognome, "Cognome");
+        if (!pCognomeValidation.valid)
+          passeggeriErrors[`cognome_${i}`] = pCognomeValidation.message;
+        const pNomeValidation = validateRequiredField(p.nome, "Nome");
+        if (!pNomeValidation.valid)
+          passeggeriErrors[`nome_${i}`] = pNomeValidation.message;
+        const pCfValidation = validateCodiceFiscale(p.codiceFiscale);
+        if (!pCfValidation.valid)
+          passeggeriErrors[`codiceFiscale_${i}`] = pCfValidation.message;
+        const pPhoneValidation = validatePhone(p.cellulare);
+        if (!pPhoneValidation.valid)
+          passeggeriErrors[`cellulare_${i}`] = pPhoneValidation.message;
+        const pEmailValidation = validateEmail(p.email);
+        if (!pEmailValidation.valid)
+          passeggeriErrors[`email_${i}`] = pEmailValidation.message;
+        const pDataNascitaValidation = validateDate(
+          p.dataNascita,
+          "Data di Nascita",
+        );
+        if (!pDataNascitaValidation.valid)
+          passeggeriErrors[`dataNascita_${i}`] = pDataNascitaValidation.message;
+        const pIndirizzoValidation = validateRequiredField(
+          p.indirizzo,
+          "Indirizzo",
+        );
+        if (!pIndirizzoValidation.valid)
+          passeggeriErrors[`indirizzo_${i}`] = pIndirizzoValidation.message;
+        if (!p.autorizzaTrattamento)
+          passeggeriErrors[`autorizzaTrattamento_${i}`] =
+            `Il passeggero ${i + 1} deve autorizzare GDPR`;
+        if (!p.documentoFronte)
+          passeggeriErrors[`documentoFronte_${i}`] =
+            `Documento fronte passeggero ${i + 1} obbligatorio`;
+        if (!p.documentoRetro)
+          passeggeriErrors[`documentoRetro_${i}`] =
+            `Documento retro passeggero ${i + 1} obbligatorio`;
+      });
 
-        // Controllo documenti obbligatori
-        if (!formData.guidatoreDocumentoFronte) {
-            guidatoreErrors.guidatoreDocumentoFronte = "Il documento di identità fronte è obbligatorio";
-        }
-        if (!formData.guidatoreDocumentoRetro) {
-            guidatoreErrors.guidatoreDocumentoRetro = "Il documento di identità retro è obbligatorio";
-        }
-
-        // Validazione passeggeri
-        const passeggeriErrors = {};
-        for (let i = 0; i < passeggeri.length; i++) {
-            const p = passeggeri[i];
-            
-            const pCognomeValidation = validateRequiredField(p.cognome, "Cognome");
-            if (!pCognomeValidation.valid) passeggeriErrors[`cognome_${i}`] = pCognomeValidation.message;
-            
-            const pNomeValidation = validateRequiredField(p.nome, "Nome");
-            if (!pNomeValidation.valid) passeggeriErrors[`nome_${i}`] = pNomeValidation.message;
-            
-            // CORREZIONE: Validazione rigorosa del codice fiscale per passeggeri
-            const pCfValidation = validateCodiceFiscale(p.codiceFiscale);
-            if (!pCfValidation.valid) {
-                passeggeriErrors[`codiceFiscale_${i}`] = pCfValidation.message;
-                console.error(`Errore validazione CF passeggero ${i + 1}:`, pCfValidation.message, "CF:", p.codiceFiscale);
-            }
-            
-            const pPhoneValidation = validatePhone(p.cellulare);
-            if (!pPhoneValidation.valid) passeggeriErrors[`cellulare_${i}`] = pPhoneValidation.message;
-            
-            const pEmailValidation = validateEmail(p.email);
-            if (!pEmailValidation.valid) passeggeriErrors[`email_${i}`] = pEmailValidation.message;
-            
-            const pDataNascitaValidation = validateDate(p.dataNascita, "Data di Nascita");
-            if (!pDataNascitaValidation.valid) passeggeriErrors[`dataNascita_${i}`] = pDataNascitaValidation.message;
-            
-            const pIndirizzoValidation = validateRequiredField(p.indirizzo, "Indirizzo");
-            if (!pIndirizzoValidation.valid) passeggeriErrors[`indirizzo_${i}`] = pIndirizzoValidation.message;
-
-            // Controllo GDPR rigoroso per passeggeri
-            if (!p.autorizzaTrattamento) {
-                passeggeriErrors[`autorizzaTrattamento_${i}`] = `Il passeggero ${i + 1} deve autorizzare il trattamento dei dati personali (GDPR)`;
-            }
-
-            // Controllo documenti passeggeri
-            if (!p.documentoFronte) {
-                passeggeriErrors[`documentoFronte_${i}`] = `Documento fronte del passeggero ${i + 1} è obbligatorio`;
-            }
-            if (!p.documentoRetro) {
-                passeggeriErrors[`documentoRetro_${i}`] = `Documento retro del passeggero ${i + 1} è obbligatorio`;
-            }
-        }
-
-        // Combina tutti gli errori
-        const allErrors = { ...guidatoreErrors, ...passeggeriErrors };
-        
-        // CORREZIONE: Controllo più rigoroso degli errori
-        if (Object.keys(allErrors).length > 0) {
-            setValidationErrors(allErrors);
-            console.error("Errori di validazione trovati:", allErrors);
-            
-            // Mostra un messaggio più dettagliato
-            const errorMessages = Object.values(allErrors);
-            const firstError = errorMessages[0];
-            alert(`Errore di validazione: ${firstError}\n\nTotale errori trovati: ${errorMessages.length}. Controlla tutti i campi evidenziati.`);
-            
-            setIsSubmitting(false);
-            return;
-        }
-
-        // Log per debug - verifica che non ci siano errori
-        console.log("Validazione completata con successo. Nessun errore trovato.");
-        console.log("CF Guidatore:", formData.guidatoreCodiceFiscale, "Lunghezza:", formData.guidatoreCodiceFiscale?.length);
-
-        // Se tutti i controlli sono superati, procedi con l'inserimento atomico
-        let guidatoreId = null;
-        const passeggeriInseritiIds = [];
-        const documentiCaricati = [];
-
-        try {
-            // Inizia transazione logica - inserimento guidatore
-            const guidatoreDataForDb = {
-                nome: formData.guidatoreNome.trim(),
-                cognome: formData.guidatoreCognome.trim(),
-                data_nascita: formData.guidatoreDataNascita,
-                codice_fiscale: formData.guidatoreCodiceFiscale.toUpperCase().trim(),
-                indirizzo: formData.guidatoreIndirizzo.trim(),
-                indirizzo_email: formData.guidatoreEmail.toLowerCase().trim(),
-                telefono: formData.guidatoreCellulare.replace(/\s+/g, ''),
-                Patente: formData.guidatorePatente.toUpperCase().trim(),
-                PatenteS: formData.guidatorePatenteScadenza,
-                auto_marca: formData.autoMarca.trim(),
-                auto_colore: formData.autoColore.trim(),
-                auto_immatricolazione: formData.autoImmatricolazione,
-                auto_modello: formData.autoModello.trim(),
-                auto_targa: formData.autoTarga.toUpperCase().trim(),
-                posti_auto: parseInt(formData.postiAuto),
-                intolleranze: formData.guidatoreEsigenzeAlimentari ? formData.guidatoreIntolleranze.trim() : null,
-                id_evento_fk: selectedEvent.id,
-                quota: formData.quotaSelezionata,
-                verificato: false,
-            };
-
-            const { data: guidatoreInserito, error: insertErr } = await supabase
-                .from("guidatore")
-                .insert(guidatoreDataForDb)
-                .select()
-                .single();
-
-            if (insertErr) {
-                console.error("Errore inserimento guidatore:", insertErr);
-                throw new Error("Errore durante l'inserimento del guidatore: " + insertErr.message);
-            }
-
-            guidatoreId = guidatoreInserito.id;
-
-            // Upload documenti guidatore
-            let guidatoreFrontePath = null;
-            let guidatoreRetroPath = null;
-
-            if (formData.guidatoreDocumentoFronte) {
-                const fronteFileName = `${formData.guidatoreCodiceFiscale.toUpperCase()}_${Date.now()}_fronte.${formData.guidatoreDocumentoFronte.name.split(".").pop()}`;
-                const { data: docFronte, error: uploadFronteErr } = await supabase.storage
-                    .from("doc")
-                    .upload(`guidatori/${fronteFileName}`, formData.guidatoreDocumentoFronte, {
-                        cacheControl: "3600",
-                        upsert: false,
-                    });
-                if (uploadFronteErr) {
-                    throw new Error("Errore durante il caricamento del documento fronte: " + uploadFronteErr.message);
-                }
-                guidatoreFrontePath = docFronte.path;
-                documentiCaricati.push(guidatoreFrontePath);
-            }
-
-            if (formData.guidatoreDocumentoRetro) {
-                const retroFileName = `${formData.guidatoreCodiceFiscale.toUpperCase()}_${Date.now()}_retro.${formData.guidatoreDocumentoRetro.name.split(".").pop()}`;
-                const { data: docRetro, error: uploadRetroErr } = await supabase.storage
-                    .from("doc")
-                    .upload(`guidatori/${retroFileName}`, formData.guidatoreDocumentoRetro, {
-                        cacheControl: "3600",
-                        upsert: false,
-                    });
-                if (uploadRetroErr) {
-                    throw new Error("Errore durante il caricamento del documento retro: " + uploadRetroErr.message);
-                }
-                guidatoreRetroPath = docRetro.path;
-                documentiCaricati.push(guidatoreRetroPath);
-            }
-            
-            // Aggiorna il guidatore con i path dei documenti
-            const { error: updateError } = await supabase
-                .from('guidatore')
-                .update({ documento_fronte: guidatoreFrontePath, documento_retro: guidatoreRetroPath })
-                .match({ id: guidatoreId });
-
-            if (updateError) {
-                throw new Error("Errore durante l'aggiornamento dei documenti del guidatore: " + updateError.message);
-            }
-
-            // Inserimento passeggeri
-            for (let i = 0; i < passeggeri.length; i++) {
-                const p = passeggeri[i];
-                let passeggeroFrontePath = null;
-                let passeggeroRetroPath = null;
-
-                if (p.documentoFronte) {
-                    const fronteFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_fronte.${p.documentoFronte.name.split(".").pop()}`;
-                    const { data: docFronte, error: pFronteErr } = await supabase.storage
-                        .from("doc")
-                        .upload(`passeggeri/${fronteFileName}`, p.documentoFronte, { cacheControl: "3600", upsert: false });
-                    if (pFronteErr) {
-                        throw new Error(`Errore upload documento fronte passeggero ${i + 1}: ` + pFronteErr.message);
-                    }
-                    passeggeroFrontePath = docFronte.path;
-                    documentiCaricati.push(passeggeroFrontePath);
-                }
-
-                if (p.documentoRetro) {
-                    const retroFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_retro.${p.documentoRetro.name.split(".").pop()}`;
-                    const { data: docRetro, error: pRetroErr } = await supabase.storage
-                        .from("doc")
-                        .upload(`passeggeri/${retroFileName}`, p.documentoRetro, { cacheControl: "3600", upsert: false });
-                    if (pRetroErr) {
-                        throw new Error(`Errore upload documento retro passeggero ${i + 1}: ` + pRetroErr.message);
-                    }
-                    passeggeroRetroPath = docRetro.path;
-                    documentiCaricati.push(passeggeroRetroPath);
-                }
-
-                const { data: pInserito, error: pInsertErr } = await supabase.from("passeggero").insert({
-                    nome: p.nome.trim(),
-                    cognome: p.cognome.trim(),
-                    data_nascita: p.dataNascita,
-                    codice_fiscale: p.codiceFiscale.toUpperCase().trim(),
-                    indirizzo: p.indirizzo.trim(),
-                    indirizzo_email: p.email.toLowerCase().trim(),
-                    telefono: p.cellulare.replace(/\s+/g, ''),
-                    documento_fronte: passeggeroFrontePath,
-                    documento_retro: passeggeroRetroPath,
-                    intolleranze: p.esigenzeAlimentari ? p.intolleranze.trim() : null,
-                    id_guidatore_fk: guidatoreId,
-                    id_evento_fk: selectedEvent.id,
-                    verificato: false,
-                }).select().single();
-
-                if (pInsertErr) {
-                    throw new Error(`Errore inserimento passeggero ${i + 1}: ` + pInsertErr.message);
-                }
-                passeggeriInseritiIds.push(pInserito.id);
-            }
-
-            // Se tutto è andato a buon fine, invia email di conferma
-            try {
-                await handleConfirmationMail(0, formData.guidatoreEmail, formData, passeggeri, selectedEvent);
-            } catch (emailError) {
-                console.warn("Errore invio email di conferma:", emailError);
-                // Non bloccare il processo per errori email
-            }
-
-            alert("Iscrizione completata con successo!");
-            setShowForm(false);
-            
-            // Reset form
-            setFormData({
-                guidatoreCognome: "",
-                guidatoreNome: "",
-                guidatoreCodiceFiscale: "",
-                guidatoreDataNascita: "",
-                guidatoreIndirizzo: "",
-                guidatoreCellulare: "",
-                guidatoreEmail: "",
-                guidatorePatente: "",
-                guidatorePatenteScadenza: "",
-                guidatoreDocumentoFronte: null,
-                guidatoreDocumentoRetro: null,
-                autoMarca: "",
-                autoColore: "",
-                autoImmatricolazione: "",
-                autoModello: "",
-                autoTarga: "",
-                postiAuto: 4,
-                quotaSelezionata: "",
-                guidatoreEsigenzeAlimentari: false,
-                guidatoreIntolleranze: "",
-                guidatoreAutorizzaFoto: true,
-                guidatoreAutorizzaTrattamento: true,
-            });
-            setPasseggeri([]);
-            setValidationErrors({});
-
-        } catch (transactionError) {
-            console.error("Errore durante la transazione, avvio rollback:", transactionError);
-            
-            // Rollback completo
-            if (guidatoreId) {
-                try {
-                    await supabase.from('guidatore').delete().match({ id: guidatoreId });
-                } catch (rollbackError) {
-                    console.error("Errore durante il rollback del guidatore:", rollbackError);
-                }
-            }
-            
-            if (passeggeriInseritiIds.length > 0) {
-                try {
-                    await supabase.from('passeggero').delete().in('id', passeggeriInseritiIds);
-                } catch (rollbackError) {
-                    console.error("Errore durante il rollback dei passeggeri:", rollbackError);
-                }
-            }
-            
-            // Rimuovi tutti i documenti caricati
-            if (documentiCaricati.length > 0) {
-                try {
-                    await supabase.storage.from('doc').remove(documentiCaricati);
-                } catch (rollbackError) {
-                    console.error("Errore durante il rollback dei documenti:", rollbackError);
-                }
-            }
-
-            throw transactionError;
-        }
-
-    } catch (err) {
-        console.error("Errore durante la registrazione:", err);
-        alert("Si è verificato un errore durante l'iscrizione: " + (err.message || "Verifica i dati inseriti e riprova."));
-    } finally {
+      const allErrors = { ...guidatoreErrors, ...passeggeriErrors };
+      if (Object.keys(allErrors).length > 0) {
+        setValidationErrors(allErrors);
+        alert(
+          `Errore di validazione: ${Object.values(allErrors)[0]}\nTotale errori: ${Object.keys(allErrors).length}`,
+        );
         setIsSubmitting(false);
+        return;
+      }
+
+      // Upload documenti guidatore
+      let guidatoreFrontePath = null;
+      let guidatoreRetroPath = null;
+
+      if (formData.guidatoreDocumentoFronte) {
+        const fronteFileName = `${formData.guidatoreCodiceFiscale.toUpperCase()}_${Date.now()}_fronte.${formData.guidatoreDocumentoFronte.name.split(".").pop()}`;
+        const { data: docFronte, error: uploadFronteErr } =
+          await supabase.storage
+            .from("doc")
+            .upload(
+              `guidatori/${fronteFileName}`,
+              formData.guidatoreDocumentoFronte,
+              {
+                cacheControl: "3600",
+                upsert: false,
+              },
+            );
+        if (uploadFronteErr) {
+          throw new Error(
+            "Errore durante il caricamento del documento fronte: " +
+              uploadFronteErr.message,
+          );
+        }
+        guidatoreFrontePath = docFronte.path;
+      }
+
+      if (formData.guidatoreDocumentoRetro) {
+        const retroFileName = `${formData.guidatoreCodiceFiscale.toUpperCase()}_${Date.now()}_retro.${formData.guidatoreDocumentoRetro.name.split(".").pop()}`;
+        const { data: docRetro, error: uploadRetroErr } = await supabase.storage
+          .from("doc")
+          .upload(
+            `guidatori/${retroFileName}`,
+            formData.guidatoreDocumentoRetro,
+            {
+              cacheControl: "3600",
+              upsert: false,
+            },
+          );
+        if (uploadRetroErr) {
+          throw new Error(
+            "Errore durante il caricamento del documento retro: " +
+              uploadRetroErr.message,
+          );
+        }
+        guidatoreRetroPath = docRetro.path;
+      }
+
+      // Preparazione dati guidatore
+      const guidatorePayload = {
+        nome: formData.guidatoreNome.trim(),
+        cognome: formData.guidatoreCognome.trim(),
+        data_nascita: formData.guidatoreDataNascita,
+        codice_fiscale: formData.guidatoreCodiceFiscale.toUpperCase().trim(),
+        indirizzo: formData.guidatoreIndirizzo.trim(),
+        indirizzo_email: formData.guidatoreEmail.toLowerCase().trim(),
+        telefono: formData.guidatoreCellulare.replace(/\s+/g, ""),
+        patente: formData.guidatorePatente.toUpperCase().trim(),
+        patente_scadenza: formData.guidatorePatenteScadenza,
+        auto_marca: formData.autoMarca.trim(),
+        auto_colore: formData.autoColore.trim(),
+        auto_immatricolazione: formData.autoImmatricolazione,
+        auto_modello: formData.autoModello.trim(),
+        auto_targa: formData.autoTarga.toUpperCase().trim(),
+        posti_auto: formData.postiAuto,
+        intolleranze: formData.guidatoreEsigenzeAlimentari
+          ? formData.guidatoreIntolleranze.trim()
+          : "",
+        id_evento_fk: selectedEvent.id,
+        quota: formData.quotaSelezionata,
+        documento_fronte: guidatoreFrontePath || null,
+        documento_retro: guidatoreRetroPath || null,
+      };
+
+      const guidatoreRes = await fetch("/api/inserisciGuidatore", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(guidatorePayload),
+      });
+
+      if (!guidatoreRes.ok) {
+        const error = await guidatoreRes.text();
+        throw new Error("Errore inserimento guidatore: " + error);
+      }
+
+      const guidatoreData = await guidatoreRes.json();
+      const guidatoreId = guidatoreData.id;
+
+      // Inserimento passeggeri
+      for (let i = 0; i < passeggeri.length; i++) {
+        const p = passeggeri[i];
+        let passeggeroFrontePath = null;
+        let passeggeroRetroPath = null;
+      
+        // Upload documento fronte
+        if (p.documentoFronte) {
+          const estensioneFronte = p.documentoFronte.name.split('.').pop();
+          const fronteFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_fronte.${estensioneFronte}`;
+      
+          const { data: docFronte, error: pFronteErr } = await supabase.storage
+            .from("doc")
+            .upload(`passeggeri/${fronteFileName}`, p.documentoFronte, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+      
+          if (pFronteErr) {
+            throw new Error(`Errore upload documento fronte passeggero ${i + 1}: ${pFronteErr.message}`);
+          }
+      
+          passeggeroFrontePath = docFronte.path;
+        }
+      
+        // Upload documento retro
+        if (p.documentoRetro) {
+          const estensioneRetro = p.documentoRetro.name.split('.').pop();
+          const retroFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_retro.${estensioneRetro}`;
+      
+          const { data: docRetro, error: pRetroErr } = await supabase.storage
+            .from("doc")
+            .upload(`passeggeri/${retroFileName}`, p.documentoRetro, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+      
+          if (pRetroErr) {
+            throw new Error(`Errore upload documento retro passeggero ${i + 1}: ${pRetroErr.message}`);
+          }
+      
+          passeggeroRetroPath = docRetro.path;
+        }
+      
+        // Preparazione payload JSON passeggero
+        const passeggeroPayload = {
+          nome: p.nome.trim(),
+          cognome: p.cognome.trim(),
+          data_nascita: p.dataNascita,
+          codice_fiscale: p.codiceFiscale.toUpperCase().trim(),
+          indirizzo: p.indirizzo.trim(),
+          indirizzo_email: p.email.toLowerCase().trim(),
+          telefono: p.cellulare.replace(/\s+/g, ""),
+          documento_fronte: passeggeroFrontePath || null,
+          documento_retro: passeggeroRetroPath || null,
+          intolleranze: p.esigenzeAlimentari ? p.intolleranze.trim() : "",
+          id_guidatore_fk: guidatoreId,
+          id_evento_fk: selectedEvent.id,
+          verificato: false,
+        };
+      
+        const passeggeroRes = await fetch("/api/inserisciPasseggero", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(passeggeroPayload),
+        });
+      
+        if (!passeggeroRes.ok) {
+          const error = await passeggeroRes.text();
+          throw new Error(`Errore inserimento passeggero ${i + 1}: ${error}`);
+        }
+      
+        const passeggeroData = await passeggeroRes.json();
+      }
+      
+
+      // Invia mail di conferma (ipotesi: funzione rimane la stessa)
+      try {
+        await handleConfirmationMail(
+          0,
+          formData.guidatoreEmail,
+          formData,
+          passeggeri,
+          selectedEvent,
+        );
+      } catch (emailError) {
+        console.warn("Errore invio email di conferma:", emailError);
+      }
+
+      alert("Iscrizione completata con successo!");
+      setShowForm(false);
+
+      // Reset form e stato
+      setFormData({
+        guidatoreCognome: "",
+        guidatoreNome: "",
+        guidatoreCodiceFiscale: "",
+        guidatoreDataNascita: "",
+        guidatoreIndirizzo: "",
+        guidatoreCellulare: "",
+        guidatoreEmail: "",
+        guidatorePatente: "",
+        guidatorePatenteScadenza: "",
+        guidatoreDocumentoFronte: null,
+        guidatoreDocumentoRetro: null,
+        autoMarca: "",
+        autoColore: "",
+        autoImmatricolazione: "",
+        autoModello: "",
+        autoTarga: "",
+        postiAuto: 4,
+        quotaSelezionata: "",
+        guidatoreEsigenzeAlimentari: false,
+        guidatoreIntolleranze: "",
+        guidatoreAutorizzaFoto: true,
+        guidatoreAutorizzaTrattamento: true,
+      });
+      setPasseggeri([]);
+      setValidationErrors({});
+    } catch (err) {
+      console.error("Errore durante la registrazione:", err);
+      alert(
+        "Si è verificato un errore durante l'iscrizione: " +
+          (err.message || "Verifica i dati inseriti e riprova."),
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-};
+  };
 
   // Funzione per l'invio della mail conferma iscrizione
-  async function handleConfirmationMail(type, email, formData, passeggeri, selectedEvent) {
+  async function handleConfirmationMail(
+    type,
+    email,
+    formData,
+    passeggeri,
+    selectedEvent,
+  ) {
     try {
-      const res = await fetch('/api/resendApi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/resendApi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
           formData,
           passeggeri,
-          selectedEvent
+          selectedEvent,
         }),
       });
-  
+
       let data;
       try {
         data = await res.json();
       } catch (jsonError) {
         const text = await res.text(); // fallback se non è JSON
-        console.error('Risposta non JSON:', text);
-        throw new Error('Risposta non valida dal server');
+        console.error("Risposta non JSON:", text);
+        throw new Error("Risposta non valida dal server");
       }
-  
+
       if (res.ok) {
-        alert('Email di conferma inviata con successo!');
+        alert("Email di conferma inviata con successo!");
       } else {
-        alert('Errore nell\'invio dell\'email di conferma: ' + (data?.error || 'Errore sconosciuto'));
+        alert(
+          "Errore nell'invio dell'email di conferma: " +
+            (data?.error || "Errore sconosciuto"),
+        );
       }
     } catch (err) {
-      alert('Errore di rete durante l\'invio dell\'email: ' + err.message);
+      alert("Errore di rete durante l'invio dell'email: " + err.message);
     }
   }
-  
-  
-  
 
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
       </Head>
       <main className="min-h-screen bg-white text-black overflow-x-hidden">
         {/* HEADER MIGLIORATO */}
         <header className="bg-black shadow-lg border-b-2 border-gray-800">
           <div className="container mx-auto px-6 py-4">
             <div className="flex justify-between items-center">
-             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
                 <div className="relative w-72 h-28 md:w-32 md:h-32">
-                  <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
+                  <Image
+                    src="/logo.png"
+                    alt="AldebaranDrive Logo"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <div className="hidden md:block">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white">AldebaranDrive</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-white">
+                    AldebaranDrive
+                  </h1>
                 </div>
               </div>
 
               <nav className="hidden md:flex gap-8 text-lg font-medium items-center">
-                <a href="#chi-siamo" className="text-white hover:text-gray-200 transition-colors relative group">
+                <a
+                  href="#chi-siamo"
+                  className="text-white hover:text-gray-200 transition-colors relative group"
+                >
                   Chi Siamo
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#prossimi-eventi" className="text-white hover:text-gray-200 transition-colors relative group">
+                <a
+                  href="#prossimi-eventi"
+                  className="text-white hover:text-gray-200 transition-colors relative group"
+                >
                   Prossimi Eventi
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#galleria-eventi" className="text-white hover:text-gray-200 transition-colors relative group">
+                <a
+                  href="#galleria-eventi"
+                  className="text-white hover:text-gray-200 transition-colors relative group"
+                >
                   Galleria Eventi
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#galleria-foto" className="text-white hover:text-gray-200 transition-colors relative group">
+                <a
+                  href="#galleria-foto"
+                  className="text-white hover:text-gray-200 transition-colors relative group"
+                >
                   Galleria Foto
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
                 </a>
               </nav>
-              <button className="md:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                {isMobileMenuOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+              <button
+                className="md:hidden p-2 text-white"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? (
+                  <XIcon className="w-6 h-6" />
+                ) : (
+                  <MenuIcon className="w-6 h-6" />
+                )}
               </button>
             </div>
           </div>
@@ -1071,7 +1188,10 @@ export default function Home() {
         {/* MOBILE MENU OVERLAY */}
         {isMobileMenuOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-95 z-40 flex flex-col items-center justify-center space-y-8 md:hidden">
-            <button className="absolute top-6 right-6 text-white p-2" onClick={() => setIsMobileMenuOpen(false)}>
+            <button
+              className="absolute top-6 right-6 text-white p-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               <XIcon className="w-8 h-8" />
             </button>
             <nav className="flex flex-col gap-6 text-xl font-medium text-white">
@@ -1114,9 +1234,11 @@ export default function Home() {
         >
           <div className="absolute inset-0 bg-black opacity-60"></div>
           <div className="relative z-10">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">Vivi la Passione</h1>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Vivi la Passione
+            </h1>
             <p className="text-gray-200 max-w-3xl mx-auto mb-8 text-lg md:text-xl">
-              Un’esperienza riservata a chi vive la strada come un privilegio. 
+              Un’esperienza riservata a chi vive la strada come un privilegio.
             </p>
             <Button className="bg-white text-black hover:bg-gray-200 px-8 py-4 text-lg font-semibold relative group overflow-hidden">
               <span className="relative z-10">Scopri i Prossimi Eventi</span>
@@ -1128,14 +1250,21 @@ export default function Home() {
         {/* SEZIONE PROSSIMI EVENTI */}
         <section id="prossimi-eventi" className="px-6 py-20 bg-gray-100">
           <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">Prossimi Eventi</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">
+              Prossimi Eventi
+            </h2>
             <p className="text-center text-gray-700 mb-12 text-lg max-w-2xl mx-auto">
-              Scopri i nostri eventi esclusivi e iscriviti per vivere esperienze indimenticabili
+              Scopri i nostri eventi esclusivi e iscriviti per vivere esperienze
+              indimenticabili
             </p>
             {loadingEventi ? (
-              <div className="text-center text-gray-700 text-lg">Caricamento eventi...</div>
+              <div className="text-center text-gray-700 text-lg">
+                Caricamento eventi...
+              </div>
             ) : eventi.length === 0 ? (
-              <div className="text-center text-gray-700 text-lg">Nessun evento futuro in programma.</div>
+              <div className="text-center text-gray-700 text-lg">
+                Nessun evento futuro in programma.
+              </div>
             ) : (
               <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {eventi.map((evento) => (
@@ -1146,32 +1275,36 @@ export default function Home() {
                     {/* Immagine evento */}
                     <div className="relative aspect-[3/2] bg-gray-200 overflow-hidden">
                       <Image
-                          src={cover[evento.id] || "/hero.png"}
-                          alt={evento.titolo}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                        <div className="absolute top-4 left-4">
-                          <div className="text-xs font-bold bg-black text-white px-3 py-1 rounded-full">
-                            {evento.tipo || "Evento"}
-                          </div>
+                        src={cover[evento.id] || "/hero.png"}
+                        alt={evento.titolo}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <div className="text-xs font-bold bg-black text-white px-3 py-1 rounded-full">
+                          {evento.tipo || "Evento"}
                         </div>
+                      </div>
                     </div>
 
-
                     <div className="p-6 flex flex-col">
-                      <h3 className="text-xl font-bold mb-3 text-black">{evento.titolo}</h3>
+                      <h3 className="text-xl font-bold mb-3 text-black">
+                        {evento.titolo}
+                      </h3>
                       <div className="text-gray-600 mb-6 flex-grow">
                         <ReactMarkdown>{evento.descrizione}</ReactMarkdown>
                       </div>
 
                       <div className="flex flex-col gap-3 text-sm text-gray-700 mb-6">
                         <p className="flex items-center gap-2">
-                          <CalendarDaysIcon className="w-4 h-4 text-black" /> Dal {new Date(evento.data).toLocaleDateString()} al {new Date(evento.fine).toLocaleDateString()}
+                          <CalendarDaysIcon className="w-4 h-4 text-black" />{" "}
+                          Dal {new Date(evento.data).toLocaleDateString()} al{" "}
+                          {new Date(evento.fine).toLocaleDateString()}
                         </p>
                         <p className="flex items-center gap-2">
-                          <MapPinIcon className="w-4 h-4 text-black" /> {evento.luogo}
+                          <MapPinIcon className="w-4 h-4 text-black" />{" "}
+                          {evento.luogo}
                         </p>
                       </div>
                       <div className="flex flex-col gap-3">
@@ -1201,26 +1334,36 @@ export default function Home() {
         {/* SEZIONE CHI SIAMO */}
         <section id="chi-siamo" className="px-6 py-20 bg-black text-white">
           <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Chi Siamo</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+              Chi Siamo
+            </h2>
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <h3 className="text-2xl font-semibold mb-6">La Nostra Passione</h3>
+                <h3 className="text-2xl font-semibold mb-6">
+                  La Nostra Passione
+                </h3>
                 <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                  Aldebaran Drive è specializzata nell'organizzazione di eventi a due e quattro ruote, offrendo un
-                  servizio completo e curato nei minimi dettagli per tutti gli appassionati di motori. Fondata da
-                  professionisti con una lunga esperienza nel settore, l'azienda nasce con una doppia missione:
-                  celebrare la passione motoristica e promuovere la solidarietà.
+                  Aldebaran Drive è specializzata nell'organizzazione di eventi
+                  a due e quattro ruote, offrendo un servizio completo e curato
+                  nei minimi dettagli per tutti gli appassionati di motori.
+                  Fondata da professionisti con una lunga esperienza nel
+                  settore, l'azienda nasce con una doppia missione: celebrare la
+                  passione motoristica e promuovere la solidarietà.
                 </p>
                 <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                  Collaborando attivamente con associazioni benefiche, Aldebaran Drive organizza raduni di beneficenza
-                  che uniscono divertimento e impegno sociale, contribuendo concretamente a sostenere comunità e
-                  iniziative locali
+                  Collaborando attivamente con associazioni benefiche, Aldebaran
+                  Drive organizza raduni di beneficenza che uniscono
+                  divertimento e impegno sociale, contribuendo concretamente a
+                  sostenere comunità e iniziative locali
                 </p>
                 <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                  Il nostro team si occupa di ogni fase dell'organizzazione: dalla selezione di location suggestive alla
-                  gestione della logistica, garantendo eventi coinvolgenti e indimenticabili, nel rispetto delle norme
-                  di sicurezza. Ogni raduno è un'occasione per condividere esperienze, stringere nuove amicizie e vivere
-                  la passione per i motori in un'atmosfera esclusiva
+                  Il nostro team si occupa di ogni fase dell'organizzazione:
+                  dalla selezione di location suggestive alla gestione della
+                  logistica, garantendo eventi coinvolgenti e indimenticabili,
+                  nel rispetto delle norme di sicurezza. Ogni raduno è
+                  un'occasione per condividere esperienze, stringere nuove
+                  amicizie e vivere la passione per i motori in un'atmosfera
+                  esclusiva
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -1243,147 +1386,180 @@ export default function Home() {
           </div>
         </section>
 
-       {/* SEZIONE GALLERIA GENERALE MIGLIORATA */}
-<section
-  id="galleria-foto"
-  className="px-6 py-20 bg-black relative overflow-hidden"
->
-  {/* Sfondo rimosso: niente racing stripe */}
-  {/* Nessuna decorazione racing qui */}
+        {/* SEZIONE GALLERIA GENERALE MIGLIORATA */}
+        <section
+          id="galleria-foto"
+          className="px-6 py-20 bg-black relative overflow-hidden"
+        >
+          {/* Sfondo rimosso: niente racing stripe */}
+          {/* Nessuna decorazione racing qui */}
 
-  <div className="container mx-auto relative z-10">
-    <div className="text-center mb-12">
-      <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">🏁 Galleria Generale 🏁</h2>
-      <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-        I momenti più emozionanti dei nostri eventi motoristici
-      </p>
-      <div className="w-24 h-1 bg-white mx-auto mt-4 rounded-full"></div>
-    </div>
-
-    {loadingGalleria ? (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {[...Array(15)].map((_, index) => (
-          <div
-            key={index}
-            className="aspect-square rounded-xl bg-gray-800 animate-pulse relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <div className="container mx-auto relative z-10">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+                🏁 Galleria Generale 🏁
+              </h2>
+              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+                I momenti più emozionanti dei nostri eventi motoristici
+              </p>
+              <div className="w-24 h-1 bg-white mx-auto mt-4 rounded-full"></div>
             </div>
-          </div>
-        ))}
-      </div>
-    ) : images.length === 0 ? (
-      <div className="text-center py-16">
-        <div className="text-6xl mb-4">🏎️</div>
-        <p className="text-gray-300 text-xl">Nessuna immagine disponibile al momento</p>
-        <p className="text-gray-400 text-sm mt-2">Le foto degli eventi verranno caricate presto!</p>
-      </div>
-    ) : (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {images.map((url, index) => (
-          <div
-            key={index}
-            className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer transform transition-all duration-500 hover:scale-105 hover:z-10"
-            onClick={() => handleImageClick(url)}
-          >
-            <img
-              src={url || "/placeholder.svg"}
-              alt={`Galleria foto ${index + 1}`}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              loading="lazy"
-              onLoad={(e) => {
-                e.target.classList.add("loaded")
-              }}
-              style={{
-                filter: "brightness(0.9) contrast(1.1)",
-              }}
-            />
 
-            {/* Overlay gradiente sempre visibile ma sottile */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-
-            {/* Icona zoom su hover */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
-              <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
-                <span className="text-2xl">🔍</span>
+            {loadingGalleria ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {[...Array(15)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="aspect-square rounded-xl bg-gray-800 animate-pulse relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : images.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">🏎️</div>
+                <p className="text-gray-300 text-xl">
+                  Nessuna immagine disponibile al momento
+                </p>
+                <p className="text-gray-400 text-sm mt-2">
+                  Le foto degli eventi verranno caricate presto!
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {images.map((url, index) => (
+                  <div
+                    key={index}
+                    className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer transform transition-all duration-500 hover:scale-105 hover:z-10"
+                    onClick={() => handleImageClick(url)}
+                  >
+                    <img
+                      src={url || "/placeholder.svg"}
+                      alt={`Galleria foto ${index + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy"
+                      onLoad={(e) => {
+                        e.target.classList.add("loaded");
+                      }}
+                      style={{
+                        filter: "brightness(0.9) contrast(1.1)",
+                      }}
+                    />
 
-            {/* Numero foto in basso */}
-            <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              #{index + 1}
-            </div>
+                    {/* Overlay gradiente sempre visibile ma sottile */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
 
-            {/* Effetto riflesso racing */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Icona zoom su hover */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
+                      <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
+                        <span className="text-2xl">🔍</span>
+                      </div>
+                    </div>
 
-            {/* Bordo su hover */}
-            <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/50 rounded-xl transition-all duration-300"></div>
+                    {/* Numero foto in basso */}
+                    <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      #{index + 1}
+                    </div>
+
+                    {/* Effetto riflesso racing */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                    {/* Bordo su hover */}
+                    <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/50 rounded-xl transition-all duration-300"></div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Sezione finale racing rimossa */}
           </div>
-        ))}
-      </div>
-    )}
-
-    {/* Sezione finale racing rimossa */}
-  </div>
-</section>
-
+        </section>
 
         {/* SEZIONE GALLERIA EVENTI PASSATI MIGLIORATA */}
         <section id="galleria-eventi" className="px-6 py-20 bg-gray-100">
           <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">Galleria Eventi Passati</h2>
-            <p className="text-center text-gray-600 mb-12 text-lg">Rivivi le emozioni dei nostri eventi precedenti</p>
-            
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">
+              Galleria Eventi Passati
+            </h2>
+            <p className="text-center text-gray-600 mb-12 text-lg">
+              Rivivi le emozioni dei nostri eventi precedenti
+            </p>
+
             {loadingEventiPassatiImmagini ? (
-              <div className="text-center text-gray-700 text-lg">Caricamento gallerie eventi...</div>
-            ) : Object.keys(eventiPassatiImmagini).length === 0 || Object.values(eventiPassatiImmagini).every(arr => arr.length === 0) ? (
+              <div className="text-center text-gray-700 text-lg">
+                Caricamento gallerie eventi...
+              </div>
+            ) : Object.keys(eventiPassatiImmagini).length === 0 ||
+              Object.values(eventiPassatiImmagini).every(
+                (arr) => arr.length === 0,
+              ) ? (
               <div className="text-center py-16">
                 <div className="text-6xl mb-4">🏎️</div>
-                <p className="text-gray-600 text-xl">Nessuna galleria eventi disponibile al momento</p>
-                <p className="text-gray-500 text-sm mt-2">Le foto degli eventi passati verranno caricate presto!</p>
+                <p className="text-gray-600 text-xl">
+                  Nessuna galleria eventi disponibile al momento
+                </p>
+                <p className="text-gray-500 text-sm mt-2">
+                  Le foto degli eventi passati verranno caricate presto!
+                </p>
               </div>
             ) : (
               <div className="space-y-16">
                 {eventiPassati
-                  .filter(evento => eventiPassatiImmagini[evento.id] && eventiPassatiImmagini[evento.id].length > 0)
+                  .filter(
+                    (evento) =>
+                      eventiPassatiImmagini[evento.id] &&
+                      eventiPassatiImmagini[evento.id].length > 0,
+                  )
                   .map((evento) => (
-                    <div key={evento.id} className="bg-white rounded-2xl p-8 shadow-lg">
+                    <div
+                      key={evento.id}
+                      className="bg-white rounded-2xl p-8 shadow-lg"
+                    >
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-2 h-12 bg-gradient-to-b from-red-500 via-white to-green-500 rounded-full"></div>
                         <div>
-                          <h3 className="text-2xl font-semibold text-black">{evento.titolo}</h3>
-                          <p className="text-gray-600">{new Date(evento.data).toLocaleDateString()}</p>
+                          <h3 className="text-2xl font-semibold text-black">
+                            {evento.titolo}
+                          </h3>
+                          <p className="text-gray-600">
+                            {new Date(evento.data).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                        {eventiPassatiImmagini[evento.id].map((immagine, index) => (
-                          <div
-                            key={immagine.id}
-                            className="group relative aspect-square overflow-hidden rounded-xl bg-gray-200 hover:shadow-xl transition-all duration-500 cursor-pointer"
-                            onClick={() => handleImageClick(immagine.url)}
-                          >
-                            <img
-                              src={immagine.url}
-                              alt={immagine.alt}
-                              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <div className="absolute bottom-4 left-4 text-white">
-                                <p className="text-sm font-medium">Foto {index + 1}</p>
+                        {eventiPassatiImmagini[evento.id].map(
+                          (immagine, index) => (
+                            <div
+                              key={immagine.id}
+                              className="group relative aspect-square overflow-hidden rounded-xl bg-gray-200 hover:shadow-xl transition-all duration-500 cursor-pointer"
+                              onClick={() => handleImageClick(immagine.url)}
+                            >
+                              <img
+                                src={immagine.url}
+                                alt={immagine.alt}
+                                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div className="absolute bottom-4 left-4 text-white">
+                                  <p className="text-sm font-medium">
+                                    Foto {index + 1}
+                                  </p>
+                                </div>
+                              </div>
+                              {/* Icona zoom su hover */}
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
+                                <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
+                                  <span className="text-xl">🔍</span>
+                                </div>
                               </div>
                             </div>
-                            {/* Icona zoom su hover */}
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
-                              <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
-                                <span className="text-xl">🔍</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          ),
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1397,8 +1573,13 @@ export default function Home() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">Programma - {selectedEvent?.titolo}</h2>
-                <button onClick={() => setShowProgramModal(false)} className="text-gray-500 hover:text-black">
+                <h2 className="text-2xl font-bold text-black">
+                  Programma - {selectedEvent?.titolo}
+                </h2>
+                <button
+                  onClick={() => setShowProgramModal(false)}
+                  className="text-gray-500 hover:text-black"
+                >
                   <XIcon className="w-6 h-6" />
                 </button>
               </div>
@@ -1406,7 +1587,10 @@ export default function Home() {
                 <div className="space-y-6">
                   {selectedEvent.programma ? (
                     selectedEvent.programma.split("\n").map((item, index) => (
-                      <div key={index} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
+                      >
                         <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold">
                           {index + 1}
                         </div>
@@ -1415,31 +1599,41 @@ export default function Home() {
                     ))
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-gray-600 mb-4">Programma in fase di definizione</p>
+                      <p className="text-gray-600 mb-4">
+                        Programma in fase di definizione
+                      </p>
                       <div className="space-y-4">
                         <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                           <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
                             1
                           </div>
-                          <p className="text-gray-600 flex-1">Ritrovo e registrazione partecipanti</p>
+                          <p className="text-gray-600 flex-1">
+                            Ritrovo e registrazione partecipanti
+                          </p>
                         </div>
                         <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                           <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
                             2
                           </div>
-                          <p className="text-gray-600 flex-1">Briefing e presentazione del percorso</p>
+                          <p className="text-gray-600 flex-1">
+                            Briefing e presentazione del percorso
+                          </p>
                         </div>
                         <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                           <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
                             3
                           </div>
-                          <p className="text-gray-600 flex-1">Partenza e tour guidato</p>
+                          <p className="text-gray-600 flex-1">
+                            Partenza e tour guidato
+                          </p>
                         </div>
                         <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                           <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
                             4
                           </div>
-                          <p className="text-gray-600 flex-1">Pranzo e momento conviviale</p>
+                          <p className="text-gray-600 flex-1">
+                            Pranzo e momento conviviale
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1448,8 +1642,8 @@ export default function Home() {
                 <div className="mt-8 pt-6 border-t">
                   <Button
                     onClick={() => {
-                      setShowProgramModal(false)
-                      handleIscriviti(selectedEvent)
+                      setShowProgramModal(false);
+                      handleIscriviti(selectedEvent);
                     }}
                     className="w-full bg-black text-white hover:bg-gray-800 py-3 font-semibold text-lg"
                   >
@@ -1466,8 +1660,13 @@ export default function Home() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">Iscrizione - {selectedEvent?.titolo}</h2>
-                <button onClick={() => setShowForm(false)} className="text-gray-500 hover:text-black">
+                <h2 className="text-2xl font-bold text-black">
+                  Iscrizione - {selectedEvent?.titolo}
+                </h2>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="text-gray-500 hover:text-black"
+                >
                   <XIcon className="w-6 h-6" />
                 </button>
               </div>
@@ -1475,16 +1674,21 @@ export default function Home() {
                 <form
                   className="space-y-8"
                   onSubmit={(e) => {
-                    e.preventDefault()
-                    handleSubmitRegistration()
+                    e.preventDefault();
+                    handleSubmitRegistration();
                   }}
                 >
                   {/* SEZIONE DATI GUIDATORE */}
                   <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
-                    <h3 className="text-xl font-semibold mb-4 text-black">Dati Guidatore</h3>
+                    <h3 className="text-xl font-semibold mb-4 text-black">
+                      Dati Guidatore
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="guidatore-cognome" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="guidatore-cognome"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Cognome *
                         </label>
                         <input
@@ -1495,18 +1699,23 @@ export default function Home() {
                           value={formData.guidatoreCognome}
                           onChange={handleInputChange}
                           className={`border-2 p-3 rounded-lg focus:outline-none w-full ${
-                            validationErrors.guidatoreCognome 
-                              ? 'border-red-500 bg-red-50 focus:border-red-600' 
-                              : 'border-gray-300 focus:border-black'
+                            validationErrors.guidatoreCognome
+                              ? "border-red-500 bg-red-50 focus:border-red-600"
+                              : "border-gray-300 focus:border-black"
                           }`}
                           required
                         />
                         {validationErrors.guidatoreCognome && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.guidatoreCognome}</p>
+                          <p className="text-red-600 text-sm mt-1">
+                            {validationErrors.guidatoreCognome}
+                          </p>
                         )}
                       </div>
                       <div>
-                        <label htmlFor="guidatore-nome" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="guidatore-nome"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Nome *
                         </label>
                         <input
@@ -1535,14 +1744,16 @@ export default function Home() {
                           value={formData.guidatoreCodiceFiscale}
                           onChange={handleInputChange}
                           className={`border-2 p-3 rounded-lg focus:outline-none w-full ${
-                            validationErrors.guidatoreCodiceFiscale 
-                              ? 'border-red-500 bg-red-50 focus:border-red-600' 
-                              : 'border-gray-300 focus:border-black'
+                            validationErrors.guidatoreCodiceFiscale
+                              ? "border-red-500 bg-red-50 focus:border-red-600"
+                              : "border-gray-300 focus:border-black"
                           }`}
                           required
                         />
                         {validationErrors.guidatoreCodiceFiscale && (
-                          <p className="text-red-600 text-sm mt-1 font-semibold">{validationErrors.guidatoreCodiceFiscale}</p>
+                          <p className="text-red-600 text-sm mt-1 font-semibold">
+                            {validationErrors.guidatoreCodiceFiscale}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1563,7 +1774,10 @@ export default function Home() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="guidatore-indirizzo" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="guidatore-indirizzo"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Indirizzo *
                         </label>
                         <input
@@ -1578,7 +1792,10 @@ export default function Home() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="guidatore-cellulare" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="guidatore-cellulare"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Cellulare *
                         </label>
                         <input
@@ -1593,7 +1810,10 @@ export default function Home() {
                         />
                       </div>
                       <div className="md:col-span-2">
-                        <label htmlFor="guidatore-email" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="guidatore-email"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Email *
                         </label>
                         <input
@@ -1607,8 +1827,11 @@ export default function Home() {
                           required
                         />
                       </div>
-                       <div>
-                        <label htmlFor="guidatore-patente" className="block text-sm font-medium text-gray-700 mb-1">
+                      <div>
+                        <label
+                          htmlFor="guidatore-patente"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Numero patente *
                         </label>
                         <input
@@ -1622,7 +1845,7 @@ export default function Home() {
                           required
                         />
                       </div>
-                       <div>
+                      <div>
                         <label
                           htmlFor="guidatore-patente-scadenza"
                           className="block text-sm font-medium text-gray-700 mb-1"
@@ -1641,100 +1864,122 @@ export default function Home() {
                       </div>
                     </div>
 
-                   {/* Upload documenti guidatore */}
-<div className="mt-6 space-y-4">
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Documento di Identità Guidatore - Fronte *
-    </label>
-    <div className="flex flex-wrap gap-2">
-      <input
-        type="file"
-        accept=".pdf,.jpg,.jpeg,.png"
-        onChange={(e) => handleFileUpload(e, "guidatoreDocumentoFronte")}
-        className="hidden"
-        id="guidatore-doc-fronte"
-      />
-      <label
-        htmlFor="guidatore-doc-fronte"
-        className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
-      >
-        <UploadIcon className="w-4 h-4" />
-        {isMobile ? "Carica" : "Carica da PC"}
-      </label>
-      {isMobile && (
-        <Button
-          type="button"
-          onClick={() => startCamera("guidatoreDocumentoFronte", null, "back")}
-          className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
-        >
-          <CameraIcon className="w-4 h-4 mr-2" />
-          Scatta Foto
-        </Button>
-      )}
-    </div>
-    {formData.guidatoreDocumentoFronte && (
-      <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
-        ✓ {formData.guidatoreDocumentoFronte.name}
-        <Button
-          type="button"
-          onClick={() => removeFile("guidatoreDocumentoFronte")}
-          className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
-        >
-          <XIcon className="w-3 h-3" />
-        </Button>
-      </div>
-    )}
-  </div>
+                    {/* Upload documenti guidatore */}
+                    <div className="mt-6 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Documento di Identità Guidatore - Fronte *
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) =>
+                              handleFileUpload(e, "guidatoreDocumentoFronte")
+                            }
+                            className="hidden"
+                            id="guidatore-doc-fronte"
+                          />
+                          <label
+                            htmlFor="guidatore-doc-fronte"
+                            className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
+                          >
+                            <UploadIcon className="w-4 h-4" />
+                            {isMobile ? "Carica" : "Carica da PC"}
+                          </label>
+                          {isMobile && (
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                startCamera(
+                                  "guidatoreDocumentoFronte",
+                                  null,
+                                  "back",
+                                )
+                              }
+                              className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
+                            >
+                              <CameraIcon className="w-4 h-4 mr-2" />
+                              Scatta Foto
+                            </Button>
+                          )}
+                        </div>
+                        {formData.guidatoreDocumentoFronte && (
+                          <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
+                            ✓ {formData.guidatoreDocumentoFronte.name}
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                removeFile("guidatoreDocumentoFronte")
+                              }
+                              className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                            >
+                              <XIcon className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
 
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Documento di identità Guidatore - Retro *
-    </label>
-    <div className="flex flex-wrap gap-2">
-      <input
-        type="file"
-        accept=".pdf,.jpg,.jpeg,.png"
-        onChange={(e) => handleFileUpload(e, "guidatoreDocumentoRetro")}
-        className="hidden"
-        id="guidatore-doc-retro"
-      />
-      <label
-        htmlFor="guidatore-doc-retro"
-        className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
-      >
-        <UploadIcon className="w-4 h-4" />
-        {isMobile ? "Carica" : "Carica da PC"}
-      </label>
-      {isMobile && (
-        <Button
-          type="button"
-          onClick={() => startCamera("guidatoreDocumentoRetro", null, "back")}
-          className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
-        >
-          <CameraIcon className="w-4 h-4 mr-2" />
-          Scatta Foto
-        </Button>
-      )}
-    </div>
-    {formData.guidatoreDocumentoRetro && (
-      <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
-        ✓ {formData.guidatoreDocumentoRetro.name}
-        <Button
-          type="button"
-          onClick={() => removeFile("guidatoreDocumentoRetro")}
-          className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
-        >
-          <XIcon className="w-3 h-3" />
-        </Button>
-      </div>
-    )}
-  </div>
-</div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Documento di identità Guidatore - Retro *
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) =>
+                              handleFileUpload(e, "guidatoreDocumentoRetro")
+                            }
+                            className="hidden"
+                            id="guidatore-doc-retro"
+                          />
+                          <label
+                            htmlFor="guidatore-doc-retro"
+                            className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
+                          >
+                            <UploadIcon className="w-4 h-4" />
+                            {isMobile ? "Carica" : "Carica da PC"}
+                          </label>
+                          {isMobile && (
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                startCamera(
+                                  "guidatoreDocumentoRetro",
+                                  null,
+                                  "back",
+                                )
+                              }
+                              className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
+                            >
+                              <CameraIcon className="w-4 h-4 mr-2" />
+                              Scatta Foto
+                            </Button>
+                          )}
+                        </div>
+                        {formData.guidatoreDocumentoRetro && (
+                          <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
+                            ✓ {formData.guidatoreDocumentoRetro.name}
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                removeFile("guidatoreDocumentoRetro")
+                              }
+                              className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                            >
+                              <XIcon className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                     {/* ESIGENZE ALIMENTARI GUIDATORE */}
                     <div className="mt-6">
-                      <h4 className="text-lg font-semibold mb-4 text-black">Esigenze Alimentari Guidatore</h4>
+                      <h4 className="text-lg font-semibold mb-4 text-black">
+                        Esigenze Alimentari Guidatore
+                      </h4>
                       <div className="flex items-center gap-4 mb-4">
                         <label className="flex items-center">
                           <input
@@ -1771,11 +2016,18 @@ export default function Home() {
 
                   {/* SEZIONE DATI PASSEGGERI */}
                   <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
-                    <h3 className="text-xl font-semibold mb-4 text-black">Dati Passeggeri</h3>
+                    <h3 className="text-xl font-semibold mb-4 text-black">
+                      Dati Passeggeri
+                    </h3>
                     {passeggeri.map((passeggero, index) => (
-                      <div key={index} className="border-b pb-6 mb-6 last:border-b-0 last:pb-0">
+                      <div
+                        key={index}
+                        className="border-b pb-6 mb-6 last:border-b-0 last:pb-0"
+                      >
                         <div className="flex justify-between items-center mb-4">
-                          <h4 className="text-lg font-medium text-black">Passeggero {index + 1}</h4>
+                          <h4 className="text-lg font-medium text-black">
+                            Passeggero {index + 1}
+                          </h4>
                           <Button
                             type="button"
                             onClick={() => rimuoviPasseggero(index)}
@@ -1786,84 +2038,140 @@ export default function Home() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Cognome *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Cognome *
+                            </label>
                             <input
                               type="text"
                               placeholder="Es. Verdi"
                               value={passeggero.cognome}
-                              onChange={(e) => handlePasseggeroChange(index, "cognome", e.target.value)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "cognome",
+                                  e.target.value,
+                                )
+                              }
                               className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                               required
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Nome *
+                            </label>
                             <input
                               type="text"
                               placeholder="Es. Luigi"
                               value={passeggero.nome}
-                              onChange={(e) => handlePasseggeroChange(index, "nome", e.target.value)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "nome",
+                                  e.target.value,
+                                )
+                              }
                               className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                               required
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Codice Fiscale *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Codice Fiscale *
+                            </label>
                             <input
                               type="text"
                               placeholder="Es. VRDLGU85B15F205P"
                               value={passeggero.codiceFiscale}
-                              onChange={(e) => handlePasseggeroChange(index, "codiceFiscale", e.target.value)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "codiceFiscale",
+                                  e.target.value,
+                                )
+                              }
                               className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                               required
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Data di Nascita *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Data di Nascita *
+                            </label>
                             <input
                               type="date"
                               value={passeggero.dataNascita}
-                              onChange={(e) => handlePasseggeroChange(index, "dataNascita", e.target.value)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "dataNascita",
+                                  e.target.value,
+                                )
+                              }
                               className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                               required
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Indirizzo *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Indirizzo *
+                            </label>
                             <input
                               type="text"
                               placeholder="Es. Via Verdi 10, Roma"
                               value={passeggero.indirizzo}
-                              onChange={(e) => handlePasseggeroChange(index, "indirizzo", e.target.value)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "indirizzo",
+                                  e.target.value,
+                                )
+                              }
                               className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                               required
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Cellulare *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Cellulare *
+                            </label>
                             <input
                               type="tel"
                               placeholder="Es. 3459876543"
                               value={passeggero.cellulare}
-                              onChange={(e) => handlePasseggeroChange(index, "cellulare", e.target.value)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "cellulare",
+                                  e.target.value,
+                                )
+                              }
                               className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                               required
                             />
                           </div>
                           <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Email *
+                            </label>
                             <input
                               type="email"
                               placeholder="Es. luigi.verdi@example.com"
                               value={passeggero.email}
-                              onChange={(e) => handlePasseggeroChange(index, "email", e.target.value)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "email",
+                                  e.target.value,
+                                )
+                              }
                               className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                               required
                             />
                           </div>
                         </div>
 
-          {/* Upload documenti passeggero */}
+                        {/* Upload documenti passeggero */}
                         <div className="mt-4 space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1873,7 +2181,9 @@ export default function Home() {
                               <input
                                 type="file"
                                 accept=".pdf,.jpg,.jpeg,.png"
-                                onChange={(e) => handleFileUpload(e, "documentoFronte", index)}
+                                onChange={(e) =>
+                                  handleFileUpload(e, "documentoFronte", index)
+                                }
                                 className="hidden"
                                 id={`passeggero-doc-fronte-${index}`}
                               />
@@ -1887,7 +2197,13 @@ export default function Home() {
                               {isMobile && (
                                 <Button
                                   type="button"
-                                  onClick={() => startCamera("documentoFronte", index, "back")}
+                                  onClick={() =>
+                                    startCamera(
+                                      "documentoFronte",
+                                      index,
+                                      "back",
+                                    )
+                                  }
                                   className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
                                 >
                                   <CameraIcon className="w-4 h-4 mr-2" />
@@ -1900,7 +2216,9 @@ export default function Home() {
                                 ✓ {passeggero.documentoFronte.name}
                                 <Button
                                   type="button"
-                                  onClick={() => removeFile("documentoFronte", index)}
+                                  onClick={() =>
+                                    removeFile("documentoFronte", index)
+                                  }
                                   className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
                                 >
                                   <XIcon className="w-3 h-3" />
@@ -1917,7 +2235,9 @@ export default function Home() {
                               <input
                                 type="file"
                                 accept=".pdf,.jpg,.jpeg,.png"
-                                onChange={(e) => handleFileUpload(e, "documentoRetro", index)}
+                                onChange={(e) =>
+                                  handleFileUpload(e, "documentoRetro", index)
+                                }
                                 className="hidden"
                                 id={`passeggero-doc-retro-${index}`}
                               />
@@ -1931,7 +2251,9 @@ export default function Home() {
                               {isMobile && (
                                 <Button
                                   type="button"
-                                  onClick={() => startCamera("documentoRetro", index, "back")}
+                                  onClick={() =>
+                                    startCamera("documentoRetro", index, "back")
+                                  }
                                   className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
                                 >
                                   <CameraIcon className="w-4 h-4 mr-2" />
@@ -1944,7 +2266,9 @@ export default function Home() {
                                 ✓ {passeggero.documentoRetro.name}
                                 <Button
                                   type="button"
-                                  onClick={() => removeFile("documentoRetro", index)}
+                                  onClick={() =>
+                                    removeFile("documentoRetro", index)
+                                  }
                                   className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
                                 >
                                   <XIcon className="w-3 h-3" />
@@ -1964,7 +2288,15 @@ export default function Home() {
                               <input
                                 type="checkbox"
                                 checked={passeggero.esigenzeAlimentari}
-                                onChange={(e) => handlePasseggeroChange(index, "esigenzeAlimentari", e.target.checked, 'checkbox', e.target.checked)}
+                                onChange={(e) =>
+                                  handlePasseggeroChange(
+                                    index,
+                                    "esigenzeAlimentari",
+                                    e.target.checked,
+                                    "checkbox",
+                                    e.target.checked,
+                                  )
+                                }
                                 className="mr-2"
                               />
                               Ho esigenze alimentari particolari
@@ -1979,7 +2311,13 @@ export default function Home() {
                                 type="text"
                                 placeholder="Specificare intolleranze o allergie"
                                 value={passeggero.intolleranze}
-                                onChange={(e) => handlePasseggeroChange(index, "intolleranze", e.target.value)}
+                                onChange={(e) =>
+                                  handlePasseggeroChange(
+                                    index,
+                                    "intolleranze",
+                                    e.target.value,
+                                  )
+                                }
                                 className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
                               />
                             </div>
@@ -1992,16 +2330,33 @@ export default function Home() {
                             <input
                               type="checkbox"
                               checked={passeggero.autorizzaFoto}
-                              onChange={(e) => handlePasseggeroChange(index, "autorizzaFoto", e.target.checked, 'checkbox', e.target.checked)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "autorizzaFoto",
+                                  e.target.checked,
+                                  "checkbox",
+                                  e.target.checked,
+                                )
+                              }
                               className="mr-2"
                             />
-                            Autorizzo la pubblicazione di foto/video in cui sono presente
+                            Autorizzo la pubblicazione di foto/video in cui sono
+                            presente
                           </label>
                           <label className="flex items-center">
                             <input
                               type="checkbox"
                               checked={passeggero.autorizzaTrattamento}
-                              onChange={(e) => handlePasseggeroChange(index, "autorizzaTrattamento", e.target.checked, 'checkbox', e.target.checked)}
+                              onChange={(e) =>
+                                handlePasseggeroChange(
+                                  index,
+                                  "autorizzaTrattamento",
+                                  e.target.checked,
+                                  "checkbox",
+                                  e.target.checked,
+                                )
+                              }
                               className="mr-2"
                               required
                             />
@@ -2021,10 +2376,15 @@ export default function Home() {
 
                   {/* SEZIONE DATI AUTO */}
                   <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
-                    <h3 className="text-xl font-semibold mb-4 text-black">Dati Autovettura</h3>
+                    <h3 className="text-xl font-semibold mb-4 text-black">
+                      Dati Autovettura
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="auto-marca" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="auto-marca"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Marca Auto *
                         </label>
                         <input
@@ -2039,7 +2399,10 @@ export default function Home() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="auto-modello" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="auto-modello"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Modello Auto *
                         </label>
                         <input
@@ -2054,7 +2417,10 @@ export default function Home() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="auto-targa" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="auto-targa"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Targa *
                         </label>
                         <input
@@ -2069,7 +2435,10 @@ export default function Home() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="auto-posti-auto" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="auto-posti-auto"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Numero Posti Auto *
                         </label>
                         <input
@@ -2085,7 +2454,10 @@ export default function Home() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="auto-colore" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="auto-colore"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Colore *
                         </label>
                         <input
@@ -2099,141 +2471,171 @@ export default function Home() {
                           required
                         />
                       </div>
-            <div>
-  <label
-    htmlFor="auto-immatricolazione"
-    className="block text-sm font-medium text-gray-700 mb-1"
-  >
-    Anno immatricolazione *
-  </label>
-  <select
-  id="auto-immatricolazione"
-  name="autoImmatricolazione"
-  value={formData.autoImmatricolazione}
-  onChange={handleInputChange}
-  required
-  className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full bg-white"
->
-  <option value="">Seleziona anno</option>
-  {Array.from({ length: 2025 - 1930 + 1 }, (_, i) => {
-    const year = 1930 + i;
-    return (
-      <option key={year} value={year}>
-        {year}
-      </option>
-    );
-  })}
-</select>
-
-</div>
+                      <div>
+                        <label
+                          htmlFor="auto-immatricolazione"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          Anno immatricolazione *
+                        </label>
+                        <select
+                          id="auto-immatricolazione"
+                          name="autoImmatricolazione"
+                          value={formData.autoImmatricolazione}
+                          onChange={handleInputChange}
+                          required
+                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full bg-white"
+                        >
+                          <option value="">Seleziona anno</option>
+                          {Array.from({ length: 2025 - 1930 + 1 }, (_, i) => {
+                            const year = 1930 + i;
+                            return (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
                     </div>
                   </div>
 
-             <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
-  <h3 className="text-xl font-semibold mb-4 text-black">Pacchetto di Partecipazione</h3>
-  <div className="grid grid-cols-1 gap-4">
-    {/* Render quotes dynamically from selectedEvent.quote */}
-    {selectedEvent?.quote && Object.keys(selectedEvent.quote).length > 0 ? (
-      Object.entries(selectedEvent.quote).map(([key, quota]) => (
-        <label
-          key={key}
-          htmlFor={`quota-${key}`}
-          className="flex flex-col sm:flex-row sm:items-start bg-white p-4 sm:p-6 rounded-lg shadow-sm border-2 border-gray-200 hover:border-black transition-colors cursor-pointer"
-        >
-          <div className="flex items-start w-full">
-            <input
-              id={`quota-${key}`}
-              type="radio"
-              name="quotaSelezionata"
-              value={key}
-              checked={formData.quotaSelezionata === key}
-              onChange={handleInputChange}
-              className="mr-3 sm:mr-4 mt-1 w-5 h-5 flex-shrink-0"
-            />
-            <div className="flex-1 min-w-0">
-              {/* Header con titolo e prezzo - responsive */}
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
-                <h4 className="text-lg sm:text-xl font-bold text-black pr-2 break-words">
-                  {quota.titolo || key}
-                </h4>
-                <div className="text-left sm:text-right flex-shrink-0">
-                  <div className="text-2xl sm:text-3xl font-bold text-green-600">€{parseFloat(quota.prezzo).toFixed(2)}</div>
-                </div>
-              </div>
+                  <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                    <h3 className="text-xl font-semibold mb-4 text-black">
+                      Pacchetto di Partecipazione
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Render quotes dynamically from selectedEvent.quote */}
+                      {selectedEvent?.quote &&
+                      Object.keys(selectedEvent.quote).length > 0 ? (
+                        Object.entries(selectedEvent.quote).map(
+                          ([key, quota]) => (
+                            <label
+                              key={key}
+                              htmlFor={`quota-${key}`}
+                              className="flex flex-col sm:flex-row sm:items-start bg-white p-4 sm:p-6 rounded-lg shadow-sm border-2 border-gray-200 hover:border-black transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-start w-full">
+                                <input
+                                  id={`quota-${key}`}
+                                  type="radio"
+                                  name="quotaSelezionata"
+                                  value={key}
+                                  checked={formData.quotaSelezionata === key}
+                                  onChange={handleInputChange}
+                                  className="mr-3 sm:mr-4 mt-1 w-5 h-5 flex-shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  {/* Header con titolo e prezzo - responsive */}
+                                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
+                                    <h4 className="text-lg sm:text-xl font-bold text-black pr-2 break-words">
+                                      {quota.titolo || key}
+                                    </h4>
+                                    <div className="text-left sm:text-right flex-shrink-0">
+                                      <div className="text-2xl sm:text-3xl font-bold text-green-600">
+                                        €{parseFloat(quota.prezzo).toFixed(2)}
+                                      </div>
+                                    </div>
+                                  </div>
 
-              {quota.descrizione && (
-                <div className="text-gray-700 leading-relaxed mb-4 text-sm sm:text-base">
-                  {quota.descrizione.split("\n").map((line, index) => (
-                    <div key={index} className="mb-1">
-                      {line.trim().startsWith("•") || line.trim().startsWith("-") ? (
-                        <div className="flex items-start gap-2">
-                          <span className="text-green-600 mt-1 flex-shrink-0">✓</span>
-                          <span className="break-words">{line.replace(/^[•-]\s*/, "")}</span>
-                        </div>
+                                  {quota.descrizione && (
+                                    <div className="text-gray-700 leading-relaxed mb-4 text-sm sm:text-base">
+                                      {quota.descrizione
+                                        .split("\n")
+                                        .map((line, index) => (
+                                          <div key={index} className="mb-1">
+                                            {line.trim().startsWith("•") ||
+                                            line.trim().startsWith("-") ? (
+                                              <div className="flex items-start gap-2">
+                                                <span className="text-green-600 mt-1 flex-shrink-0">
+                                                  ✓
+                                                </span>
+                                                <span className="break-words">
+                                                  {line.replace(/^[•-]\s*/, "")}
+                                                </span>
+                                              </div>
+                                            ) : (
+                                              <p className="break-words">
+                                                {line}
+                                              </p>
+                                            )}
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </label>
+                          ),
+                        )
                       ) : (
-                        <p className="break-words">{line}</p>
+                        <div className="text-center py-8">
+                          <div className="text-4xl mb-4">🎫</div>
+                          <p className="text-gray-600 text-lg">
+                            Nessuna quota disponibile per questo evento.
+                          </p>
+                          <p className="text-500 text-sm mt-2">
+                            Le opzioni di partecipazione verranno pubblicate
+                            presto!
+                          </p>
+                        </div>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </label>
-      ))
-    ) : (
-      <div className="text-center py-8">
-        <div className="text-4xl mb-4">🎫</div>
-        <p className="text-gray-600 text-lg">Nessuna quota disponibile per questo evento.</p>
-        <p className="text-500 text-sm mt-2">
-          Le opzioni di partecipazione verranno pubblicate presto!
-        </p>
-      </div>
-    )}
-  </div>
-</div>
+                  </div>
 
                   {/* SEZIONE INVITO AL PAGAMENTO IMMEDIATO */}
-<div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
-  <h3 className="text-xl font-semibold mb-4 text-black">Pagamento Iscrizione</h3>
-  <div className="bg-white p-4 rounded-lg border border-blue-300">
-    <div className="space-y-2 text-sm text-gray-700">
-      <p className="text-red-600 font-semibold">
-        ⚠️ Per poter confermare la propria iscrizione si prega di eseguire il prima possibile il pagamento (la fattura verrà ricevuta in seguito alla mail del guidatore registrato)
-      </p>
-      <p>
-        <strong>IBAN:</strong>IT89 P0832 5709 60000 0002 03250
-      </p>
-      <p>
-        <strong>BIC/SWIFT:</strong>ICRAITRR910
-      </p>
-      <p>
-        <strong>Banca:</strong> BANCO FIORENTINO – MUGELLO – IMPRUNETA – SIGNA - CRED. COOP. SOCIETA’ COOPERATIVA
-      </p>
-      <p>
-        <strong>Intestatario:</strong>MARLAN SRL
-      </p>
-      <p>
-        <strong>Causale:</strong> Iscrizione evento {selectedEvent?.titolo} – {formData.guidatoreCognome} {formData.guidatoreNome}
-      </p>
-    </div>
-    <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
-      <p className="text-sm text-yellow-800">
-        <strong>Importante:</strong> Usa esattamente la causale indicata per facilitare l’identificazione del pagamento.
-      </p>
-    </div>
-    <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
-      <p className="text-sm text-green-800">
-        📞 Per qualsiasi informazione o supporto, contatta il numero <strong>344 685 3979</strong>.
-      </p>
-    </div>
-  </div>
-</div>
-
+                  <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
+                    <h3 className="text-xl font-semibold mb-4 text-black">
+                      Pagamento Iscrizione
+                    </h3>
+                    <div className="bg-white p-4 rounded-lg border border-blue-300">
+                      <div className="space-y-2 text-sm text-gray-700">
+                        <p className="text-red-600 font-semibold">
+                          ⚠️ Per poter confermare la propria iscrizione si prega
+                          di eseguire il prima possibile il pagamento (la
+                          fattura verrà ricevuta in seguito alla mail del
+                          guidatore registrato)
+                        </p>
+                        <p>
+                          <strong>IBAN:</strong>IT89 P0832 5709 60000 0002 03250
+                        </p>
+                        <p>
+                          <strong>BIC/SWIFT:</strong>ICRAITRR910
+                        </p>
+                        <p>
+                          <strong>Banca:</strong> BANCO FIORENTINO – MUGELLO –
+                          IMPRUNETA – SIGNA - CRED. COOP. SOCIETA’ COOPERATIVA
+                        </p>
+                        <p>
+                          <strong>Intestatario:</strong>MARLAN SRL
+                        </p>
+                        <p>
+                          <strong>Causale:</strong> Iscrizione evento{" "}
+                          {selectedEvent?.titolo} – {formData.guidatoreCognome}{" "}
+                          {formData.guidatoreNome}
+                        </p>
+                      </div>
+                      <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Importante:</strong> Usa esattamente la
+                          causale indicata per facilitare l’identificazione del
+                          pagamento.
+                        </p>
+                      </div>
+                      <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+                        <p className="text-sm text-green-800">
+                          📞 Per qualsiasi informazione o supporto, contatta il
+                          numero <strong>344 685 3979</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* SEZIONE AUTORIZZAZIONI GUIDATORE */}
                   <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
-                    <h3 className="text-xl font-semibold mb-4 text-black">Autorizzazioni Guidatore</h3>
+                    <h3 className="text-xl font-semibold mb-4 text-black">
+                      Autorizzazioni Guidatore
+                    </h3>
                     <div className="space-y-4">
                       <label className="flex items-center">
                         <input
@@ -2243,7 +2645,8 @@ export default function Home() {
                           onChange={handleInputChange}
                           className="mr-2"
                         />
-                        Autorizzo la pubblicazione di foto/video in cui sono presente
+                        Autorizzo la pubblicazione di foto/video in cui sono
+                        presente
                       </label>
                       <label className="flex items-center">
                         <input
@@ -2279,22 +2682,25 @@ export default function Home() {
             <div className="bg-white rounded-lg max-w-md w-full">
               <div className="p-4 border-b flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Scatta Foto Documento</h3>
-                <button onClick={stopCamera} className="text-gray-500 hover:text-black">
+                <button
+                  onClick={stopCamera}
+                  className="text-gray-500 hover:text-black"
+                >
                   <XIcon className="w-6 h-6" />
                 </button>
               </div>
               <div className="p-4">
                 <div className="relative bg-black rounded-lg overflow-hidden mb-4">
-                  <video 
-                    ref={videoRef} 
-                    autoPlay 
-                    playsInline 
-                    muted 
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
                     className="w-full h-64 object-cover"
                   />
                   <canvas ref={canvasRef} className="hidden" />
                 </div>
-                
+
                 <div className="flex justify-center gap-4">
                   <Button
                     onClick={capturePhoto}
@@ -2310,7 +2716,7 @@ export default function Home() {
                     Annulla
                   </Button>
                 </div>
-                
+
                 <p className="text-sm text-gray-600 text-center mt-2">
                   Posiziona il documento nel riquadro e scatta la foto
                 </p>
@@ -2319,98 +2725,136 @@ export default function Home() {
           </div>
         )}
 
-{/* FOOTER */}
-<footer className="bg-black text-white py-12">
-  <div className="container mx-auto px-6">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-      {/* Informazioni Azienda */}
-      <div>
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative w-16 h-16">
-            <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
+        {/* FOOTER */}
+        <footer className="bg-black text-white py-12">
+          <div className="container mx-auto px-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {/* Informazioni Azienda */}
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative w-16 h-16">
+                    <Image
+                      src="/logo.png"
+                      alt="AldebaranDrive Logo"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold">AldebaranDrive</h3>
+                </div>
+                <p className="text-gray-300 mb-4">
+                  Specializzata nell'organizzazione di eventi a due e quattro
+                  ruote, offrendo un servizio completo per tutti gli
+                  appassionati di motori.
+                </p>
+                <p className="text-gray-400 text-sm">P.IVA: 02254520591</p>
+              </div>
+
+              {/* Informazioni di Contatto */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4">Contatti</h4>
+                <div className="space-y-3 text-gray-300">
+                  <p className="flex items-center gap-2">
+                    <MapPinIcon className="w-4 h-4" />
+                    Via dell'acero, 17 - 56022 - Castelfranco di sotto (PI)
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-4 h-4 flex items-center justify-center">
+                      📞
+                    </span>
+                    +39 392.019.1272 +39 344.6853.979
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-4 h-4 flex items-center justify-center">
+                      📧
+                    </span>
+                    info@aldebarandrive.it
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-4 h-4 flex items-center justify-center">
+                      🌐
+                    </span>
+                    www.aldebarandrive.it
+                  </p>
+                </div>
+              </div>
+
+              {/* Links e Admin */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4">Links Utili</h4>
+                <div className="space-y-3 mb-6">
+                  <a
+                    href="#chi-siamo"
+                    className="block text-gray-300 hover:text-white transition-colors"
+                  >
+                    Chi Siamo
+                  </a>
+                  <a
+                    href="#prossimi-eventi"
+                    className="block text-gray-300 hover:text-white transition-colors"
+                  >
+                    Prossimi Eventi
+                  </a>
+                  <a
+                    href="#galleria-eventi"
+                    className="block text-gray-300 hover:text-white transition-colors"
+                  >
+                    Galleria Eventi
+                  </a>
+                  <a
+                    href="#galleria-foto"
+                    className="block text-gray-300 hover:text-white transition-colors"
+                  >
+                    Galleria Foto
+                  </a>
+                </div>
+
+                <Link href="/admin/login">
+                  <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
+                    <LogInIcon className="w-4 h-4" />
+                    Admin Login
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Sezione Social */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4">Social</h4>
+                <div className="flex space-x-4">
+                  <a
+                    href="https://facebook.com/aldebarandrive"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Facebook"
+                  >
+                    <FaFacebook className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
+                  </a>
+                  <a
+                    href="https://instagram.com/aldebarandrive"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                  >
+                    <FaInstagram className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
+                  </a>
+                  <a
+                    href="https://tiktok.com/@aldebarandrive"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="TikTok"
+                  >
+                    <FaTiktok className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+              <p>&copy; 2024 AldebaranDrive. Tutti i diritti riservati.</p>
+            </div>
           </div>
-          <h3 className="text-xl font-bold">AldebaranDrive</h3>
-        </div>
-        <p className="text-gray-300 mb-4">
-          Specializzata nell'organizzazione di eventi a due e quattro ruote, offrendo un servizio completo per
-          tutti gli appassionati di motori.
-        </p>
-        <p className="text-gray-400 text-sm">P.IVA: 02254520591</p>
-      </div>
-
-      {/* Informazioni di Contatto */}
-      <div>
-        <h4 className="text-lg font-semibold mb-4">Contatti</h4>
-        <div className="space-y-3 text-gray-300">
-          <p className="flex items-center gap-2">
-            <MapPinIcon className="w-4 h-4" />
-            Via dell'acero, 17 - 56022 - Castelfranco di sotto (PI)
-          </p>
-          <p className="flex items-center gap-2">
-            <span className="w-4 h-4 flex items-center justify-center">📞</span>
-            +39 392.019.1272 +39 344.6853.979
-          </p>
-          <p className="flex items-center gap-2">
-            <span className="w-4 h-4 flex items-center justify-center">📧</span>
-            info@aldebarandrive.it
-          </p>
-          <p className="flex items-center gap-2">
-            <span className="w-4 h-4 flex items-center justify-center">🌐</span>
-            www.aldebarandrive.it
-          </p>
-        </div>
-      </div>
-
-      {/* Links e Admin */}
-      <div>
-        <h4 className="text-lg font-semibold mb-4">Links Utili</h4>
-        <div className="space-y-3 mb-6">
-          <a href="#chi-siamo" className="block text-gray-300 hover:text-white transition-colors">
-            Chi Siamo
-          </a>
-          <a href="#prossimi-eventi" className="block text-gray-300 hover:text-white transition-colors">
-            Prossimi Eventi
-          </a>
-          <a href="#galleria-eventi" className="block text-gray-300 hover:text-white transition-colors">
-            Galleria Eventi
-          </a>
-          <a href="#galleria-foto" className="block text-gray-300 hover:text-white transition-colors">
-            Galleria Foto
-          </a>
-        </div>
-
-        <Link href="/admin/login">
-          <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
-            <LogInIcon className="w-4 h-4" />
-            Admin Login
-          </Button>
-        </Link>
-      </div>
-
-      {/* Sezione Social */}
-      <div>
-        <h4 className="text-lg font-semibold mb-4">Social</h4>
-        <div className="flex space-x-4">
-          <a href="https://facebook.com/aldebarandrive" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <FaFacebook className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-          <a href="https://instagram.com/aldebarandrive" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <FaInstagram className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-          <a href="https://tiktok.com/@aldebarandrive" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-            <FaTiktok className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-        </div>
-      </div>
-    </div>
-
-    {/* Copyright */}
-    <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
-      <p>&copy; 2024 AldebaranDrive. Tutti i diritti riservati.</p>
-    </div>
-  </div>
-</footer>
-
+        </footer>
 
         {/* MODAL VISUALIZZAZIONE IMMAGINI */}
         {showImageModal && selectedImage && (
@@ -2432,7 +2876,5 @@ export default function Home() {
         )}
       </main>
     </>
-  )
+  );
 }
-
-
