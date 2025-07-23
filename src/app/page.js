@@ -286,8 +286,9 @@ export default function Home() {
                         .from("doc")
                         .createSignedUrl(evento.copertina, 60 * 60); // validità 1h
 
+                        alert(signedUrl.signedUrl)
                     if (!urlError && signedUrl?.signedUrl) {
-                      alert(signedUrl.signedUrl)
+                      
                       coverImages[evento.id] = signedUrl.signedUrl;
                     }
                   } catch (urlError) {
