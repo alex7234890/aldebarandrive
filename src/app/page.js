@@ -225,6 +225,7 @@ export default function Home() {
           return;
         }
 
+        const now = new Date();
         const futuri = [];
         const passati = [];
 
@@ -271,8 +272,6 @@ export default function Home() {
                 ];
                 const lower = evento.copertina.toLowerCase();
 
-                alert("Path: " + evento.copertina);
-
                 // Verifica se il path della copertina è valido
                 if (
                   validExtensions.some((ext) => lower.endsWith(ext)) &&
@@ -286,13 +285,11 @@ export default function Home() {
                         .from("doc")
                         .createSignedUrl(evento.copertina, 60 * 60); // validità 1h
 
-                        alert(signedUrl.signedUrl)
                     if (!urlError && signedUrl?.signedUrl) {
-                      
                       coverImages[evento.id] = signedUrl.signedUrl;
                     }
                   } catch (urlError) {
-                    console.log(
+                    console.error(
                       `Errore URL per evento ${evento.id}:`,
                       urlError,
                     );
@@ -307,7 +304,6 @@ export default function Home() {
           }
         };
 
-        alert("Sto per chiamare fetchCopertine")
         // Chiama la funzione per caricare le immagini di copertina
         await fetchImagesEvents();
       } catch (error) {
