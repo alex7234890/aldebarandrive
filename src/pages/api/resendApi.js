@@ -66,7 +66,7 @@ export default async function handler(req, res) {
     `;
 
     await resend.emails.send({
-      from: 'onboarding@resend.dev', // Assicurati che questo sia un dominio verificato con Resend
+      from: 'Notifica iscrizione AldebaranDrive <info@mail.aldebarandrive.com>', // Assicurati che questo sia un dominio verificato con Resend
       to: email,
       subject: `Conferma Registrazione Evento: ${selectedEvent.titolo}`, // Soggetto più specifico
       html: emailHtml, // Usa il contenuto HTML dettagliato
