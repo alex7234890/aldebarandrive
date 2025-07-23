@@ -2318,97 +2318,79 @@ export default function Home() {
           </div>
         )}
 
-{/* FOOTER */}
-<footer className="bg-black text-white py-12">
-  <div className="container mx-auto px-6">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-      {/* Informazioni Azienda */}
-      <div>
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative w-16 h-16">
-            <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
+        {/* FOOTER */}
+        <footer className="bg-black text-white py-12">
+          <div className="container mx-auto px-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Informazioni Azienda */}
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative w-16 h-16">
+                    <Image src="/logo.png" alt="AldebaranDrive Logo" fill className="object-contain" />
+                  </div>
+                 <h3 className="text-xl font-bold">AldebaranDrive</h3>
+                </div>
+                <p className="text-gray-300 mb-4">
+                  Specializzata nell'organizzazione di eventi a due e quattro ruote, offrendo un servizio completo per
+                  tutti gli appassionati di motori.
+                </p>
+                <p className="text-gray-400 text-sm">P.IVA: 02254520591</p>
+              </div>
+              {/* Informazioni di Contatto */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4">Contatti</h4>
+                <div className="space-y-3 text-gray-300">
+                  <p className="flex items-center gap-2">
+                    <MapPinIcon className="w-4 h-4" />
+                    Via dell'acero, 17 - 56022 - Castelfranco di sotto (PI)
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-4 h-4 flex items-center justify-center">📞</span>
+                    +39 392.019.1272 +39 344.6853.979
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-4 h-4 flex items-center justify-center">📧</span>
+                    info@aldebarandrive.it
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-4 h-4 flex items-center justify-center">🌐</span>
+                    www.aldebarandrive.it
+                  </p>
+                </div>
+              </div>
+              {/* Links e Admin */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4">Links Utili</h4>
+                <div className="space-y-3 mb-6">
+                  <a href="#chi-siamo" className="block text-gray-300 hover:text-white transition-colors">
+                    Chi Siamo
+                  </a>
+                  <a href="#prossimi-eventi" className="block text-gray-300 hover:text-white transition-colors">
+                    Prossimi Eventi
+                  </a>
+                  <a href="#galleria-eventi" className="block text-gray-300 hover:text-white transition-colors">
+                    Galleria Eventi
+                  </a>
+                  <a href="#galleria-foto" className="block text-gray-300 hover:text-white transition-colors">
+                    Galleria Foto
+                  </a>
+                </div>
+
+                {/* Admin Login nel Footer */}
+                <Link href="/admin/login">
+                  <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
+                    <LogInIcon className="w-4 h-4" />
+                    Admin Login
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            {/* Copyright */}
+            <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+              <p>&copy; 2024 AldebaranDrive. Tutti i diritti riservati.</p>
+            </div>
           </div>
-          <h3 className="text-xl font-bold">AldebaranDrive</h3>
-        </div>
-        <p className="text-gray-300 mb-4">
-          Specializzata nell'organizzazione di eventi a due e quattro ruote, offrendo un servizio completo per
-          tutti gli appassionati di motori.
-        </p>
-        <p className="text-gray-400 text-sm">P.IVA: 02254520591</p>
-      </div>
-
-      {/* Informazioni di Contatto */}
-      <div>
-        <h4 className="text-lg font-semibold mb-4">Contatti</h4>
-        <div className="space-y-3 text-gray-300">
-          <p className="flex items-center gap-2">
-            <MapPinIcon className="w-4 h-4" />
-            Via dell'acero, 17 - 56022 - Castelfranco di sotto (PI)
-          </p>
-          <p className="flex items-center gap-2">
-            <span className="w-4 h-4 flex items-center justify-center">📞</span>
-            +39 392.019.1272 +39 344.6853.979
-          </p>
-          <p className="flex items-center gap-2">
-            <span className="w-4 h-4 flex items-center justify-center">📧</span>
-            info@aldebarandrive.it
-          </p>
-          <p className="flex items-center gap-2">
-            <span className="w-4 h-4 flex items-center justify-center">🌐</span>
-            www.aldebarandrive.it
-          </p>
-        </div>
-      </div>
-
-      {/* Links e Admin */}
-      <div>
-        <h4 className="text-lg font-semibold mb-4">Links Utili</h4>
-        <div className="space-y-3 mb-6">
-          <a href="#chi-siamo" className="block text-gray-300 hover:text-white transition-colors">
-            Chi Siamo
-          </a>
-          <a href="#prossimi-eventi" className="block text-gray-300 hover:text-white transition-colors">
-            Prossimi Eventi
-          </a>
-          <a href="#galleria-eventi" className="block text-gray-300 hover:text-white transition-colors">
-            Galleria Eventi
-          </a>
-          <a href="#galleria-foto" className="block text-gray-300 hover:text-white transition-colors">
-            Galleria Foto
-          </a>
-        </div>
-
-        <Link href="/admin/login">
-          <Button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 w-fit">
-            <LogInIcon className="w-4 h-4" />
-            Admin Login
-          </Button>
-        </Link>
-      </div>
-
-      {/* Sezione Social */}
-      <div>
-        <h4 className="text-lg font-semibold mb-4">Social</h4>
-        <div className="flex space-x-4">
-          <a href="https://www.facebook.com/profile.php?id=61574983770764" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <FaFacebook className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-          <a href="https://instagram.com/aldebaran.drive" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <FaInstagram className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-          <a href="https://tiktok.com/@aldebaran.drive" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-            <FaTiktok className="w-6 h-6 text-gray-300 hover:text-white transition-colors" />
-          </a>
-        </div>
-      </div>
-    </div>
-
-    {/* Copyright */}
-    <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
-      <p>&copy; 2025 AldebaranDrive. Tutti i diritti riservati.</p>
-    </div>
-  </div>
-</footer>
+        </footer>
 
         {/* MODAL VISUALIZZAZIONE IMMAGINI */}
         {showImageModal && selectedImage && (
