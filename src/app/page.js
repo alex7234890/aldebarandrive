@@ -292,7 +292,7 @@ export default function Home() {
                       coverImages[evento.id] = signedUrl.signedUrl;
                     }
                   } catch (urlError) {
-                    alert(
+                    console.log(
                       `Errore URL per evento ${evento.id}:`,
                       urlError,
                     );
@@ -307,6 +307,7 @@ export default function Home() {
           }
         };
 
+        alert("Sto per chiamare fetchCopertine")
         // Chiama la funzione per caricare le immagini di copertina
         await fetchImagesEvents();
       } catch (error) {
