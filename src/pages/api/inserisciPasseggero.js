@@ -29,18 +29,16 @@ export default async function handler(req, res) {
       verificato: false,
     };
 
-    const { data: inserted, error } = await supabase
+    const { error } = await supabase
       .from("passeggero")
-      .insert(encryptedPasseggero)
-      .select()
-      .single();
+      .insert(encryptedPasseggero);
 
     if (error) {
       console.error("Errore Supabase:", error.message);
       return res.status(500).json({ error: `Errore Supabase: ${error.message}` });
     }
 
-    return res.status(201).json({ id: inserted.id });
+    return res.status(201).json({ success: true });
   } catch (e) {
     console.error("Errore inserimento passeggero:", e.message);
     return res.status(500).json({ error: "Errore interno server" });
