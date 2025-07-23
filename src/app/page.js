@@ -157,6 +157,11 @@ export default function Home() {
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Stati per la gestione dei banner di notifica
+  const [showBanner, setShowBanner] = useState(false);
+  const [bannerType, setBannerType] = useState(''); // 'success', 'error'
+  const [bannerMessage, setBannerMessage] = useState('');
+
   // Stato per i dati del form di iscrizione
   const [formData, setFormData] = useState({
     // Dati guidatore
@@ -473,7 +478,7 @@ export default function Home() {
         })
         .catch((err) => {
           console.error("Errore nell'accesso alla fotocamera:", err);
-          alert("Errore nell'accesso alla fotocamera: " + err.message);
+          showErrorBanner("Errore nell'accesso alla fotocamera: " + err.message);
           setIsCameraActive(false);
           setShowCamera(false);
         });
@@ -494,8 +499,8 @@ export default function Home() {
   // Funzioni per la camera
   const startCamera = async (fieldName, index = null, type = "back") => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert(
-        "Il tuo browser non supporta l'accesso alla fotocamera. Prova ad aggiornare o usare un altro browser.",
+      showErrorBanner(
+        "Il tuo browser non supporta l'accesso alla fotocamera. Prova ad aggiornare o usare un altro browser."
       );
       return;
     }
@@ -527,7 +532,7 @@ export default function Home() {
         (blob) => {
           if (!blob) {
             console.error("Failed to create blob from canvas.");
-            alert("Impossibile catturare l'immagine. Riprova.");
+            showErrorBanner("Impossibile catturare l'immagine. Riprova.");
             return;
           }
 
@@ -561,6 +566,31 @@ export default function Home() {
         0.8,
       );
     }
+  };
+
+  // FUNZIONI PER LA GESTIONE DEI BANNER
+  const showSuccessBanner = (message) => {
+    setBannerType('success');
+    setBannerMessage(message);
+    setShowBanner(true);
+    // Auto-hide dopo 8 secondi per il successo (più tempo per leggere)
+    setTimeout(() => {
+      setShowBanner(false);
+    }, 8000);
+  };
+
+  const showErrorBanner = (message) => {
+    setBannerType('error');
+    setBannerMessage(message);
+    setShowBanner(true);
+    // Auto-hide dopo 10 secondi per gli errori (ancora più tempo per leggere)
+    setTimeout(() => {
+      setShowBanner(false);
+    }, 10000);
+  };
+
+  const closeBanner = () => {
+    setShowBanner(false);
   };
 
   // FUNZIONI DI GESTIONE DEL FORM
@@ -639,8 +669,8 @@ export default function Home() {
 
   const aggiungiPasseggero = () => {
     if (formData.postiAuto > 0 && passeggeri.length >= formData.postiAuto - 1) {
-      alert(
-        `Non è possibile aggiungere più di ${formData.postiAuto - 1} passeggeri per un'auto con ${formData.postiAuto} posti (uno è per il guidatore).`,
+      showErrorBanner(
+        `Non è possibile aggiungere più di ${formData.postiAuto - 1} passeggeri per un'auto con ${formData.postiAuto} posti (uno è per il guidatore).`
       );
       return;
     }
@@ -703,10 +733,11 @@ export default function Home() {
 
   const handleSubmitRegistration = async () => {
     if (!selectedEvent) {
-      alert("Nessun evento selezionato per l'iscrizione.");
+      showErrorBanner("Nessun evento selezionato per l'iscrizione.");
       return;
     }
 
+    // Imposta immediatamente lo stato di caricamento per disabilitare il pulsante
     setIsSubmitting(true);
     setValidationErrors({});
 
@@ -843,8 +874,8 @@ export default function Home() {
       const allErrors = { ...guidatoreErrors, ...passeggeriErrors };
       if (Object.keys(allErrors).length > 0) {
         setValidationErrors(allErrors);
-        alert(
-          `Errore di validazione: ${Object.values(allErrors)[0]}\nTotale errori: ${Object.keys(allErrors).length}`,
+        showErrorBanner(
+          `Errore di validazione: ${Object.values(allErrors)[0]}\nTotale errori: ${Object.keys(allErrors).length}`
         );
         setIsSubmitting(false);
         return;
@@ -947,7 +978,7 @@ export default function Home() {
       
         // Upload documento fronte
         if (p.documentoFronte) {
-          const estensioneFronte = p.documentoFronte.name.split('.').pop();
+          const estensioneFronte = p.documentoFronte.name.split(".").pop();
           const fronteFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_fronte.${estensioneFronte}`;
       
           const { data: docFronte, error: pFronteErr } = await supabase.storage
@@ -966,7 +997,7 @@ export default function Home() {
       
         // Upload documento retro
         if (p.documentoRetro) {
-          const estensioneRetro = p.documentoRetro.name.split('.').pop();
+          const estensioneRetro = p.documentoRetro.name.split(".").pop();
           const retroFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_retro.${estensioneRetro}`;
       
           const { data: docRetro, error: pRetroErr } = await supabase.storage
@@ -1030,7 +1061,7 @@ export default function Home() {
         console.warn("Errore invio email di conferma:", emailError);
       }
 
-      alert("Iscrizione completata con successo!");
+      showSuccessBanner("Iscrizione completata con successo! È stata inviata una mail di riepilogo all'indirizzo email del guidatore.");
       setShowForm(false);
 
       // Reset form e stato
@@ -1062,9 +1093,9 @@ export default function Home() {
       setValidationErrors({});
     } catch (err) {
       console.error("Errore durante la registrazione:", err);
-      alert(
+      showErrorBanner(
         "Si è verificato un errore durante l'iscrizione: " +
-          (err.message || "Verifica i dati inseriti e riprova."),
+          (err.message || "Verifica i dati inseriti e riprova.")
       );
     } finally {
       setIsSubmitting(false);
@@ -1101,15 +1132,16 @@ export default function Home() {
       }
 
       if (res.ok) {
-        alert("Email di conferma inviata con successo!");
+        // Non mostriamo più il banner qui perché viene gestito nella funzione principale
+        console.log("Email di conferma inviata con successo!");
       } else {
-        alert(
+        showErrorBanner(
           "Errore nell'invio dell'email di conferma: " +
-            (data?.error || "Errore sconosciuto"),
+            (data?.error || "Errore sconosciuto")
         );
       }
     } catch (err) {
-      alert("Errore di rete durante l'invio dell'email: " + err.message);
+      showErrorBanner("Errore di rete durante l'invio dell'email: " + err.message);
     }
   }
 
@@ -1121,7 +1153,50 @@ export default function Home() {
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
       </Head>
+      <style jsx>{`
+        @keyframes shrink {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      `}</style>
       <main className="min-h-screen bg-white text-black overflow-x-hidden">
+        {/* BANNER DI NOTIFICA */}
+        {showBanner && (
+          <div className={`fixed top-0 left-0 right-0 z-[9999] p-6 text-center font-bold text-white shadow-2xl transform transition-all duration-700 ease-in-out border-b-4 ${
+            bannerType === 'success' 
+              ? 'bg-gradient-to-r from-green-400 via-green-500 to-green-600 border-green-300' 
+              : 'bg-gradient-to-r from-red-400 via-red-500 to-red-600 border-red-300'
+          }`} style={{ 
+            boxShadow: bannerType === 'success' 
+              ? '0 10px 25px rgba(34, 197, 94, 0.4)' 
+              : '0 10px 25px rgba(239, 68, 68, 0.4)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div className="container mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-black shadow-lg ${
+                  bannerType === 'success' ? 'bg-white text-green-600' : 'bg-white text-red-600'
+                }`}>
+                  {bannerType === 'success' ? '✓' : '⚠'}
+                </div>
+                <span className="text-base md:text-lg whitespace-pre-line font-semibold">{bannerMessage}</span>
+              </div>
+              <button
+                onClick={closeBanner}
+                className="ml-4 text-white hover:text-gray-200 transition-colors p-2 rounded-full hover:bg-white/20"
+              >
+                <XIcon className="w-6 h-6" />
+              </button>
+            </div>
+            {/* Barra di progresso per auto-dismiss */}
+            <div className={`absolute bottom-0 left-0 h-1 ${
+              bannerType === 'success' ? 'bg-green-300' : 'bg-red-300'
+            } animate-pulse`} style={{
+              width: '100%',
+              animation: `shrink ${bannerType === 'success' ? '8' : '10'}s linear forwards`
+            }}></div>
+          </div>
+        )}
         {/* HEADER MIGLIORATO */}
         <header className="bg-black shadow-lg border-b-2 border-gray-800">
           <div className="container mx-auto px-6 py-4">
@@ -1867,114 +1942,122 @@ export default function Home() {
 
                     {/* Upload documenti guidatore */}
                     <div className="mt-6 space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Documento di Identità Guidatore - Fronte *
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          <input
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(e) =>
-                              handleFileUpload(e, "guidatoreDocumentoFronte")
-                            }
-                            className="hidden"
-                            id="guidatore-doc-fronte"
-                          />
-                          <label
-                            htmlFor="guidatore-doc-fronte"
-                            className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
-                          >
-                            <UploadIcon className="w-4 h-4" />
-                            {isMobile ? "Carica" : "Carica da PC"}
-                          </label>
-                          {isMobile && (
-                            <Button
-                              type="button"
-                              onClick={() =>
-                                startCamera(
-                                  "guidatoreDocumentoFronte",
-                                  null,
-                                  "back",
-                                )
-                              }
-                              className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
-                            >
-                              <CameraIcon className="w-4 h-4 mr-2" />
-                              Scatta Foto
-                            </Button>
-                          )}
-                        </div>
-                        {formData.guidatoreDocumentoFronte && (
-                          <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
-                            ✓ {formData.guidatoreDocumentoFronte.name}
-                            <Button
-                              type="button"
-                              onClick={() =>
-                                removeFile("guidatoreDocumentoFronte")
-                              }
-                              className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
-                            >
-                              <XIcon className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Documento di Identità Guidatore - Fronte *
+    </label>
+    <div className="flex flex-wrap gap-2">
+      <input
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={(e) =>
+          handleFileUpload(e, "guidatoreDocumentoFronte")
+        }
+        className="hidden"
+        id="guidatore-doc-fronte"
+      />
+      <label
+        htmlFor="guidatore-doc-fronte"
+        className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
+      >
+        <UploadIcon className="w-4 h-4" />
+        {isMobile ? "Carica" : "Carica da PC"}
+      </label>
+      {isMobile && (
+        <Button
+          type="button"
+          onClick={() =>
+            startCamera(
+              "guidatoreDocumentoFronte",
+              null,
+              "back",
+            )
+          }
+          className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
+        >
+          <CameraIcon className="w-4 h-4 mr-2" />
+          Scatta Foto
+        </Button>
+      )}
+    </div>
+    {formData.guidatoreDocumentoFronte && (
+      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm text-green-600 min-w-0 flex-1">
+            <span className="text-green-500">✓</span>
+            <span className="truncate">{formData.guidatoreDocumentoFronte.name}</span>
+          </div>
+          <Button
+            type="button"
+            onClick={() => removeFile("guidatoreDocumentoFronte")}
+            className="flex-shrink-0 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
+            title="Rimuovi file"
+          >
+            <XIcon className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    )}
+  </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Documento di identità Guidatore - Retro *
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          <input
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(e) =>
-                              handleFileUpload(e, "guidatoreDocumentoRetro")
-                            }
-                            className="hidden"
-                            id="guidatore-doc-retro"
-                          />
-                          <label
-                            htmlFor="guidatore-doc-retro"
-                            className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
-                          >
-                            <UploadIcon className="w-4 h-4" />
-                            {isMobile ? "Carica" : "Carica da PC"}
-                          </label>
-                          {isMobile && (
-                            <Button
-                              type="button"
-                              onClick={() =>
-                                startCamera(
-                                  "guidatoreDocumentoRetro",
-                                  null,
-                                  "back",
-                                )
-                              }
-                              className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
-                            >
-                              <CameraIcon className="w-4 h-4 mr-2" />
-                              Scatta Foto
-                            </Button>
-                          )}
-                        </div>
-                        {formData.guidatoreDocumentoRetro && (
-                          <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
-                            ✓ {formData.guidatoreDocumentoRetro.name}
-                            <Button
-                              type="button"
-                              onClick={() =>
-                                removeFile("guidatoreDocumentoRetro")
-                              }
-                              className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
-                            >
-                              <XIcon className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Documento di identità Guidatore - Retro *
+    </label>
+    <div className="flex flex-wrap gap-2">
+      <input
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={(e) =>
+          handleFileUpload(e, "guidatoreDocumentoRetro")
+        }
+        className="hidden"
+        id="guidatore-doc-retro"
+      />
+      <label
+        htmlFor="guidatore-doc-retro"
+        className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
+      >
+        <UploadIcon className="w-4 h-4" />
+        {isMobile ? "Carica" : "Carica da PC"}
+      </label>
+      {isMobile && (
+        <Button
+          type="button"
+          onClick={() =>
+            startCamera(
+              "guidatoreDocumentoRetro",
+              null,
+              "back",
+            )
+          }
+          className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
+        >
+          <CameraIcon className="w-4 h-4 mr-2" />
+          Scatta Foto
+        </Button>
+      )}
+    </div>
+    {formData.guidatoreDocumentoRetro && (
+      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm text-green-600 min-w-0 flex-1">
+            <span className="text-green-500">✓</span>
+            <span className="truncate">{formData.guidatoreDocumentoRetro.name}</span>
+          </div>
+          <Button
+            type="button"
+            onClick={() => removeFile("guidatoreDocumentoRetro")}
+            className="flex-shrink-0 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
+            title="Rimuovi file"
+          >
+            <XIcon className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
 
                     {/* ESIGENZE ALIMENTARI GUIDATORE */}
                     <div className="mt-6">
@@ -2174,111 +2257,118 @@ export default function Home() {
 
                         {/* Upload documenti passeggero */}
                         <div className="mt-4 space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Documento Passeggero - Fronte *
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                              <input
-                                type="file"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                onChange={(e) =>
-                                  handleFileUpload(e, "documentoFronte", index)
-                                }
-                                className="hidden"
-                                id={`passeggero-doc-fronte-${index}`}
-                              />
-                              <label
-                                htmlFor={`passeggero-doc-fronte-${index}`}
-                                className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
-                              >
-                                <UploadIcon className="w-4 h-4" />
-                                {isMobile ? "Carica" : "Carica da PC"}
-                              </label>
-                              {isMobile && (
-                                <Button
-                                  type="button"
-                                  onClick={() =>
-                                    startCamera(
-                                      "documentoFronte",
-                                      index,
-                                      "back",
-                                    )
-                                  }
-                                  className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
-                                >
-                                  <CameraIcon className="w-4 h-4 mr-2" />
-                                  Scatta Foto
-                                </Button>
-                              )}
-                            </div>
-                            {passeggero.documentoFronte && (
-                              <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
-                                ✓ {passeggero.documentoFronte.name}
-                                <Button
-                                  type="button"
-                                  onClick={() =>
-                                    removeFile("documentoFronte", index)
-                                  }
-                                  className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
-                                >
-                                  <XIcon className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Documento Passeggero - Fronte *
+    </label>
+    <div className="flex flex-wrap gap-2">
+      <input
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={(e) =>
+          handleFileUpload(e, "documentoFronte", index)
+        }
+        className="hidden"
+        id={`passeggero-doc-fronte-${index}`}
+      />
+      <label
+        htmlFor={`passeggero-doc-fronte-${index}`}
+        className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
+      >
+        <UploadIcon className="w-4 h-4" />
+        {isMobile ? "Carica" : "Carica da PC"}
+      </label>
+      {isMobile && (
+        <Button
+          type="button"
+          onClick={() =>
+            startCamera(
+              "documentoFronte",
+              index,
+              "back",
+            )
+          }
+          className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
+        >
+          <CameraIcon className="w-4 h-4 mr-2" />
+          Scatta Foto
+        </Button>
+      )}
+    </div>
+    {passeggero.documentoFronte && (
+      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm text-green-600 min-w-0 flex-1">
+            <span className="text-green-500">✓</span>
+            <span className="truncate">{passeggero.documentoFronte.name}</span>
+          </div>
+          <Button
+            type="button"
+            onClick={() => removeFile("documentoFronte", index)}
+            className="flex-shrink-0 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
+            title="Rimuovi file"
+          >
+            <XIcon className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    )}
+  </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Documento Passeggero - Retro *
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                              <input
-                                type="file"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                onChange={(e) =>
-                                  handleFileUpload(e, "documentoRetro", index)
-                                }
-                                className="hidden"
-                                id={`passeggero-doc-retro-${index}`}
-                              />
-                              <label
-                                htmlFor={`passeggero-doc-retro-${index}`}
-                                className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
-                              >
-                                <UploadIcon className="w-4 h-4" />
-                                {isMobile ? "Carica" : "Carica da PC"}
-                              </label>
-                              {isMobile && (
-                                <Button
-                                  type="button"
-                                  onClick={() =>
-                                    startCamera("documentoRetro", index, "back")
-                                  }
-                                  className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
-                                >
-                                  <CameraIcon className="w-4 h-4 mr-2" />
-                                  Scatta Foto
-                                </Button>
-                              )}
-                            </div>
-                            {passeggero.documentoRetro && (
-                              <div className="flex items-center gap-2 text-sm text-green-600 mt-2 break-words">
-                                ✓ {passeggero.documentoRetro.name}
-                                <Button
-                                  type="button"
-                                  onClick={() =>
-                                    removeFile("documentoRetro", index)
-                                  }
-                                  className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
-                                >
-                                  <XIcon className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Documento Passeggero - Retro *
+    </label>
+    <div className="flex flex-wrap gap-2">
+      <input
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={(e) =>
+          handleFileUpload(e, "documentoRetro", index)
+        }
+        className="hidden"
+        id={`passeggero-doc-retro-${index}`}
+      />
+      <label
+        htmlFor={`passeggero-doc-retro-${index}`}
+        className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors text-sm"
+      >
+        <UploadIcon className="w-4 h-4" />
+        {isMobile ? "Carica" : "Carica da PC"}
+      </label>
+      {isMobile && (
+        <Button
+          type="button"
+          onClick={() =>
+            startCamera("documentoRetro", index, "back")
+          }
+          className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm"
+        >
+          <CameraIcon className="w-4 h-4 mr-2" />
+          Scatta Foto
+        </Button>
+      )}
+    </div>
+    {passeggero.documentoRetro && (
+      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm text-green-600 min-w-0 flex-1">
+            <span className="text-green-500">✓</span>
+            <span className="truncate">{passeggero.documentoRetro.name}</span>
+          </div>
+          <Button
+            type="button"
+            onClick={() => removeFile("documentoRetro", index)}
+            className="flex-shrink-0 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
+            title="Rimuovi file"
+          >
+            <XIcon className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
                         {/* Esigenze alimentari passeggero */}
                         <div className="mt-4">
                           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2362,7 +2452,7 @@ export default function Home() {
                               required
                             />
                             Autorizzo il trattamento dei dati personali (GDPR) *         <a
-                                                                                            href="/privacy-policy"
+                                                                                            href="/privacy_policy"
                                                                                             target="_blank"
                                                                                             rel="noopener noreferrer"
                                                                                             className="text-blue-600 underline hover:text-blue-800"
@@ -2667,7 +2757,7 @@ export default function Home() {
                           required
                         />
                         Autorizzo il trattamento dei dati personali (GDPR) *            <a
-                                                                                          href="/privacy-policy"
+                                                                                          href="/privacy_policy"
                                                                                           target="_blank"
                                                                                           rel="noopener noreferrer"
                                                                                           className="text-blue-600 underline hover:text-blue-800"
@@ -2682,10 +2772,26 @@ export default function Home() {
                   {/* BOTTONE INVIA ISCRIZIONE */}
                   <Button
                     type="submit"
-                    className="w-full bg-black text-white hover:bg-gray-800 py-4 font-semibold text-lg relative group overflow-hidden"
+                    disabled={isSubmitting}
+                    className={`w-full py-4 font-semibold text-lg relative group overflow-hidden transition-all duration-300 ${
+                      isSubmitting 
+                        ? "bg-gray-400 text-gray-700 cursor-not-allowed" 
+                        : "bg-black text-white hover:bg-gray-800"
+                    }`}
                   >
-                    <span className="relative z-10">Invia Iscrizione</span>
-                    <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
+                          Caricamento...
+                        </>
+                      ) : (
+                        "Invia Iscrizione"
+                      )}
+                    </span>
+                    {!isSubmitting && (
+                      <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
+                    )}
                   </Button>
                 </form>
               </div>
