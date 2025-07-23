@@ -6,7 +6,7 @@ export default function PrivacyPolicy() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-blue-400 mb-4">📄 Informativa sulla Privacy</h1>
           <p className="text-gray-400 text-lg">Aldebaran Drive - Raduni Automobilistici</p>
-          <p className="text-sm text-gray-500 mt-2">Ultimo aggiornamento: [inserire data pubblicazione]</p>
+          <p className="text-sm text-gray-500 mt-2">Ultimo aggiornamento: 23/07/2025</p>
         </div>
 
         {/* Content */}

@@ -2361,8 +2361,16 @@ export default function Home() {
                               className="mr-2"
                               required
                             />
-                            Autorizzo il trattamento dei dati personali (GDPR) * 
+                            Autorizzo il trattamento dei dati personali (GDPR) *         <a
+                                                                                            href="/privacy-policy"
+                                                                                            target="_blank"
+                                                                                            rel="noopener noreferrer"
+                                                                                            className="text-blue-600 underline hover:text-blue-800"
+                                                                                          >
+                                                                                              Leggi l'informativa
+                                                                                          </a>
                           </label>
+                  
                         </div>
                       </div>
                     ))}
@@ -2658,8 +2666,16 @@ export default function Home() {
                           className="mr-2"
                           required
                         />
-                        Autorizzo il trattamento dei dati personali (GDPR) *
+                        Autorizzo il trattamento dei dati personali (GDPR) *            <a
+                                                                                          href="/privacy-policy"
+                                                                                          target="_blank"
+                                                                                          rel="noopener noreferrer"
+                                                                                          className="text-blue-600 underline hover:text-blue-800"
+                                                                                        >
+                                                                                            Leggi l'informativa
+                                                                                        </a>
                       </label>
+           
                     </div>
                   </div>
 
