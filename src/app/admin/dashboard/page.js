@@ -1887,68 +1887,59 @@ export default function AdminDashboard() {
       showErrorBanner("Nessun file selezionato per il caricamento.");
       return;
     }
-  
+
     setIsUploadingImages(true);
     setUploadProgress(0);
     setUploadedCount(0);
     setTotalCount(uploadFiles.length);
-  
+    
     const bucket = uploadTarget.type === "event" ? "eventi" : "galleria";
-    const pathPrefix = bucket === "eventi" && uploadTarget.eventId
-      ? `eventi/${uploadTarget.eventId}`
-      : uploadFolderPath;
-  
     let successfulUploadsCount = 0;
     let failedUploadsCount = 0;
     const failedFiles = [];
-  
+
     for (let i = 0; i < uploadFiles.length; i++) {
       const file = uploadFiles[i];
       try {
-        const path = `${pathPrefix}/${file.name}`;
         const { data, error } = await supabase.storage
           .from(bucket)
-          .upload(path, file, {
+          .upload(file.name, file, {
             cacheControl: "3600",
-            upsert: false,
-          });
-  
+            upsert: false, // Prevents overwriting existing files
+          })
+
         if (error) {
-          if (
-            error.statusCode === "409" ||
-            error.message.includes("duplicate key") ||
-            error.message.includes("already exists")
-          ) {
-            console.warn(`File "${file.name}" già esistente in "${pathPrefix}".`);
+          // Specific error for file already exists.
+          if (error.statusCode === '409' || error.message.includes('duplicate key') || error.message.includes('already exists')) {
+            console.warn(`File "${file.name}" already exists in "${uploadFolderPath}". Skipping upload.`);
             failedUploadsCount++;
             failedFiles.push(`${file.name} (già esistente)`);
           } else {
             throw new Error(`Errore nel caricamento di ${file.name}: ${error.message}`);
           }
         } else {
-          console.log(`File "${file.name}" caricato con successo in "${pathPrefix}".`, data);
+          console.log(`File "${file.name}" caricato con successo in "${uploadFolderPath}".`, data);
           successfulUploadsCount++;
-  
+
+          // Se è un upload per un evento, salva i metadati nella tabella eventoimmagine
           if (uploadTarget.type === "event" && uploadTarget.eventId) {
             try {
               const { error: dbError } = await supabase
                 .from("eventoimmagine")
                 .insert({
                   id_evento_fk: uploadTarget.eventId,
-                  path: path,
-                  descrizione: file.name,
+                  path: `${uploadFolderPath}/${file.name}`,
+                  descrizione: file.name
                 });
-  
+
               if (dbError) {
-                console.error(
-                  `Errore nel salvataggio dei metadati per ${file.name}:`,
-                  dbError.message
-                );
+                console.error(`Errore nel salvare i metadati dell'immagine ${file.name} nel database:`, dbError.message);
+                // Non consideriamo questo un errore fatale, l'immagine è comunque caricata
               } else {
-                console.log(`Metadati salvati per ${file.name}.`);
+                console.log(`Metadati dell'immagine ${file.name} salvati nel database con successo.`);
               }
             } catch (dbError) {
-              console.error(`Errore nel salvataggio dei metadati per ${file.name}:`, dbError.message);
+              console.error(`Errore nel salvare i metadati dell'immagine ${file.name}:`, dbError.message);
             }
           }
         }
@@ -1957,33 +1948,30 @@ export default function AdminDashboard() {
         failedUploadsCount++;
         failedFiles.push(`${file.name} (${error.message})`);
       }
-  
+      
+      // Aggiorna il progresso
       const completed = i + 1;
       setUploadedCount(completed);
       setUploadProgress((completed / uploadFiles.length) * 100);
     }
-  
+
     if (successfulUploadsCount === uploadFiles.length) {
       showSuccessBanner("Tutte le immagini caricate con successo!");
     } else if (successfulUploadsCount > 0) {
-      showErrorBanner(
-        `Caricamento completato con ${successfulUploadsCount} immagini caricate e ${failedUploadsCount} fallite. Dettagli: ${failedFiles.join(", ")}`
-      );
+      showErrorBanner(`Caricamento completato con ${successfulUploadsCount} immagini caricate e ${failedUploadsCount} fallite. Dettagli: ${failedFiles.join(", ")}`);
     } else {
-      showErrorBanner(
-        `Nessuna immagine caricata. Tutti i caricamenti sono falliti. Dettagli: ${failedFiles.join(", ")}`
-      );
+      showErrorBanner(`Nessuna immagine caricata. Tutti i caricamenti sono falliti. Dettagli: ${failedFiles.join(", ")}`);
     }
-  
+
     setShowImageUpload(false);
     setUploadFiles([]);
     setUploadProgress(0);
     setUploadedCount(0);
     setTotalCount(0);
-    fetchEventsAndImages();
+    fetchEventsAndImages(); // Refresh galleries
     setIsUploadingImages(false);
-  };
-  
+  }
+
   const handleDeleteImage = async (imagePath, eventId = null) => {
     showConfirmationModal(
       "Elimina Immagine",
