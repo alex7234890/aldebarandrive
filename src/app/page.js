@@ -259,7 +259,7 @@ export default function Home() {
           try {
             // Crea un oggetto per mappare gli eventi con le loro immagini di copertina
             const coverImages = {};
-
+            
             // Per ogni evento, genera il signed URL della copertina se esiste
             for (const evento of data) {
               if (evento.copertina) {
@@ -271,7 +271,7 @@ export default function Home() {
                   ".webp",
                 ];
                 const lower = evento.copertina.toLowerCase();
-
+                
                 // Verifica se il path della copertina è valido
                 if (
                   validExtensions.some((ext) => lower.endsWith(ext)) &&
@@ -280,13 +280,17 @@ export default function Home() {
                   !lower.startsWith(".")
                 ) {
                   try {
+                    // Usa il bucket "eventi" e il path relativo della copertina
                     const { data: signedUrl, error: urlError } =
                       await supabase.storage
-                        .from("doc")
+                        .from("eventi") // Bucket corretto per gli eventi
                         .createSignedUrl(evento.copertina, 60 * 60); // validità 1h
-
+                        
                     if (!urlError && signedUrl?.signedUrl) {
                       coverImages[evento.id] = signedUrl.signedUrl;
+                      console.log(`URL copertina generato per evento ${evento.id}: eventi/${evento.copertina}`);
+                    } else if (urlError) {
+                      console.error(`Errore nella generazione URL per evento ${evento.id}:`, urlError);
                     }
                   } catch (urlError) {
                     console.error(
@@ -297,7 +301,7 @@ export default function Home() {
                 }
               }
             }
-
+            
             setCover(coverImages);
           } catch (error) {
             console.error("Errore nel caricamento delle copertine:", error);

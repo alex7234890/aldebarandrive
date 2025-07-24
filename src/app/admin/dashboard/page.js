@@ -1507,9 +1507,10 @@ export default function AdminDashboard() {
   // API
   const handleCreateEvent = async (e) => {
     // e.preventDefault() is already handled by EventFormModal's handleSubmit
-    setIsCreatingEvent(true)
+    setIsCreatingEvent(true);
+    
     try {
-      const quotesJson = {}
+      const quotesJson = {};
       // Filter out entirely empty quotas before sending to DB
       newEvent.quote.forEach((q, index) => {
         if (q.titolo.trim() && q.descrizione.trim() && q.prezzo !== "" && !isNaN(Number(q.prezzo))) {
@@ -1517,10 +1518,10 @@ export default function AdminDashboard() {
             titolo: q.titolo.trim(),
             descrizione: q.descrizione.trim(),
             prezzo: Number(q.prezzo),
-          }
+          };
         }
-      })
-
+      });
+      
       // Prima crea l'evento per ottenere l'ID
       const { data, error } = await supabase
         .from("evento")
@@ -1536,67 +1537,71 @@ export default function AdminDashboard() {
           programma: newEvent.programma.trim() || null,
         })
         .select()
-        .single()
-
+        .single();
+        
       if (error) {
-        throw error
+        throw error;
       }
-
+      
       // Se c'è un'immagine di copertina, caricala
       if (newEvent.copertina) {
         try {
-          const fileExtension = newEvent.copertina.name.split('.').pop()
-          const fileName = `copertina.${fileExtension}`
-          const filePath = `eventi/${data.id}/${fileName}`
-
+          const fileExtension = newEvent.copertina.name.split('.').pop();
+          const fileName = `copertina.${fileExtension}`;
+          // Path relativo per il bucket eventi: id_evento/copertina.ext
+          const relativePath = `${data.id}/${fileName}`;
+          
           const { error: uploadError } = await supabase.storage
-            .from("doc")
-            .upload(filePath, newEvent.copertina, {
+            .from("eventi") // Bucket corretto per gli eventi
+            .upload(relativePath, newEvent.copertina, {
               cacheControl: "3600",
               upsert: true,
-            })
-
+            });
+            
           if (uploadError) {
-            throw new Error(`Errore nel caricamento dell'immagine di copertina: ${uploadError.message}`)
+            throw new Error(`Errore nel caricamento dell'immagine di copertina: ${uploadError.message}`);
           }
-
+          
           // Aggiorna l'evento con il path dell'immagine di copertina
+          // Salva il path relativo nel database
           const { error: updateError } = await supabase
             .from("evento")
-            .update({ copertina: filePath })
-            .eq("id", data.id)
-
+            .update({ copertina: relativePath })
+            .eq("id", data.id);
+            
           if (updateError) {
-            throw new Error(`Errore nell'aggiornamento del path della copertina: ${updateError.message}`)
+            throw new Error(`Errore nell'aggiornamento del path della copertina: ${updateError.message}`);
           }
+          
+          console.log(`Copertina caricata con successo: eventi/${relativePath}`);
         } catch (uploadError) {
-          console.error("Errore durante l'upload della copertina:", uploadError)
-          showErrorBanner("Evento creato ma errore nel caricamento della copertina: " + uploadError.message)
+          console.error("Errore durante l'upload della copertina:", uploadError);
+          showErrorBanner("Evento creato ma errore nel caricamento della copertina: " + uploadError.message);
         }
       }
-
-      showSuccessBanner("Evento creato con successo!")
-      setShowNewEventForm(false)
-      setCoverImagePreview(null) // Reset anteprima
+      
+      showSuccessBanner("Evento creato con successo!");
+      setShowNewEventForm(false);
+      setCoverImagePreview(null); // Reset anteprima
       setNewEvent({
         titolo: "",
         descrizione: "",
         data: "",
-        fine:"",
+        fine: "",
         orario: "",
         luogo: "",
         programma: "",
         quote: [{ titolo: "", descrizione: "", prezzo: "" }],
         copertina: null,
-      })
-      fetchEventsAndImages()
+      });
+      fetchEventsAndImages();
     } catch (error) {
-      console.error("Errore nella creazione dell'evento:", error)
-      showErrorBanner("Errore nella creazione dell'evento: " + error.message)
+      console.error("Errore nella creazione dell'evento:", error);
+      showErrorBanner("Errore nella creazione dell'evento: " + error.message);
     } finally {
-      setIsCreatingEvent(false)
+      setIsCreatingEvent(false);
     }
-  }
+  };
 
   const handleEditEvent = (event) => {
     setEditingEvent(event)
@@ -1622,48 +1627,51 @@ export default function AdminDashboard() {
 
   const handleUpdateEvent = async (e) => {
     // e.preventDefault() is already handled by EventFormModal's handleSubmit
-    if (!editingEvent) return
-
-    setIsUpdatingEvent(true)
+    if (!editingEvent) return;
+    
+    setIsUpdatingEvent(true);
+    
     try {
-      const quotesJson = {}
+      const quotesJson = {};
       newEvent.quote.forEach((q, index) => {
         if (q.titolo.trim() && q.descrizione.trim() && q.prezzo !== "" && !isNaN(Number(q.prezzo))) {
           quotesJson[`quota${index + 1}`] = {
             titolo: q.titolo.trim(),
             descrizione: q.descrizione.trim(),
             prezzo: Number(q.prezzo),
-          }
+          };
         }
-      })
-
-      let copertinePath = editingEvent.copertina // Mantieni la copertina esistente se non viene caricata una nuova
-
+      });
+      
+      let copertinePath = editingEvent.copertina; // Mantieni la copertina esistente se non viene caricata una nuova
+      
       // Se c'è una nuova immagine di copertina, caricala
       if (newEvent.copertina) {
         try {
-          const fileExtension = newEvent.copertina.name.split('.').pop()
-          const fileName = `copertina.${fileExtension}`
-          const filePath = `eventi/${editingEvent.id}/${fileName}`
-
+          const fileExtension = newEvent.copertina.name.split('.').pop();
+          const fileName = `copertina.${fileExtension}`;
+          // Path relativo per il bucket eventi: id_evento/copertina.ext
+          const relativePath = `${editingEvent.id}/${fileName}`;
+          
           const { error: uploadError } = await supabase.storage
-            .from("doc")
-            .upload(filePath, newEvent.copertina, {
+            .from("eventi") // Bucket corretto per gli eventi
+            .upload(relativePath, newEvent.copertina, {
               cacheControl: "3600",
               upsert: true,
-            })
-
+            });
+            
           if (uploadError) {
-            throw new Error(`Errore nel caricamento dell'immagine di copertina: ${uploadError.message}`)
+            throw new Error(`Errore nel caricamento dell'immagine di copertina: ${uploadError.message}`);
           }
-
-          copertinePath = filePath
+          
+          copertinePath = relativePath; // Salva il path relativo
+          console.log(`Copertina aggiornata con successo: eventi/${relativePath}`);
         } catch (uploadError) {
-          console.error("Errore durante l'upload della copertina:", uploadError)
-          showErrorBanner("Errore nel caricamento della nuova copertina: " + uploadError.message)
+          console.error("Errore durante l'upload della copertina:", uploadError);
+          showErrorBanner("Errore nel caricamento della nuova copertina: " + uploadError.message);
         }
       }
-
+      
       const { data, error } = await supabase
         .from("evento")
         .update({
@@ -1679,35 +1687,35 @@ export default function AdminDashboard() {
         })
         .eq("id", editingEvent.id)
         .select()
-        .single()
-
+        .single();
+        
       if (error) {
-        throw error
+        throw error;
       }
-
-      showSuccessBanner("Evento aggiornato con successo!")
-      setShowEditEventForm(false)
-      setEditingEvent(null)
-      setCoverImagePreview(null) // Reset anteprima
+      
+      showSuccessBanner("Evento aggiornato con successo!");
+      setShowEditEventForm(false);
+      setEditingEvent(null);
+      setCoverImagePreview(null); // Reset anteprima
       setNewEvent({
         titolo: "",
         descrizione: "",
         data: "",
-        fine:"",
+        fine: "",
         orario: "",
         luogo: "",
         programma: "",
         quote: [{ titolo: "", descrizione: "", prezzo: "" }],
         copertina: null,
-      })
-      fetchEventsAndImages()
+      });
+      fetchEventsAndImages();
     } catch (error) {
-      console.error("Errore nell'aggiornamento dell'evento:", error)
-      showErrorBanner("Errore nell'aggiornamento dell'evento: " + error.message)
+      console.error("Errore nell'aggiornamento dell'evento:", error);
+      showErrorBanner("Errore nell'aggiornamento dell'evento: " + error.message);
     } finally {
-      setIsUpdatingEvent(false)
+      setIsUpdatingEvent(false);
     }
-  }
+  };
 
   const handleDeleteEvent = async (eventId) => {
     showConfirmationModal(
