@@ -371,6 +371,7 @@ export default function Home() {
 
     const fetchEventiPassatiImmagini = async () => {
       setLoadingEventiPassatiImmagini(true);
+      
       try {
         // Prima ottieni tutti gli eventi passati
         const { data: eventiPassatiData, error: eventiError } = await supabase
@@ -378,14 +379,14 @@ export default function Home() {
           .select("*")
           .eq("passato", true)
           .order("data", { ascending: false });
-
+          
         if (eventiError) {
           console.error("Errore nel recupero eventi passati:", eventiError);
           return;
         }
-
+        
         const immaginiPerEvento = {};
-
+        
         // Per ogni evento passato, recupera le immagini dalla tabella eventoimmagine
         for (const evento of eventiPassatiData) {
           try {
@@ -394,7 +395,7 @@ export default function Home() {
               .select("*")
               .eq("id_evento_fk", evento.id)
               .order("id", { ascending: true });
-
+              
             if (immaginiError) {
               console.warn(
                 `Errore nel recupero immagini per evento ${evento.id}:`,
@@ -403,16 +404,18 @@ export default function Home() {
               immaginiPerEvento[evento.id] = [];
               continue;
             }
-
+            
             // Genera signed URLs per ogni immagine
             const immaginiConUrl = await Promise.all(
               immaginiData.map(async (immagine) => {
                 try {
+                  // Usa il bucket "eventi" con il path relativo dell'immagine
+                  // Il path nel database dovrebbe essere nel formato: id_evento/immagine.jpg
                   const { data: signedUrlData, error: signedUrlError } =
                     await supabase.storage
-                      .from("doc")
+                      .from("eventi") // Bucket corretto per gli eventi
                       .createSignedUrl(immagine.path, 3600); // 1 ora di validità
-
+                      
                   if (signedUrlError) {
                     console.error(
                       `Errore generazione URL per ${immagine.path}:`,
@@ -420,7 +423,7 @@ export default function Home() {
                     );
                     return null;
                   }
-
+                  
                   return {
                     id: immagine.id,
                     url: signedUrlData.signedUrl,
@@ -436,9 +439,10 @@ export default function Home() {
                 }
               }),
             );
-
+            
             // Filtra le immagini valide
             immaginiPerEvento[evento.id] = immaginiConUrl.filter(Boolean);
+            console.log(`Caricate ${immaginiConUrl.filter(Boolean).length} immagini per evento ${evento.id}`);
           } catch (eventoError) {
             console.error(
               `Errore nel processare l'evento ${evento.id}:`,
@@ -447,7 +451,7 @@ export default function Home() {
             immaginiPerEvento[evento.id] = [];
           }
         }
-
+        
         setEventiPassatiImmagini(immaginiPerEvento);
       } catch (error) {
         console.error("Errore nel caricamento immagini eventi passati:", error);
@@ -893,7 +897,7 @@ export default function Home() {
         const fronteFileName = `${formData.guidatoreCodiceFiscale.toUpperCase()}_${Date.now()}_fronte.${formData.guidatoreDocumentoFronte.name.split(".").pop()}`;
         const { data: docFronte, error: uploadFronteErr } =
           await supabase.storage
-            .from("doc")
+            .from("partecipanti")
             .upload(
               `guidatori/${fronteFileName}`,
               formData.guidatoreDocumentoFronte,
@@ -914,7 +918,7 @@ export default function Home() {
       if (formData.guidatoreDocumentoRetro) {
         const retroFileName = `${formData.guidatoreCodiceFiscale.toUpperCase()}_${Date.now()}_retro.${formData.guidatoreDocumentoRetro.name.split(".").pop()}`;
         const { data: docRetro, error: uploadRetroErr } = await supabase.storage
-          .from("doc")
+          .from("partecipanti")
           .upload(
             `guidatori/${retroFileName}`,
             formData.guidatoreDocumentoRetro,
@@ -986,7 +990,7 @@ export default function Home() {
           const fronteFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_fronte.${estensioneFronte}`;
       
           const { data: docFronte, error: pFronteErr } = await supabase.storage
-            .from("doc")
+            .from("partecipanti")
             .upload(`passeggeri/${fronteFileName}`, p.documentoFronte, {
               cacheControl: "3600",
               upsert: false,
@@ -1005,7 +1009,7 @@ export default function Home() {
           const retroFileName = `${p.codiceFiscale.toUpperCase()}_${Date.now()}_retro.${estensioneRetro}`;
       
           const { data: docRetro, error: pRetroErr } = await supabase.storage
-            .from("doc")
+            .from("partecipanti")
             .upload(`passeggeri/${retroFileName}`, p.documentoRetro, {
               cacheControl: "3600",
               upsert: false,
