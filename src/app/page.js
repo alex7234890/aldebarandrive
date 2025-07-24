@@ -912,6 +912,9 @@ const handleSubmitRegistration = async () => {
         const fronteBase64 = await convertFileToBase64(formData.guidatoreDocumentoFronte);
         const retroBase64 = await convertFileToBase64(formData.guidatoreDocumentoRetro);
 
+        // Imposto nomi per i documenti
+        
+
         const uploadResponse = await fetch("/api/uploadDocumentoGuidatore", {
           method: "POST",
           headers: {
