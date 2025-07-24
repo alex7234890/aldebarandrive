@@ -3057,7 +3057,7 @@ const handleSubmitRegistration = async () => {
 
             {/* Copyright */}
             <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
-              <p>&copy; 2024 AldebaranDrive. Tutti i diritti riservati.</p>
+              <p>&copy; 2025 AldebaranDrive. Tutti i diritti riservati.</p>
             </div>
           </div>
         </footer>
