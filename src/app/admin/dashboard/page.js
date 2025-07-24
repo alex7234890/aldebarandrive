@@ -1989,36 +1989,41 @@ export default function AdminDashboard() {
       "Sei sicuro di voler eliminare questa immagine?",
       async () => {
         try {
-          // Determina il bucket corretto in base al path dell'immagine
+          // Determina il bucket e il path relativo dal path completo
           let bucket;
-          let fullPath;
+          let relativePath;
+          let dbPath; // Path da usare per la ricerca nel database
           
-          if (eventId) {
-            // È un'immagine di evento: bucket "eventi"
+          if (imagePath.startsWith("eventi/")) {
+            // È un'immagine di evento: eventi/idevento/immagine.jpg
             bucket = "eventi";
-            fullPath = imagePath; // Il path dovrebbe già essere nel formato: id_evento/immagine.jpg
-          } else {
-            // È un'immagine di galleria: bucket "galleria"
+            relativePath = imagePath.substring(7); // Rimuove "eventi/" per ottenere idevento/immagine.jpg
+            dbPath = relativePath; // Il DB dovrebbe contenere idevento/immagine.jpg
+          } else if (imagePath.startsWith("galleria/")) {
+            // È un'immagine di galleria: galleria/immagine.jpg  
             bucket = "galleria";
-            fullPath = imagePath; // Il path è direttamente il nome del file
+            relativePath = imagePath.substring(9); // Rimuove "galleria/" per ottenere immagine.jpg
+            dbPath = null; // Le immagini di galleria non hanno record nel DB
+          } else {
+            throw new Error("Path dell'immagine non valido");
           }
           
           // Elimina il file dal storage
           const { error } = await supabase.storage
             .from(bucket)
-            .remove([fullPath]);
+            .remove([relativePath]);
             
           if (error) {
             throw error;
           }
           
           // Se l'immagine appartiene a un evento, elimina anche il record dalla tabella eventoimmagine
-          if (eventId || imagePath.includes('/')) {
+          if (bucket === "eventi" && dbPath) {
             try {
               const { error: dbError } = await supabase
                 .from("eventoimmagine")
                 .delete()
-                .eq("path", imagePath); // Usa il path originale per la ricerca nel DB
+                .eq("path", dbPath);
                 
               if (dbError) {
                 console.error(`Errore nell'eliminazione del record dell'immagine dal database:`, dbError.message);
@@ -2046,6 +2051,7 @@ export default function AdminDashboard() {
       }
     );
   };
+
   // FUNZIONI DI GESTIONE ISCRIZIONI - MODIFICATA PER LA NUOVA STRUTTURA
   const fetchRegistrations = useCallback(async (eventId) => {
     setLoadingRegistrations(true)
