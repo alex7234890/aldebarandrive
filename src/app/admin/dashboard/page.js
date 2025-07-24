@@ -1989,23 +1989,37 @@ export default function AdminDashboard() {
       "Sei sicuro di voler eliminare questa immagine?",
       async () => {
         try {
+          // Determina il bucket corretto in base al path dell'immagine
+          let bucket;
+          let fullPath;
+          
+          if (eventId || imagePath.includes('/')) {
+            // È un'immagine di evento: bucket "eventi"
+            bucket = "eventi";
+            fullPath = imagePath; // Il path dovrebbe già essere nel formato: id_evento/immagine.jpg
+          } else {
+            // È un'immagine di galleria: bucket "galleria"
+            bucket = "galleria";
+            fullPath = imagePath; // Il path è direttamente il nome del file
+          }
+          
           // Elimina il file dal storage
           const { error } = await supabase.storage
-            .from("doc")
-            .remove([imagePath]);
-
+            .from(bucket)
+            .remove([fullPath]);
+            
           if (error) {
             throw error;
           }
-
+          
           // Se l'immagine appartiene a un evento, elimina anche il record dalla tabella eventoimmagine
-          if (imagePath.startsWith("eventi/")) {
+          if (eventId || imagePath.includes('/')) {
             try {
               const { error: dbError } = await supabase
                 .from("eventoimmagine")
                 .delete()
-                .eq("path", imagePath);
-
+                .eq("path", imagePath); // Usa il path originale per la ricerca nel DB
+                
               if (dbError) {
                 console.error(`Errore nell'eliminazione del record dell'immagine dal database:`, dbError.message);
                 showErrorBanner("Immagine eliminata dal storage ma errore nell'eliminazione dal database: " + dbError.message);
@@ -2017,7 +2031,7 @@ export default function AdminDashboard() {
               showErrorBanner("Immagine eliminata dal storage ma errore nell'eliminazione dal database: " + dbError.message);
             }
           }
-
+          
           showSuccessBanner("Immagine eliminata con successo!");
           fetchEventsAndImages(); // Refresh galleries
         } catch (error) {
@@ -2031,8 +2045,7 @@ export default function AdminDashboard() {
         type: "danger"
       }
     );
-  }
-
+  };
   // FUNZIONI DI GESTIONE ISCRIZIONI - MODIFICATA PER LA NUOVA STRUTTURA
   const fetchRegistrations = useCallback(async (eventId) => {
     setLoadingRegistrations(true)
