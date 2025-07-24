@@ -1887,7 +1887,7 @@ export default function AdminDashboard() {
       showErrorBanner("Nessun file selezionato per il caricamento.");
       return;
     }
-
+    
     setIsUploadingImages(true);
     setUploadProgress(0);
     setUploadedCount(0);
@@ -1897,30 +1897,41 @@ export default function AdminDashboard() {
     let successfulUploadsCount = 0;
     let failedUploadsCount = 0;
     const failedFiles = [];
-
+    
     for (let i = 0; i < uploadFiles.length; i++) {
       const file = uploadFiles[i];
+      
       try {
+        // Costruisci il path corretto basato sul tipo di upload
+        let filePath;
+        if (uploadTarget.type === "event" && uploadTarget.eventId) {
+          // Per eventi: eventi/id_evento/immagine.jpg
+          filePath = `${uploadTarget.eventId}/${file.name}`;
+        } else {
+          // Per galleria: immagine.jpg (direttamente nella root del bucket)
+          filePath = file.name;
+        }
+        
         const { data, error } = await supabase.storage
           .from(bucket)
-          .upload(file.name, file, {
+          .upload(filePath, file, {
             cacheControl: "3600",
             upsert: false, // Prevents overwriting existing files
-          })
-
+          });
+        
         if (error) {
           // Specific error for file already exists.
           if (error.statusCode === '409' || error.message.includes('duplicate key') || error.message.includes('already exists')) {
-            console.warn(`File "${file.name}" already exists in "${uploadFolderPath}". Skipping upload.`);
+            console.warn(`File "${file.name}" already exists in "${bucket}/${filePath}". Skipping upload.`);
             failedUploadsCount++;
             failedFiles.push(`${file.name} (già esistente)`);
           } else {
             throw new Error(`Errore nel caricamento di ${file.name}: ${error.message}`);
           }
         } else {
-          console.log(`File "${file.name}" caricato con successo in "${uploadFolderPath}".`, data);
+          console.log(`File "${file.name}" caricato con successo in "${bucket}/${filePath}".`, data);
           successfulUploadsCount++;
-
+          
           // Se è un upload per un evento, salva i metadati nella tabella eventoimmagine
           if (uploadTarget.type === "event" && uploadTarget.eventId) {
             try {
@@ -1928,10 +1939,10 @@ export default function AdminDashboard() {
                 .from("eventoimmagine")
                 .insert({
                   id_evento_fk: uploadTarget.eventId,
-                  path: `${uploadFolderPath}/${file.name}`,
+                  path: filePath, // Usa il path relativo: id_evento/immagine.jpg
                   descrizione: file.name
                 });
-
+              
               if (dbError) {
                 console.error(`Errore nel salvare i metadati dell'immagine ${file.name} nel database:`, dbError.message);
                 // Non consideriamo questo un errore fatale, l'immagine è comunque caricata
@@ -1954,7 +1965,7 @@ export default function AdminDashboard() {
       setUploadedCount(completed);
       setUploadProgress((completed / uploadFiles.length) * 100);
     }
-
+    
     if (successfulUploadsCount === uploadFiles.length) {
       showSuccessBanner("Tutte le immagini caricate con successo!");
     } else if (successfulUploadsCount > 0) {
@@ -1962,7 +1973,7 @@ export default function AdminDashboard() {
     } else {
       showErrorBanner(`Nessuna immagine caricata. Tutti i caricamenti sono falliti. Dettagli: ${failedFiles.join(", ")}`);
     }
-
+    
     setShowImageUpload(false);
     setUploadFiles([]);
     setUploadProgress(0);
@@ -1970,7 +1981,7 @@ export default function AdminDashboard() {
     setTotalCount(0);
     fetchEventsAndImages(); // Refresh galleries
     setIsUploadingImages(false);
-  }
+  };
 
   const handleDeleteImage = async (imagePath, eventId = null) => {
     showConfirmationModal(
