@@ -2003,7 +2003,6 @@ export default function AdminDashboard() {
           let dbPath; // Path da usare per la ricerca nel database
           if (eventId != null) {
             // È un'immagine di evento: eventi/idevento/immagine.jpg
-            alert(imagePath)
             bucket = "eventi";
             dbPath = imagePath; // Il DB dovrebbe contenere idevento/immagine.jpg
             relativePath = imagePath;
