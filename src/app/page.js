@@ -2415,6 +2415,7 @@ export default function Home() {
                           <label className="flex items-center">
                             <input
                               type="checkbox"
+                              required
                               checked={passeggero.autorizzaFoto}
                               onChange={(e) =>
                                 handlePasseggeroChange(
@@ -2427,9 +2428,9 @@ export default function Home() {
                               }
                               className="mr-2"
                             />
-                            Autorizzo la pubblicazione di foto/video in cui sono
-                            presente
+                            Autorizzo la pubblicazione di foto/video in cui sono presente
                           </label>
+
                           <label className="flex items-center">
                             <input
                               type="checkbox"
@@ -2732,16 +2733,18 @@ export default function Home() {
                     </h3>
                     <div className="space-y-4">
                       <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="guidatoreAutorizzaFoto"
-                          checked={formData.guidatoreAutorizzaFoto}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        Autorizzo la pubblicazione di foto/video in cui sono
-                        presente
-                      </label>
+                      
+                              <input
+                                type="checkbox"
+                                name="guidatoreAutorizzaFoto"
+                                required
+                                checked={formData.guidatoreAutorizzaFoto}
+                                onChange={handleInputChange}
+                                className="mr-2"
+                              />
+                              Autorizzo la pubblicazione di foto/video in cui sono presente
+                            </label>
+
                       <label className="flex items-center">
                         <input
                           type="checkbox"

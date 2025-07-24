@@ -45,10 +45,7 @@ import jsPDF from "jspdf"
 import ReactMarkdown from 'react-markdown';
 import { supabase } from "@/lib/supabaseClient"
 
-// Helper per mostrare notifiche all'utente
-const showNotification = (message, type = "error") => {
-  alert(`${type.toUpperCase()}: ${message}`)
-}
+// Helper per mostrare notifiche all'utente - RIMOSSO, ora usiamo i banner
 
 // Modal per nuovo/modifica evento
 const EventFormModal = ({
@@ -62,35 +59,42 @@ const EventFormModal = ({
   handleCreateEvent,
   handleUpdateEvent,
   onClose,
+  showErrorBanner,
+  isCreatingEvent,
+  isUpdatingEvent,
+  coverImagePreview,
 }) => {
   // Client-side validation for event form
   const validateEventForm = () => {
     if (!newEvent.titolo || newEvent.titolo.trim() === "") {
-      showNotification("Il titolo dell'evento è obbligatorio.", "warning")
+      showErrorBanner("Il titolo dell'evento è obbligatorio.")
       return false
     }
     if (!newEvent.descrizione || newEvent.descrizione.trim() === "") {
-      showNotification("La descrizione dell'evento è obbligatoria.", "warning")
+      showErrorBanner("La descrizione dell'evento è obbligatoria.")
       return false
     }
     if (!newEvent.data) {
-      showNotification("La data dell'evento è obbligatoria.", "warning")
+      showErrorBanner("La data dell'evento è obbligatoria.")
       return false
     }
     if (!newEvent.fine) {
-      showNotification("La data di fine dell'evento è obbligatoria.", "warning")
+      showErrorBanner("La data di fine dell'evento è obbligatoria.")
+      return false
+    }
+    // Validazione che la data di fine non sia prima della data di inizio
+    if (new Date(newEvent.fine) < new Date(newEvent.data)) {
+      showErrorBanner("La data di fine evento non può essere precedente alla data di inizio.")
       return false
     }
     if (!newEvent.orario) {
-      showNotification("L'orario dell'evento è obbligatorio.", "warning")
+      showErrorBanner("L'orario dell'evento è obbligatorio.")
       return false
     }
     if (!newEvent.luogo || newEvent.luogo.trim() === "") {
-      showNotification("Il luogo dell'evento è obbligatorio.", "warning")
+      showErrorBanner("Il luogo dell'evento è obbligatorio.")
       return false
     }
-    // Ensure participants and auto numbers are positive integers
-    
 
     // Validate quotas
     for (const quota of newEvent.quote) {
@@ -99,16 +103,16 @@ const EventFormModal = ({
       // If it's not entirely empty, it must be fully filled and valid
       if (!isQuotaEmpty) {
         if (!quota.titolo.trim()) {
-          showNotification("Il titolo della quota è obbligatorio se la quota non è vuota.", "warning");
+          showErrorBanner("Il titolo della quota è obbligatorio se la quota non è vuota.");
           return false;
         }
         if (!quota.descrizione.trim()) {
-          showNotification("La descrizione della quota è obbligatoria se la quota non è vuota.", "warning");
+          showErrorBanner("La descrizione della quota è obbligatoria se la quota non è vuota.");
           return false;
         }
         const prezzoNum = Number(quota.prezzo);
         if (quota.prezzo === "" || isNaN(prezzoNum) || prezzoNum < 0) {
-          showNotification("Il prezzo della quota deve essere un numero non negativo.", "warning");
+          showErrorBanner("Il prezzo della quota deve essere un numero non negativo.");
           return false;
         }
       }
@@ -268,20 +272,35 @@ const EventFormModal = ({
                   Immagine di Copertina (opzionale)
                 </Label>
             
-                 <label
-                htmlFor="copertina"
-                className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
-              >
-                <span className="text-base font-medium text-black">Carica immagine di copertina</span>
-                <Input
-                   id="copertina"
-                  name="copertina"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleNewEventChange}
-                  className="hidden"
-                />
-              </label>
+                <label
+                  htmlFor="copertina"
+                  className="flex items-center justify-center border border-gray-400 rounded-lg p-6 cursor-pointer transition-colors hover:bg-gray-100"
+                >
+                  <span className="text-base font-medium text-black">Carica immagine di copertina</span>
+                  <Input
+                    id="copertina"
+                    name="copertina"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleNewEventChange}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Anteprima immagine di copertina */}
+                {coverImagePreview && (
+                  <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+                    <h4 className="font-semibold mb-2 text-sm text-gray-600">Anteprima immagine di copertina:</h4>
+                    <div className="relative inline-block">
+                      <img
+                        src={coverImagePreview}
+                        alt="Anteprima copertina"
+                        className="max-w-full max-h-48 object-contain rounded-lg border border-gray-300"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-sm text-gray-500 mt-1">
                   Seleziona un'immagine che rappresenti l'evento. Verrà salvata nel bucket doc/eventi/id_evento.
                 </p>
@@ -370,17 +389,37 @@ const EventFormModal = ({
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
+                disabled={isCreatingEvent || isUpdatingEvent}
+                className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Annulla
               </Button>
               <Button
                 type="submit"
-                className={`text-base font-semibold py-3 px-6 rounded-lg text-white shadow-lg transition-all duration-200 order-1 sm:order-2 ${
+                disabled={isCreatingEvent || isUpdatingEvent}
+                className={`text-base font-semibold py-3 px-6 rounded-lg text-white shadow-lg transition-all duration-200 order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isEditMode ? "bg-gray-800 hover:bg-gray-900" : "bg-black hover:bg-gray-800"
                 }`}
               >
-                {isEditMode ? "Aggiorna Evento" : "Crea Evento"}
+                {isEditMode ? (
+                  isUpdatingEvent ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Caricamento...
+                    </>
+                  ) : (
+                    "Aggiorna Evento"
+                  )
+                ) : (
+                  isCreatingEvent ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Caricamento...
+                    </>
+                  ) : (
+                    "Crea Evento"
+                  )
+                )}
               </Button>
             </div>
           </form>
@@ -391,19 +430,30 @@ const EventFormModal = ({
 }
 
 // Modal per l'upload di immagini
-const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, handleUploadImages, onClose }) => {
+const ImageUploadModal = ({ 
+  uploadTarget, 
+  uploadFiles, 
+  handleImageUploadFiles, 
+  handleUploadImages, 
+  onClose, 
+  showErrorBanner, 
+  isUploadingImages,
+  uploadProgress,
+  uploadedCount,
+  totalCount
+}) => {
   const validateImageUpload = () => {
     if (!uploadFiles || uploadFiles.length === 0) {
-      showNotification("Seleziona almeno un file immagine da caricare.", "warning")
+      showErrorBanner("Seleziona almeno un file immagine da caricare.")
       return false
     }
     for (const file of uploadFiles) {
       if (!file.type.startsWith("image/")) {
-        showNotification(`Il file '${file.name}' non è un'immagine valida.`, "warning")
+        showErrorBanner(`Il file '${file.name}' non è un'immagine valida.`)
         return false
       }
       if (file.size > 5 * 1024 * 1024) { // Esempio: limite di 5MB per immagine
-        showNotification(`Il file '${file.name}' supera la dimensione massima consentita (5MB).`, "warning")
+        showErrorBanner(`Il file '${file.name}' supera la dimensione massima consentita (5MB).`)
         return false
       }
     }
@@ -485,21 +535,48 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
               </div>
             )}
 
+            {/* Progress Bar durante l'upload */}
+            {isUploadingImages && (
+              <div className="p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50">
+                <p className="text-base font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 inline-block"></span>
+                  Caricamento in corso... ({uploadedCount}/{totalCount})
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                  <div 
+                    className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-blue-700 text-center">{Math.round(uploadProgress)}% completato</p>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4 border-t border-gray-300">
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
+                disabled={isUploadingImages}
+                className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Annulla
               </Button>
               <Button
                 type="submit"
-                disabled={uploadFiles.length === 0}
+                disabled={uploadFiles.length === 0 || isUploadingImages}
                 className="text-base font-semibold bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
               >
-                <UploadIcon className="mr-2 h-5 w-5" />
-                Carica Immagini
+                {isUploadingImages ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Caricamento...
+                  </>
+                ) : (
+                  <>
+                    <UploadIcon className="mr-2 h-5 w-5" />
+                    Carica Immagini
+                  </>
+                )}
               </Button>
             </div>
           </form>
@@ -510,18 +587,18 @@ const ImageUploadModal = ({ uploadTarget, uploadFiles, handleImageUploadFiles, h
 }
 
 // Modal per l'upload di fatture
-const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile, handleInvoiceUpload, onClose }) => {
+const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile, handleInvoiceUpload, onClose, showErrorBanner }) => {
   const validateInvoiceUpload = () => {
     if (!invoiceFile) {
-      showNotification("Seleziona un file fattura da caricare.", "warning")
+      showErrorBanner("Seleziona un file fattura da caricare.")
       return false
     }
     if (invoiceFile.type !== "application/pdf") {
-      showNotification("Il file selezionato non è un PDF valido.", "warning")
+      showErrorBanner("Il file selezionato non è un PDF valido.")
       return false
     }
     if (invoiceFile.size > 10 * 1024 * 1024) { // Esempio: limite di 10MB per PDF
-      showNotification("Il file fattura supera la dimensione massima consentita (10MB).", "warning")
+      showErrorBanner("Il file fattura supera la dimensione massima consentita (10MB).")
       return false
     }
     return true
@@ -990,6 +1067,62 @@ const RegistrationsModal = ({
     </div>
   );
 };
+// Modal di conferma personalizzato
+const ConfirmationModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "Conferma", cancelText = "Annulla", type = "warning" }) => {
+  if (!isOpen) return null;
+
+  const getIcon = () => {
+    switch (type) {
+      case "danger":
+        return <AlertCircleIcon className="w-12 h-12 text-red-500" />;
+      case "success":
+        return <CheckCircleIcon className="w-12 h-12 text-green-500" />;
+      default:
+        return <AlertCircleIcon className="w-12 h-12 text-yellow-500" />;
+    }
+  };
+
+  const getButtonColor = () => {
+    switch (type) {
+      case "danger":
+        return "bg-red-600 hover:bg-red-700";
+      case "success":
+        return "bg-green-600 hover:bg-green-700";
+      default:
+        return "bg-yellow-600 hover:bg-yellow-700";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+      <Card className="w-full max-w-md animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
+        <CardContent className="p-6 text-center">
+          <div className="mb-4 flex justify-center">
+            {getIcon()}
+          </div>
+          <h3 className="text-xl font-bold text-black mb-3">{title}</h3>
+          <p className="text-gray-700 mb-6 leading-relaxed">{message}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
+            >
+              {cancelText}
+            </Button>
+            <Button
+              onClick={onConfirm}
+              className={`text-base font-semibold text-white py-2 px-6 rounded-lg shadow-lg transition-all duration-200 order-1 sm:order-2 ${getButtonColor()}`}
+            >
+              {confirmText}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // Modal per visualizzare documenti
 const DocumentViewerModal = ({ currentDocumentUrl, currentDocumentType, onClose }) => (
   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
@@ -1056,7 +1189,7 @@ export default function AdminDashboard() {
         }
       } catch (error) {
         console.error("Errore durante il controllo sessione utente:", error.message)
-        showNotification("Errore di autenticazione. Riprova o accedi nuovamente.", "error")
+        // Non possiamo usare showErrorBanner qui perché il componente non è ancora montato
         router.push("/admin/login")
       }
     }
@@ -1125,6 +1258,29 @@ export default function AdminDashboard() {
   const [loadingImages, setLoadingImages] = useState(true)
   const [loadingRegistrations, setLoadingRegistrations] = useState(true)
 
+  // STATI PER BANNER DI NOTIFICA E CARICAMENTO
+  const [showBanner, setShowBanner] = useState(false)
+  const [bannerType, setBannerType] = useState('') // 'success', 'error'
+  const [bannerMessage, setBannerMessage] = useState('')
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false)
+  const [isUpdatingEvent, setIsUpdatingEvent] = useState(false)
+  const [isUploadingImages, setIsUploadingImages] = useState(false)
+  const [coverImagePreview, setCoverImagePreview] = useState(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadedCount, setUploadedCount] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
+
+  // STATI PER MODAL DI CONFERMA
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [confirmationConfig, setConfirmationConfig] = useState({
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    confirmText: 'Conferma',
+    cancelText: 'Annulla',
+    type: 'warning'
+  })
+
   // Verifica autenticazione amministratore
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn")
@@ -1132,6 +1288,47 @@ export default function AdminDashboard() {
       router.push("/admin/login")
     }
   }, [router])
+
+  // FUNZIONI PER LA GESTIONE DEI BANNER
+  const showSuccessBanner = (message) => {
+    setBannerType('success');
+    setBannerMessage(message);
+    setShowBanner(true);
+    // Auto-hide dopo 8 secondi per il successo
+    setTimeout(() => {
+      setShowBanner(false);
+    }, 8000);
+  };
+
+  const showErrorBanner = (message) => {
+    setBannerType('error');
+    setBannerMessage(message);
+    setShowBanner(true);
+    // Auto-hide dopo 10 secondi per gli errori
+    setTimeout(() => {
+      setShowBanner(false);
+    }, 10000);
+  };
+
+  const closeBanner = () => {
+    setShowBanner(false);
+  };
+
+  // FUNZIONE HELPER PER MODAL DI CONFERMA
+  const showConfirmationModal = (title, message, onConfirm, options = {}) => {
+    setConfirmationConfig({
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setShowConfirmation(false);
+      },
+      confirmText: options.confirmText || 'Conferma',
+      cancelText: options.cancelText || 'Annulla',
+      type: options.type || 'warning'
+    });
+    setShowConfirmation(true);
+  };
 
   // FUNZIONI DI FETCHING DATI
   const fetchEventsAndImages = useCallback(async () => {
@@ -1244,7 +1441,7 @@ export default function AdminDashboard() {
 
     } catch (error) {
       console.error("Errore nel caricamento eventi o immagini:", error)
-      showNotification("Si è verificato un errore durante il caricamento di eventi o immagini: " + error.message, "error")
+      showErrorBanner("Si è verificato un errore durante il caricamento di eventi o immagini: " + error.message)
     } finally {
       setLoadingEvents(false)
       setLoadingPastEvents(false)
@@ -1268,7 +1465,7 @@ export default function AdminDashboard() {
       router.push("/admin/login")
     } catch (error) {
       console.error("Errore durante il logout:", error.message)
-      showNotification("Si è verificato un errore durante il logout. Riprova.", "error")
+      showErrorBanner("Si è verificato un errore durante il logout. Riprova.")
     }
   }
 
@@ -1276,7 +1473,19 @@ export default function AdminDashboard() {
   const handleNewEventChange = (e) => {
     const { name, value, type, files } = e.target
     if (type === 'file' && name === 'copertina') {
-      setNewEvent((prev) => ({ ...prev, [name]: files[0] }))
+      const file = files[0]
+      setNewEvent((prev) => ({ ...prev, [name]: file }))
+      
+      // Crea anteprima dell'immagine
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setCoverImagePreview(e.target.result)
+        }
+        reader.readAsDataURL(file)
+      } else {
+        setCoverImagePreview(null)
+      }
     } else {
       setNewEvent((prev) => ({ ...prev, [name]: value }))
     }
@@ -1296,6 +1505,7 @@ export default function AdminDashboard() {
 
   const handleCreateEvent = async (e) => {
     // e.preventDefault() is already handled by EventFormModal's handleSubmit
+    setIsCreatingEvent(true)
     try {
       const quotesJson = {}
       // Filter out entirely empty quotas before sending to DB
@@ -1359,12 +1569,13 @@ export default function AdminDashboard() {
           }
         } catch (uploadError) {
           console.error("Errore durante l'upload della copertina:", uploadError)
-          showNotification("Evento creato ma errore nel caricamento della copertina: " + uploadError.message, "warning")
+          showErrorBanner("Evento creato ma errore nel caricamento della copertina: " + uploadError.message)
         }
       }
 
-      showNotification("Evento creato con successo!", "success")
+      showSuccessBanner("Evento creato con successo!")
       setShowNewEventForm(false)
+      setCoverImagePreview(null) // Reset anteprima
       setNewEvent({
         titolo: "",
         descrizione: "",
@@ -1379,7 +1590,9 @@ export default function AdminDashboard() {
       fetchEventsAndImages()
     } catch (error) {
       console.error("Errore nella creazione dell'evento:", error)
-      showNotification("Errore nella creazione dell'evento: " + error.message, "error")
+      showErrorBanner("Errore nella creazione dell'evento: " + error.message)
+    } finally {
+      setIsCreatingEvent(false)
     }
   }
 
@@ -1401,6 +1614,7 @@ export default function AdminDashboard() {
       quote: quotesArray,
       copertina: null, // Reset file input for editing
     })
+    setCoverImagePreview(null) // Reset anteprima per editing
     setShowEditEventForm(true)
   }
 
@@ -1408,6 +1622,7 @@ export default function AdminDashboard() {
     // e.preventDefault() is already handled by EventFormModal's handleSubmit
     if (!editingEvent) return
 
+    setIsUpdatingEvent(true)
     try {
       const quotesJson = {}
       newEvent.quote.forEach((q, index) => {
@@ -1443,7 +1658,7 @@ export default function AdminDashboard() {
           copertinePath = filePath
         } catch (uploadError) {
           console.error("Errore durante l'upload della copertina:", uploadError)
-          showNotification("Errore nel caricamento della nuova copertina: " + uploadError.message, "warning")
+          showErrorBanner("Errore nel caricamento della nuova copertina: " + uploadError.message)
         }
       }
 
@@ -1468,9 +1683,10 @@ export default function AdminDashboard() {
         throw error
       }
 
-      showNotification("Evento aggiornato con successo!", "success")
+      showSuccessBanner("Evento aggiornato con successo!")
       setShowEditEventForm(false)
       setEditingEvent(null)
+      setCoverImagePreview(null) // Reset anteprima
       setNewEvent({
         titolo: "",
         descrizione: "",
@@ -1485,155 +1701,178 @@ export default function AdminDashboard() {
       fetchEventsAndImages()
     } catch (error) {
       console.error("Errore nell'aggiornamento dell'evento:", error)
-      showNotification("Errore nell'aggiornamento dell'evento: " + error.message, "error")
+      showErrorBanner("Errore nell'aggiornamento dell'evento: " + error.message)
+    } finally {
+      setIsUpdatingEvent(false)
     }
   }
 
   const handleDeleteEvent = async (eventId) => {
-    if (!confirm("Sei sicuro di voler eliminare questo evento? Verranno eliminate anche tutte le sue iscrizioni e immagini associate.")) {
-      return
-    }
+    showConfirmationModal(
+      "Elimina Evento",
+      "Sei sicuro di voler eliminare questo evento? Verranno eliminate anche tutte le sue iscrizioni e immagini associate.",
+      async () => {
+        try {
+          let overallSuccess = true;
 
-    try {
-      let overallSuccess = true;
+          // Step 1: Delete associated registrations from guidatore table
+          try {
+            const { error: deleteGuidatoriError } = await supabase
+              .from("guidatore")
+              .delete()
+              .eq("id_evento_fk", eventId);
 
-      // Step 1: Delete associated registrations from guidatore table
-      try {
-        const { error: deleteGuidatoriError } = await supabase
-          .from("guidatore")
-          .delete()
-          .eq("id_evento_fk", eventId);
-
-        if (deleteGuidatoriError) {
-          throw new Error(`Errore durante l'eliminazione dei guidatori: ${deleteGuidatoriError.message}`);
-        }
-        console.log(`Guidatori per l'evento ${eventId} eliminati con successo.`);
-      } catch (error) {
-        overallSuccess = false;
-        console.error(`Errore critico durante l'eliminazione dei guidatori per l'evento ${eventId}:`, error.message);
-        showNotification(`Errore critico durante l'eliminazione dei guidatori. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "error");
-      }
-
-      // Step 2: Delete associated registrations from passeggero table
-      try {
-        const { error: deletePasseggeriError } = await supabase
-          .from("passeggero")
-          .delete()
-          .eq("id_evento_fk", eventId);
-
-        if (deletePasseggeriError) {
-          throw new Error(`Errore durante l'eliminazione dei passeggeri: ${deletePasseggeriError.message}`);
-        }
-        console.log(`Passeggeri per l'evento ${eventId} eliminati con successo.`);
-      } catch (error) {
-        overallSuccess = false;
-        console.error(`Errore critico durante l'eliminazione dei passeggeri per l'evento ${eventId}:`, error.message);
-        showNotification(`Errore critico durante l'eliminazione dei passeggeri. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "error");
-      }
-
-      // Step 3: Delete associated images from storage
-      try {
-        const { data: imagesList, error: listError } = await supabase.storage
-          .from("doc")
-          .list(`eventi/${eventId}`);
-
-        if (listError && listError.message !== "The resource was not found") { // Ignore if folder doesn't exist
-          console.warn(`Could not list images for event ${eventId}, might not exist or error occurred:`, listError.message);
-        } else if (imagesList && imagesList.length > 0) {
-          const imagePathsToDelete = imagesList
-            .filter(item => item.name !== ".emptyFolderPlaceholder")
-            .map(item => `eventi/${eventId}/${item.name}`);
-
-          if (imagePathsToDelete.length > 0) {
-            const { error: deleteImagesError } = await supabase.storage
-              .from("doc")
-              .remove(imagePathsToDelete);
-
-            if (deleteImagesError) {
-              throw new Error(`Errore durante l'eliminazione delle immagini dell'evento: ${deleteImagesError.message}`);
+            if (deleteGuidatoriError) {
+              throw new Error(`Errore durante l'eliminazione dei guidatori: ${deleteGuidatoriError.message}`);
             }
-            console.log(`Immagini per l'evento ${eventId} eliminate con successo.`);
+            console.log(`Guidatori per l'evento ${eventId} eliminati con successo.`);
+          } catch (error) {
+            overallSuccess = false;
+            console.error(`Errore critico durante l'eliminazione dei guidatori per l'evento ${eventId}:`, error.message);
+            showErrorBanner(`Errore critico durante l'eliminazione dei guidatori. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
           }
+
+          // Step 2: Delete associated registrations from passeggero table
+          try {
+            const { error: deletePasseggeriError } = await supabase
+              .from("passeggero")
+              .delete()
+              .eq("id_evento_fk", eventId);
+
+            if (deletePasseggeriError) {
+              throw new Error(`Errore durante l'eliminazione dei passeggeri: ${deletePasseggeriError.message}`);
+            }
+            console.log(`Passeggeri per l'evento ${eventId} eliminati con successo.`);
+          } catch (error) {
+            overallSuccess = false;
+            console.error(`Errore critico durante l'eliminazione dei passeggeri per l'evento ${eventId}:`, error.message);
+            showErrorBanner(`Errore critico durante l'eliminazione dei passeggeri. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
+          }
+
+          // Step 3: Delete associated images from storage
+          try {
+            const { data: imagesList, error: listError } = await supabase.storage
+              .from("doc")
+              .list(`eventi/${eventId}`);
+
+            if (listError && listError.message !== "The resource was not found") { // Ignore if folder doesn't exist
+              console.warn(`Could not list images for event ${eventId}, might not exist or error occurred:`, listError.message);
+            } else if (imagesList && imagesList.length > 0) {
+              const imagePathsToDelete = imagesList
+                .filter(item => item.name !== ".emptyFolderPlaceholder")
+                .map(item => `eventi/${eventId}/${item.name}`);
+
+              if (imagePathsToDelete.length > 0) {
+                const { error: deleteImagesError } = await supabase.storage
+                  .from("doc")
+                  .remove(imagePathsToDelete);
+
+                if (deleteImagesError) {
+                  throw new Error(`Errore durante l'eliminazione delle immagini dell'evento: ${deleteImagesError.message}`);
+                }
+                console.log(`Immagini per l'evento ${eventId} eliminate con successo.`);
+              }
+            }
+          } catch (error) {
+            overallSuccess = false;
+            console.error(`Errore durante l'eliminazione delle immagini per l'evento ${eventId}:`, error.message);
+            showErrorBanner(`Errore durante l'eliminazione delle immagini dell'evento. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
+          }
+
+          // Step 4: Delete the event itself
+          try {
+            const { error: deleteEventError } = await supabase
+              .from("evento")
+              .delete()
+              .eq("id", eventId)
+
+            if (deleteEventError) {
+              throw new Error(`Errore durante l'eliminazione dell'evento principale: ${deleteEventError.message}`);
+            }
+            console.log(`Evento ${eventId} eliminato con successo.`);
+          } catch (error) {
+            overallSuccess = false;
+            console.error(`Errore critico durante l'eliminazione dell'evento ${eventId}:`, error.message);
+            showErrorBanner(`Errore critico durante l'eliminazione dell'evento. Riprova. Dettagli: ${error.message}`);
+          }
+
+          if (overallSuccess) {
+            showSuccessBanner("Evento eliminato con successo, incluse iscrizioni e immagini associate!");
+          } else {
+            showErrorBanner("L'eliminazione dell'evento ha riscontrato alcuni problemi. Controlla i dettagli nel log della console.");
+          }
+
+          fetchEventsAndImages() // Refresh events after deletion
+        } catch (error) {
+          // This catch block would only be hit by synchronous errors or errors not caught by inner try-catches
+          console.error("Errore generale durante la gestione dell'eliminazione dell'evento:", error)
+          showErrorBanner("Si è verificato un errore inaspettato durante l'eliminazione dell'evento: " + error.message)
         }
-      } catch (error) {
-        overallSuccess = false;
-        console.error(`Errore durante l'eliminazione delle immagini per l'evento ${eventId}:`, error.message);
-        showNotification(`Errore durante l'eliminazione delle immagini dell'evento. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`, "warning");
+      },
+      {
+        confirmText: "Elimina",
+        cancelText: "Annulla",
+        type: "danger"
       }
-
-      // Step 4: Delete the event itself
-      try {
-        const { error: deleteEventError } = await supabase
-          .from("evento")
-          .delete()
-          .eq("id", eventId)
-
-        if (deleteEventError) {
-          throw new Error(`Errore durante l'eliminazione dell'evento principale: ${deleteEventError.message}`);
-        }
-        console.log(`Evento ${eventId} eliminato con successo.`);
-      } catch (error) {
-        overallSuccess = false;
-        console.error(`Errore critico durante l'eliminazione dell'evento ${eventId}:`, error.message);
-        showNotification(`Errore critico durante l'eliminazione dell'evento. Riprova. Dettagli: ${error.message}`, "error");
-      }
-
-      if (overallSuccess) {
-        showNotification("Evento eliminato con successo, incluse iscrizioni e immagini associate!", "success");
-      } else {
-        showNotification("L'eliminazione dell'evento ha riscontrato alcuni problemi. Controlla i dettagli nel log della console.", "warning");
-      }
-
-      fetchEventsAndImages() // Refresh events after deletion
-    } catch (error) {
-      // This catch block would only be hit by synchronous errors or errors not caught by inner try-catches
-      console.error("Errore generale durante la gestione dell'eliminazione dell'evento:", error)
-      showNotification("Si è verificato un errore inaspettato durante l'eliminazione dell'evento: " + error.message, "error")
-    }
+    );
   }
 
   const handleMarkAsPast = async (eventId) => {
-    if (!confirm("Sei sicuro di voler segnare questo evento come passato? L'evento verrà spostato nella sezione eventi passati.")) {
-      return
-    }
+    showConfirmationModal(
+      "Segna come Passato",
+      "Sei sicuro di voler segnare questo evento come passato? L'evento verrà spostato nella sezione eventi passati.",
+      async () => {
+        try {
+          const { error } = await supabase
+            .from("evento")
+            .update({ passato: true })
+            .eq("id", eventId)
 
-    try {
-      const { error } = await supabase
-        .from("evento")
-        .update({ passato: true })
-        .eq("id", eventId)
-
-      if (error) {
-        throw error
+          if (error) {
+            throw error
+          }
+          showSuccessBanner("Evento contrassegnato come passato!")
+          fetchEventsAndImages()
+        } catch (error) {
+          console.error("Errore nel contrassegnare l'evento come passato:", error)
+          showErrorBanner("Errore nel contrassegnare l'evento come passato: " + error.message)
+        }
+      },
+      {
+        confirmText: "Segna come Passato",
+        cancelText: "Annulla",
+        type: "warning"
       }
-      showNotification("Evento contrassegnato come passato!", "success")
-      fetchEventsAndImages()
-    } catch (error) {
-      console.error("Errore nel contrassegnare l'evento come passato:", error)
-      showNotification("Errore nel contrassegnare l'evento come passato: " + error.message, "error")
-    }
+    );
   }
 
   const handleRestoreToCurrent = async (eventId) => {
-    if (!confirm("Sei sicuro di voler ripristinare questo evento come corrente? L'evento verrà spostato nella sezione eventi correnti.")) {
-      return
-    }
+    showConfirmationModal(
+      "Ripristina come Corrente",
+      "Sei sicuro di voler ripristinare questo evento come corrente? L'evento verrà spostato nella sezione eventi correnti.",
+      async () => {
+        try {
+          const { error } = await supabase
+            .from("evento")
+            .update({ passato: false })
+            .eq("id", eventId)
 
-    try {
-      const { error } = await supabase
-        .from("evento")
-        .update({ passato: false })
-        .eq("id", eventId)
-
-      if (error) {
-        throw error
+          if (error) {
+            throw error
+          }
+          showSuccessBanner("Evento ripristinato come corrente!")
+          fetchEventsAndImages()
+        } catch (error) {
+          console.error("Errore nel ripristinare l'evento come corrente:", error)
+          showErrorBanner("Errore nel ripristinare l'evento come corrente: " + error.message)
+        }
+      },
+      {
+        confirmText: "Ripristina",
+        cancelText: "Annulla",
+        type: "success"
       }
-      showNotification("Evento ripristinato come corrente!", "success")
-      fetchEventsAndImages()
-    } catch (error) {
-      console.error("Errore nel ripristinare l'evento come corrente:", error)
-      showNotification("Errore nel ripristinare l'evento come corrente: " + error.message, "error")
-    }
+    );
   }
 
   // FUNZIONI DI GESTIONE IMMAGINI
@@ -1643,16 +1882,22 @@ export default function AdminDashboard() {
 
   const handleUploadImages = async () => {
     if (uploadFiles.length === 0) {
-      showNotification("Nessun file selezionato per il caricamento.", "warning");
+      showErrorBanner("Nessun file selezionato per il caricamento.");
       return;
     }
 
+    setIsUploadingImages(true);
+    setUploadProgress(0);
+    setUploadedCount(0);
+    setTotalCount(uploadFiles.length);
+    
     const uploadFolderPath = uploadTarget.type === "event" ? `eventi/${uploadTarget.eventId}` : "galleria";
     let successfulUploadsCount = 0;
     let failedUploadsCount = 0;
     const failedFiles = [];
 
-    for (const file of uploadFiles) {
+    for (let i = 0; i < uploadFiles.length; i++) {
+      const file = uploadFiles[i];
       try {
         const { data, error } = await supabase.storage
           .from("doc")
@@ -1701,61 +1946,78 @@ export default function AdminDashboard() {
         failedUploadsCount++;
         failedFiles.push(`${file.name} (${error.message})`);
       }
+      
+      // Aggiorna il progresso
+      const completed = i + 1;
+      setUploadedCount(completed);
+      setUploadProgress((completed / uploadFiles.length) * 100);
     }
 
     if (successfulUploadsCount === uploadFiles.length) {
-      showNotification("Tutte le immagini caricate con successo!", "success");
+      showSuccessBanner("Tutte le immagini caricate con successo!");
     } else if (successfulUploadsCount > 0) {
-      showNotification(`Caricamento completato con ${successfulUploadsCount} immagini caricate e ${failedUploadsCount} fallite. Dettagli: ${failedFiles.join(", ")}`, "warning");
+      showErrorBanner(`Caricamento completato con ${successfulUploadsCount} immagini caricate e ${failedUploadsCount} fallite. Dettagli: ${failedFiles.join(", ")}`);
     } else {
-      showNotification(`Nessuna immagine caricata. Tutti i caricamenti sono falliti. Dettagli: ${failedFiles.join(", ")}`, "error");
+      showErrorBanner(`Nessuna immagine caricata. Tutti i caricamenti sono falliti. Dettagli: ${failedFiles.join(", ")}`);
     }
 
     setShowImageUpload(false);
     setUploadFiles([]);
+    setUploadProgress(0);
+    setUploadedCount(0);
+    setTotalCount(0);
     fetchEventsAndImages(); // Refresh galleries
+    setIsUploadingImages(false);
   }
 
   const handleDeleteImage = async (imagePath, eventId = null) => {
-    if (!confirm("Sei sicuro di voler eliminare questa immagine?")) {
-      return;
-    }
-    try {
-      // Elimina il file dal storage
-      const { error } = await supabase.storage
-        .from("doc")
-        .remove([imagePath]);
-
-      if (error) {
-        throw error;
-      }
-
-      // Se l'immagine appartiene a un evento, elimina anche il record dalla tabella eventoimmagine
-      if (imagePath.startsWith("eventi/")) {
+    showConfirmationModal(
+      "Elimina Immagine",
+      "Sei sicuro di voler eliminare questa immagine?",
+      async () => {
         try {
-          const { error: dbError } = await supabase
-            .from("eventoimmagine")
-            .delete()
-            .eq("path", imagePath);
+          // Elimina il file dal storage
+          const { error } = await supabase.storage
+            .from("doc")
+            .remove([imagePath]);
 
-          if (dbError) {
-            console.error(`Errore nell'eliminazione del record dell'immagine dal database:`, dbError.message);
-            showNotification("Immagine eliminata dal storage ma errore nell'eliminazione dal database: " + dbError.message, "warning");
-          } else {
-            console.log(`Record dell'immagine eliminato dal database con successo.`);
+          if (error) {
+            throw error;
           }
-        } catch (dbError) {
-          console.error(`Errore nell'eliminazione del record dell'immagine:`, dbError.message);
-          showNotification("Immagine eliminata dal storage ma errore nell'eliminazione dal database: " + dbError.message, "warning");
-        }
-      }
 
-      showNotification("Immagine eliminata con successo!", "success");
-      fetchEventsAndImages(); // Refresh galleries
-    } catch (error) {
-      console.error("Errore nell'eliminazione dell'immagine:", error);
-      showNotification("Errore nell'eliminazione dell'immagine: " + error.message, "error");
-    }
+          // Se l'immagine appartiene a un evento, elimina anche il record dalla tabella eventoimmagine
+          if (imagePath.startsWith("eventi/")) {
+            try {
+              const { error: dbError } = await supabase
+                .from("eventoimmagine")
+                .delete()
+                .eq("path", imagePath);
+
+              if (dbError) {
+                console.error(`Errore nell'eliminazione del record dell'immagine dal database:`, dbError.message);
+                showErrorBanner("Immagine eliminata dal storage ma errore nell'eliminazione dal database: " + dbError.message);
+              } else {
+                console.log(`Record dell'immagine eliminato dal database con successo.`);
+              }
+            } catch (dbError) {
+              console.error(`Errore nell'eliminazione del record dell'immagine:`, dbError.message);
+              showErrorBanner("Immagine eliminata dal storage ma errore nell'eliminazione dal database: " + dbError.message);
+            }
+          }
+
+          showSuccessBanner("Immagine eliminata con successo!");
+          fetchEventsAndImages(); // Refresh galleries
+        } catch (error) {
+          console.error("Errore nell'eliminazione dell'immagine:", error);
+          showErrorBanner("Errore nell'eliminazione dell'immagine: " + error.message);
+        }
+      },
+      {
+        confirmText: "Elimina",
+        cancelText: "Annulla",
+        type: "danger"
+      }
+    );
   }
 
   // FUNZIONI DI GESTIONE ISCRIZIONI - MODIFICATA PER LA NUOVA STRUTTURA
@@ -1811,7 +2073,7 @@ export default function AdminDashboard() {
       setRegistrations(allRegistrations)
     } catch (error) {
       console.error("Errore nel recupero delle iscrizioni:", error)
-      showNotification("Errore nel recupero delle iscrizioni: " + error.message, "error")
+      showErrorBanner("Errore nel recupero delle iscrizioni: " + error.message)
       setRegistrations([])
     } finally {
       setLoadingRegistrations(false)
@@ -2226,11 +2488,11 @@ yPos += 8
     }
     
     doc.save(`modulo_iscrizione_${registration.nome}_${registration.cognome}.pdf`)
-    showNotification("PDF generato con successo!", "success")
+    showSuccessBanner("PDF generato con successo!")
     
   } catch (error) {
     console.error("Errore durante la generazione del PDF:", error)
-    showNotification("Errore durante la generazione del PDF: " + error.message, "error")
+    showErrorBanner("Errore durante la generazione del PDF: " + error.message)
   }
 }
   const handleOpenInvoiceUpload = (registration) => {
@@ -2240,7 +2502,7 @@ yPos += 8
 
   const handleInvoiceUpload = async () => {
     if (!invoiceFile || !selectedRegistration) {
-      showNotification("File fattura o registrazione non selezionati.", "warning");
+      showErrorBanner("File fattura o registrazione non selezionati.");
       return;
     }
   
@@ -2316,7 +2578,7 @@ yPos += 8
         throw new Error(emailResult?.error || "Errore durante l'invio dell'email");
       }
   
-      showNotification("Fattura inviata via email con successo!", "success");
+      showSuccessBanner("Fattura inviata via email con successo!");
       setShowInvoiceUpload(false);
       setInvoiceFile(null);
       setSelectedRegistration(null);
@@ -2335,7 +2597,7 @@ yPos += 8
   
     } catch (error) {
       console.error("Errore invio fattura:", error);
-      showNotification("Errore: " + error.message, "error");
+      showErrorBanner("Errore: " + error.message);
     }
   };
   
@@ -2344,7 +2606,7 @@ yPos += 8
 
   const openDocumentInModal = async (documentPath, type, isPassenger = false) => {
     if (!documentPath) {
-      showNotification("URL del documento non valido.", "warning");
+      showErrorBanner("URL del documento non valido.");
       return;
     }
 
@@ -2359,7 +2621,7 @@ yPos += 8
       setShowDocumentModal(true);
     } catch (error) {
       console.error("Errore nell'apertura del documento:", error);
-      showNotification("Errore nell'apertura del documento: " + error.message, "error");
+      showErrorBanner("Errore nell'apertura del documento: " + error.message);
     }
   };
 
@@ -2388,8 +2650,13 @@ yPos += 8
           removeQuota={removeQuota}
           updateQuota={updateQuota}
           handleCreateEvent={handleCreateEvent}
+          showErrorBanner={showErrorBanner}
+          isCreatingEvent={isCreatingEvent}
+          isUpdatingEvent={false}
+          coverImagePreview={coverImagePreview}
           onClose={() => {
             setShowNewEventForm(false)
+            setCoverImagePreview(null) // Reset anteprima alla chiusura
             setNewEvent({
               titolo: "",
               descrizione: "",
@@ -2415,9 +2682,14 @@ yPos += 8
           removeQuota={removeQuota}
           updateQuota={updateQuota}
           handleUpdateEvent={handleUpdateEvent}
+          showErrorBanner={showErrorBanner}
+          isCreatingEvent={false}
+          isUpdatingEvent={isUpdatingEvent}
+          coverImagePreview={coverImagePreview}
           onClose={() => {
             setShowEditEventForm(false)
             setEditingEvent(null)
+            setCoverImagePreview(null) // Reset anteprima alla chiusura
             setNewEvent({
               titolo: "",
               descrizione: "",
@@ -2451,10 +2723,18 @@ yPos += 8
           uploadFiles={uploadFiles}
           handleImageUploadFiles={handleImageUploadFiles}
           handleUploadImages={handleUploadImages}
+          showErrorBanner={showErrorBanner}
+          isUploadingImages={isUploadingImages}
+          uploadProgress={uploadProgress}
+          uploadedCount={uploadedCount}
+          totalCount={totalCount}
           onClose={() => {
             setShowImageUpload(false)
             setUploadFiles([])
             setUploadTarget({ type: "general", eventId: null })
+            setUploadProgress(0)
+            setUploadedCount(0)
+            setTotalCount(0)
           }}
         />
       )}
@@ -2465,6 +2745,7 @@ yPos += 8
           invoiceFile={invoiceFile}
           setInvoiceFile={setInvoiceFile}
           handleInvoiceUpload={handleInvoiceUpload}
+          showErrorBanner={showErrorBanner}
           onClose={() => {
             setShowInvoiceUpload(false)
             setSelectedRegistration(null)
@@ -2480,6 +2761,18 @@ yPos += 8
           onClose={() => setShowDocumentModal(false)}
         />
       )}
+
+      {/* Modal di Conferma */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        title={confirmationConfig.title}
+        message={confirmationConfig.message}
+        onConfirm={confirmationConfig.onConfirm}
+        onCancel={() => setShowConfirmation(false)}
+        confirmText={confirmationConfig.confirmText}
+        cancelText={confirmationConfig.cancelText}
+        type={confirmationConfig.type}
+      />
 
       {/* CSS personalizzato per animazioni */}
       <style jsx>{`
@@ -2516,6 +2809,41 @@ yPos += 8
           overflow: hidden;
         }
       `}</style>
+
+      {/* BANNER DI NOTIFICA */}
+      {showBanner && (
+        <div className={`fixed top-0 left-0 right-0 z-[9999] p-6 text-center font-bold text-white shadow-2xl transform transition-all duration-700 ease-in-out border-b-4 ${
+          bannerType === 'success' 
+            ? 'bg-gradient-to-r from-green-400 via-green-500 to-green-600 border-green-300' 
+            : 'bg-gradient-to-r from-red-400 via-red-500 to-red-600 border-red-300'
+        }`} style={{ 
+          boxShadow: bannerType === 'success' 
+            ? '0 10px 25px rgba(34, 197, 94, 0.4)' 
+            : '0 10px 25px rgba(239, 68, 68, 0.4)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-black shadow-lg ${
+                bannerType === 'success' ? 'bg-white text-green-600' : 'bg-white text-red-600'
+              }`}>
+                {bannerType === 'success' ? '✓' : '⚠'}
+              </div>
+              <span className="text-base md:text-lg whitespace-pre-line font-semibold">{bannerMessage}</span>
+            </div>
+            <button
+              onClick={closeBanner}
+              className="ml-4 text-white hover:text-gray-200 transition-colors p-2 rounded-full hover:bg-white/20"
+            >
+              <XIcon className="w-6 h-6" />
+            </button>
+          </div>
+          {/* Barra di progresso per auto-dismiss */}
+          <div className={`absolute bottom-0 left-0 h-1 ${
+            bannerType === 'success' ? 'bg-green-300' : 'bg-red-300'
+          } animate-progress`}></div>
+        </div>
+      )}
 
       <Card className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-6 lg:p-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
