@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabaseClient";
-import { encrypt } from "@/lib/crypto";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -23,14 +22,13 @@ export default async function handler(req, res) {
     // Upload documento fronte
     if (documentoFronte) {
       const fronteFileName = `${codiceFiscale.toUpperCase()}_${Date.now()}_fronte.${documentoFronte.name.split(".").pop()}`;
-      const encryptedFronteFileName = encrypt(fronteFileName);
       
       // Converti base64 in buffer se necessario
       const fronteBuffer = Buffer.from(documentoFronte.data, 'base64');
       
       const { data: docFronte, error: uploadFronteErr } = await supabase.storage
         .from("partecipanti")
-        .upload(`guidatori/${encryptedFronteFileName}`, fronteBuffer, {
+        .upload(`guidatori/${fronteFileName}`, fronteBuffer, {
           cacheControl: "3600",
           upsert: false,
           contentType: documentoFronte.type || 'image/jpeg'
@@ -49,13 +47,13 @@ export default async function handler(req, res) {
     // Upload documento retro
     if (documentoRetro) {
       const retroFileName = `${codiceFiscale.toUpperCase()}_${Date.now()}_retro.${documentoRetro.name.split(".").pop()}`;
-      const encryptedRetroFileName = encrypt(retroFileName);
+      
       // Converti base64 in buffer se necessario
       const retroBuffer = Buffer.from(documentoRetro.data, 'base64');
       
       const { data: docRetro, error: uploadRetroErr } = await supabase.storage
         .from("partecipanti")
-        .upload(`guidatori/${encryptedRetroFileName}`, retroBuffer, {
+        .upload(`guidatori/${retroFileName}`, retroBuffer, {
           cacheControl: "3600",
           upsert: false,
           contentType: documentoRetro.type || 'image/jpeg'

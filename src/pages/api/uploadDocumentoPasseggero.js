@@ -23,14 +23,13 @@ export default async function handler(req, res) {
     if (documentoFronte) {
       const estensioneFronte = documentoFronte.name.split(".").pop();
       const fronteFileName = `${codiceFiscale.toUpperCase()}_${Date.now()}_fronte.${estensioneFronte}`;
-      const encryptedFronteFileName = encrypt(fronteFileName);
       
       // Converti base64 in buffer se necessario
       const fronteBuffer = Buffer.from(documentoFronte.data, 'base64');
       
       const { data: docFronte, error: pFronteErr } = await supabase.storage
         .from("partecipanti")
-        .upload(`passeggeri/${encryptedFronteFileName}`, fronteBuffer, {
+        .upload(`passeggeri/${fronteFileName}`, fronteBuffer, {
           cacheControl: "3600",
           upsert: false,
           contentType: documentoFronte.type || 'image/jpeg'
@@ -50,13 +49,13 @@ export default async function handler(req, res) {
     if (documentoRetro) {
       const estensioneRetro = documentoRetro.name.split(".").pop();
       const retroFileName = `${codiceFiscale.toUpperCase()}_${Date.now()}_retro.${estensioneRetro}`;
-      const encryptedRetroFileName = encrypt(retroFileName);
+      
       // Converti base64 in buffer se necessario
       const retroBuffer = Buffer.from(documentoRetro.data, 'base64');
       
       const { data: docRetro, error: pRetroErr } = await supabase.storage
         .from("partecipanti")
-        .upload(`passeggeri/${encryptedRetroFileName}`, retroBuffer, {
+        .upload(`passeggeri/${retroFileName}`, retroBuffer, {
           cacheControl: "3600",
           upsert: false,
           contentType: documentoRetro.type || 'image/jpeg'
