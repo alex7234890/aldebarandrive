@@ -271,7 +271,7 @@ export default function Home() {
                   ".webp",
                 ];
                 const lower = evento.copertina.toLowerCase();
-                
+              
                 // Verifica se il path della copertina è valido
                 if (
                   validExtensions.some((ext) => lower.endsWith(ext)) &&
