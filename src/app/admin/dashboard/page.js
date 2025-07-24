@@ -1993,7 +1993,7 @@ export default function AdminDashboard() {
           let bucket;
           let fullPath;
           
-          if (eventId || imagePath.includes('/')) {
+          if (eventId) {
             // È un'immagine di evento: bucket "eventi"
             bucket = "eventi";
             fullPath = imagePath; // Il path dovrebbe già essere nel formato: id_evento/immagine.jpg
