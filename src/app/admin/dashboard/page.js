@@ -1412,7 +1412,7 @@ export default function AdminDashboard() {
                 imagesData.map(async (imageRecord) => {
                   try {
                     const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                      .from("doc")
+                      .from("eventi")
                       .createSignedUrl(imageRecord.path, 3600)
                     if (signedUrlError) {
                       throw new Error(`Errore generazione URL firmato per ${imageRecord.path}: ${signedUrlError.message}`)
@@ -2001,12 +2001,12 @@ export default function AdminDashboard() {
           let bucket;
           let relativePath;
           let dbPath; // Path da usare per la ricerca nel database
-          
-          if (imagePath.startsWith("eventi/")) {
+          if (eventId != null) {
             // È un'immagine di evento: eventi/idevento/immagine.jpg
+            alert(imagePath)
             bucket = "eventi";
-            relativePath = imagePath.substring(7); // Rimuove "eventi/" per ottenere idevento/immagine.jpg
-            dbPath = relativePath; // Il DB dovrebbe contenere idevento/immagine.jpg
+            dbPath = imagePath; // Il DB dovrebbe contenere idevento/immagine.jpg
+            relativePath = imagePath;
           } else if (imagePath.startsWith("galleria/")) {
             // È un'immagine di galleria: galleria/immagine.jpg  
             bucket = "galleria";
@@ -3267,7 +3267,7 @@ yPos += 8
                             <Button
                               variant="destructive"
                               size="icon"
-                              onClick={() => handleDeleteImage(image.path, image.eventId)}
+                              onClick={() => handleDeleteImage(image.path, event.id)}
                               className="bg-red-600 hover:bg-red-700 text-white rounded-full p-2"
                             >
                               <TrashIcon className="h-5 w-5" />
