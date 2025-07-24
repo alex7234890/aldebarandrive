@@ -318,8 +318,8 @@ export default function Home() {
       setLoadingGalleria(true);
       try {
         const { data, error } = await supabase.storage
-          .from("doc")
-          .list("galleria", {
+          .from("galleria")
+          .list("", {
             limit: 100,
             offset: 0,
             sortBy: { column: "name", order: "asc" },
@@ -347,8 +347,8 @@ export default function Home() {
         const urls = await Promise.all(
           validImageFiles.map(async ({ name }) => {
             const { data: signedUrl, error: urlError } = await supabase.storage
-              .from("doc")
-              .createSignedUrl(`galleria/${name}`, 60 * 60);
+              .from("galleria")
+              .createSignedUrl(name, 60 * 60);
             if (urlError) {
               console.error(`Errore URL per ${name}:`, urlError);
               return null;
@@ -1640,91 +1640,153 @@ export default function Home() {
         </section>
 
         {/* MODAL PROGRAMMA EVENTO */}
-        {showProgramModal && selectedEvent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">
-                  Programma - {selectedEvent?.titolo}
-                </h2>
-                <button
-                  onClick={() => setShowProgramModal(false)}
-                  className="text-gray-500 hover:text-black"
-                >
-                  <XIcon className="w-6 h-6" />
-                </button>
-              </div>
-              <div className="p-6">
-                <div className="space-y-6">
-                  {selectedEvent.programma ? (
-                    selectedEvent.programma.split("\n").map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
-                      >
-                        <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold">
-                          {index + 1}
+{/* MODAL PROGRAMMA EVENTO */}
+{showProgramModal && selectedEvent && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-20">
+        <h2 className="text-2xl font-bold text-black">
+          Programma - {selectedEvent?.titolo}
+        </h2>
+        <button
+          onClick={() => setShowProgramModal(false)}
+          className="text-gray-500 hover:text-black"
+        >
+          <XIcon className="w-6 h-6" />
+        </button>
+      </div>
+      <div className="p-6">
+        <div className="space-y-8">
+          {selectedEvent.programma ? (
+            (() => {
+              // Parsing del programma
+              const lines = selectedEvent.programma.split('\n').filter(line => line.trim());
+              const days = [];
+              let currentDay = null;
+              
+              lines.forEach(line => {
+                const trimmedLine = line.trim();
+                
+                // Controlla se la riga è un giorno (non contiene orario)
+                if (!trimmedLine.match(/^\d{1,2}[:\.]?\d{0,2}\s*[-–—]\s*/)) {
+                  // È un nuovo giorno
+                  currentDay = {
+                    day: trimmedLine,
+                    events: []
+                  };
+                  days.push(currentDay);
+                } else if (currentDay) {
+                  // È un evento con orario
+                  const match = trimmedLine.match(/^(\d{1,2}[:\.]?\d{0,2})\s*[-–—]\s*(.+)$/);
+                  if (match) {
+                    currentDay.events.push({
+                      time: match[1],
+                      description: match[2]
+                    });
+                  }
+                }
+              });
+              
+              return days.map((day, dayIndex) => (
+                <div key={dayIndex} className="border-l-4 border-black pl-6 relative">
+                  {/* Pallino indicatore */}
+                  <div className="absolute -left-3 top-2 w-6 h-6 bg-black rounded-full flex items-center justify-center z-10">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  
+                  {/* Nome del giorno */}
+                  <h3 className="text-2xl font-bold text-black mb-6 uppercase tracking-wide">
+                    {day.day}
+                  </h3>
+                  
+                  {/* Eventi del giorno */}
+                  <div className="space-y-4 ml-2">
+                    {day.events.map((event, eventIndex) => (
+                      <div key={eventIndex} className="flex items-start gap-4">
+                        <div className="bg-gray-100 px-3 py-1 rounded-full min-w-fit">
+                          <span className="text-sm font-bold text-gray-800">
+                            {event.time}
+                          </span>
                         </div>
-                        <p className="text-gray-800 flex-1">{item}</p>
+                        <p className="text-gray-700 leading-relaxed pt-1">
+                          {event.description}
+                        </p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 mb-4">
-                        Programma in fase di definizione
-                      </p>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            1
-                          </div>
-                          <p className="text-gray-600 flex-1">
-                            Ritrovo e registrazione partecipanti
-                          </p>
-                        </div>
-                        <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            2
-                          </div>
-                          <p className="text-gray-600 flex-1">
-                            Briefing e presentazione del percorso
-                          </p>
-                        </div>
-                        <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            3
-                          </div>
-                          <p className="text-gray-600 flex-1">
-                            Partenza e tour guidato
-                          </p>
-                        </div>
-                        <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                            4
-                          </div>
-                          <p className="text-gray-600 flex-1">
-                            Pranzo e momento conviviale
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
-                <div className="mt-8 pt-6 border-t">
-                  <Button
-                    onClick={() => {
-                      setShowProgramModal(false);
-                      handleIscriviti(selectedEvent);
-                    }}
-                    className="w-full bg-black text-white hover:bg-gray-800 py-3 font-semibold text-lg"
-                  >
-                    Iscriviti a questo Evento
-                  </Button>
+              ));
+            })()
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-8 text-lg">
+                Programma in fase di definizione
+              </p>
+              
+              {/* Programma placeholder migliorato */}
+              <div className="border-l-4 border-gray-300 pl-6 relative">
+                <div className="absolute -left-3 top-2 w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center z-10">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                
+                <h3 className="text-2xl font-bold text-gray-500 mb-6 uppercase tracking-wide">
+                  GIORNO DELL'EVENTO
+                </h3>
+                
+                <div className="space-y-4 ml-2">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-gray-100 px-3 py-1 rounded-full min-w-fit">
+                      <span className="text-sm font-bold text-gray-600">09:00</span>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed pt-1">
+                      Ritrovo e registrazione partecipanti
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="bg-gray-100 px-3 py-1 rounded-full min-w-fit">
+                      <span className="text-sm font-bold text-gray-600">09:30</span>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed pt-1">
+                      Briefing e presentazione del percorso
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="bg-gray-100 px-3 py-1 rounded-full min-w-fit">
+                      <span className="text-sm font-bold text-gray-600">10:00</span>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed pt-1">
+                      Partenza e tour guidato
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="bg-gray-100 px-3 py-1 rounded-full min-w-fit">
+                      <span className="text-sm font-bold text-gray-600">12:30</span>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed pt-1">
+                      Pranzo e momento conviviale
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+        
+        <div className="mt-8 pt-6 border-t">
+          <Button
+            onClick={() => {
+              setShowProgramModal(false);
+              handleIscriviti(selectedEvent);
+            }}
+            className="w-full bg-black text-white hover:bg-gray-800 py-3 font-semibold text-lg"
+          >
+            Iscriviti a questo Evento
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* MODAL FORM ISCRIZIONE MIGLIORATO */}
         {showForm && (
