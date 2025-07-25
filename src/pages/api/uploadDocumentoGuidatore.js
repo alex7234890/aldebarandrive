@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
+import crypto from 'crypto';
+
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -21,7 +23,9 @@ export default async function handler(req, res) {
 
     // Upload documento fronte
     if (documentoFronte) {
-      const fronteFileName = `${codiceFiscale.toUpperCase()}_${Date.now()}_fronte.${documentoFronte.name.split(".").pop()}`;
+
+      const estensioneFronte = documentoFronte.name.split('.').pop();
+      const fronteFileName = `${crypto.randomUUID()}_fronte.${estensioneFronte}`;
       
       // Converti base64 in buffer se necessario
       const fronteBuffer = Buffer.from(documentoFronte.data, 'base64');
@@ -46,7 +50,9 @@ export default async function handler(req, res) {
 
     // Upload documento retro
     if (documentoRetro) {
-      const retroFileName = `${codiceFiscale.toUpperCase()}_${Date.now()}_retro.${documentoRetro.name.split(".").pop()}`;
+
+      const estensioneRetro = documentoRetro.name.split('.').pop();
+      const retroFileName = `${crypto.randomUUID()}_retro.${estensioneRetro}`;
       
       // Converti base64 in buffer se necessario
       const retroBuffer = Buffer.from(documentoRetro.data, 'base64');

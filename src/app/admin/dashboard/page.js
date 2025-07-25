@@ -45,6 +45,7 @@ import jsPDF from "jspdf"
 import ReactMarkdown from 'react-markdown';
 import { supabase } from "@/lib/supabaseClient"
 
+
 // Helper per mostrare notifiche all'utente - RIMOSSO, ora usiamo i banner
 
 // Modal per nuovo/modifica evento
@@ -1724,59 +1725,71 @@ export default function AdminDashboard() {
       async () => {
         try {
           let overallSuccess = true;
-
-          // Step 1: Delete associated registrations from guidatore table
+  
+          // Step 1: Delete associated registrations from guidatore table via API
           try {
-            const { error: deleteGuidatoriError } = await supabase
-              .from("guidatore")
-              .delete()
-              .eq("id_evento_fk", eventId);
-
-            if (deleteGuidatoriError) {
-              throw new Error(`Errore durante l'eliminazione dei guidatori: ${deleteGuidatoriError.message}`);
+            const deleteGuidatoriResponse = await fetch("/api/eliminaGuidatore", {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ eventId }),
+            });
+  
+            if (!deleteGuidatoriResponse.ok) {
+              const error = await deleteGuidatoriResponse.text();
+              throw new Error(`Errore durante l'eliminazione dei guidatori: ${error}`);
             }
-            console.log(`Guidatori per l'evento ${eventId} eliminati con successo.`);
+  
+            const guidatoriResult = await deleteGuidatoriResponse.json();
+            console.log(`Guidatori per l'evento ${eventId} eliminati con successo.`, guidatoriResult);
           } catch (error) {
             overallSuccess = false;
             console.error(`Errore critico durante l'eliminazione dei guidatori per l'evento ${eventId}:`, error.message);
             showErrorBanner(`Errore critico durante l'eliminazione dei guidatori. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
           }
-
-          // Step 2: Delete associated registrations from passeggero table
+  
+          // Step 2: Delete associated registrations from passeggero table via API
           try {
-            const { error: deletePasseggeriError } = await supabase
-              .from("passeggero")
-              .delete()
-              .eq("id_evento_fk", eventId);
-
-            if (deletePasseggeriError) {
-              throw new Error(`Errore durante l'eliminazione dei passeggeri: ${deletePasseggeriError.message}`);
+            const deletePasseggeriResponse = await fetch("/api/eliminaPasseggero", {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ eventId }),
+            });
+  
+            if (!deletePasseggeriResponse.ok) {
+              const error = await deletePasseggeriResponse.text();
+              throw new Error(`Errore durante l'eliminazione dei passeggeri: ${error}`);
             }
-            console.log(`Passeggeri per l'evento ${eventId} eliminati con successo.`);
+  
+            const passeggeriResult = await deletePasseggeriResponse.json();
+            console.log(`Passeggeri per l'evento ${eventId} eliminati con successo.`, passeggeriResult);
           } catch (error) {
             overallSuccess = false;
             console.error(`Errore critico durante l'eliminazione dei passeggeri per l'evento ${eventId}:`, error.message);
             showErrorBanner(`Errore critico durante l'eliminazione dei passeggeri. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
           }
-
-          // Step 3: Delete associated images from storage
+  
+          /* Step 3: Delete associated images from storage (mantengo la logica esistente)
           try {
             const { data: imagesList, error: listError } = await supabase.storage
               .from("doc")
               .list(`eventi/${eventId}`);
-
+  
             if (listError && listError.message !== "The resource was not found") { // Ignore if folder doesn't exist
               console.warn(`Could not list images for event ${eventId}, might not exist or error occurred:`, listError.message);
             } else if (imagesList && imagesList.length > 0) {
               const imagePathsToDelete = imagesList
                 .filter(item => item.name !== ".emptyFolderPlaceholder")
                 .map(item => `eventi/${eventId}/${item.name}`);
-
+  
               if (imagePathsToDelete.length > 0) {
                 const { error: deleteImagesError } = await supabase.storage
                   .from("doc")
                   .remove(imagePathsToDelete);
-
+  
                 if (deleteImagesError) {
                   throw new Error(`Errore durante l'eliminazione delle immagini dell'evento: ${deleteImagesError.message}`);
                 }
@@ -1787,15 +1800,15 @@ export default function AdminDashboard() {
             overallSuccess = false;
             console.error(`Errore durante l'eliminazione delle immagini per l'evento ${eventId}:`, error.message);
             showErrorBanner(`Errore durante l'eliminazione delle immagini dell'evento. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
-          }
-
-          // Step 4: Delete the event itself
+          }*/
+  
+          // Step 4: Delete the event itself (mantengo la logica esistente)
           try {
             const { error: deleteEventError } = await supabase
               .from("evento")
               .delete()
               .eq("id", eventId)
-
+  
             if (deleteEventError) {
               throw new Error(`Errore durante l'eliminazione dell'evento principale: ${deleteEventError.message}`);
             }
@@ -1805,13 +1818,13 @@ export default function AdminDashboard() {
             console.error(`Errore critico durante l'eliminazione dell'evento ${eventId}:`, error.message);
             showErrorBanner(`Errore critico durante l'eliminazione dell'evento. Riprova. Dettagli: ${error.message}`);
           }
-
+  
           if (overallSuccess) {
-            showSuccessBanner("Evento eliminato con successo, incluse iscrizioni e immagini associate!");
+            showSuccessBanner("Evento eliminato con successo, incluse iscrizioni, documenti e immagini associate!");
           } else {
             showErrorBanner("L'eliminazione dell'evento ha riscontrato alcuni problemi. Controlla i dettagli nel log della console.");
           }
-
+  
           fetchEventsAndImages() // Refresh events after deletion
         } catch (error) {
           // This catch block would only be hit by synchronous errors or errors not caught by inner try-catches
@@ -1825,7 +1838,7 @@ export default function AdminDashboard() {
         type: "danger"
       }
     );
-  }
+  };
 
   const handleMarkAsPast = async (eventId) => {
     showConfirmationModal(
@@ -2059,65 +2072,162 @@ export default function AdminDashboard() {
     );
   };
 
-  // FUNZIONI DI GESTIONE ISCRIZIONI - MODIFICATA PER LA NUOVA STRUTTURA
-  const fetchRegistrations = useCallback(async (eventId) => {
-    setLoadingRegistrations(true)
-    try {
-      // Fetch guidatori per l'evento
-      const { data: guidatoriData, error: guidatoriError } = await supabase
-        .from("guidatore")
-        .select("*")
-        .eq("id_evento_fk", eventId)
+// Funzione frontend completa e aggiornata che usa le nuove API
 
-      if (guidatoriError) {
-        throw guidatoriError
+// Funzione frontend - Le chiamate sono automaticamente autenticate!
+
+const fetchRegistrations = useCallback(async (eventId) => {
+  setLoadingRegistrations(true);
+
+  try {
+    // 🔐 Ottieni sessione corrente e token
+    let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
+      throw new Error('Sessione non valida. Effettua nuovamente il login.');
+    }
+
+    let token = session.access_token;
+
+    // 1. Recupera tutti i guidatori
+    let guidatoriResponse = await fetch('/api/recuperaGuidatori', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ eventId })
+    });
+
+    // 🔄 Se token scaduto, prova refresh
+    if (guidatoriResponse.status === 401) {
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+
+      if (refreshError || !refreshData?.session) {
+        throw new Error('Sessione scaduta. Effettua nuovamente il login.');
       }
 
-      // Per ogni guidatore, fetch i passeggeri associati
-      const registrationsWithPassengers = await Promise.all(
-        guidatoriData.map(async (guidatore) => {
-          const { data: passeggeriData, error: passeggeriError } = await supabase
-            .from("passeggero")
-            .select("*")
-            .eq("id_guidatore_fk", guidatore.id)
+      token = refreshData.session.access_token;
 
-          if (passeggeriError) {
-            console.warn(`Errore nel recupero passeggeri per guidatore ${guidatore.id}:`, passeggeriError.message)
+      guidatoriResponse = await fetch('/api/recuperaGuidatori', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ eventId })
+      });
+
+      if (guidatoriResponse.status === 401) {
+        throw new Error('Autenticazione fallita anche dopo refresh token.');
+      }
+    }
+
+    if (!guidatoriResponse.ok) {
+      const errorData = await guidatoriResponse.json();
+      throw new Error(errorData.error || 'Errore nel recupero guidatori');
+    }
+
+    const guidatoriResult = await guidatoriResponse.json();
+
+    if (!guidatoriResult.success) {
+      throw new Error(guidatoriResult.error || 'Errore nel recupero guidatori');
+    }
+
+    // 2. Recupera passeggeri per ogni guidatore
+    const registrationsWithPassengers = await Promise.all(
+      guidatoriResult.data.map(async (guidatore) => {
+        try {
+          const passeggeriResponse = await fetch('/api/recuperaPasseggeri', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ 
+              eventId, 
+              guidatoreId: guidatore.id 
+            })
+          });
+
+          if (passeggeriResponse.status === 401) {
+            throw new Error('Sessione scaduta durante il recupero passeggeri.');
           }
+
+          if (!passeggeriResponse.ok) {
+            console.warn(`Errore nel recupero passeggeri per guidatore ${guidatore.id}`);
+            return { ...guidatore, passeggeri: [] };
+          }
+
+          const passeggeriResult = await passeggeriResponse.json();
 
           return {
             ...guidatore,
-            passeggeri: passeggeriData || []
-          }
+            passeggeri: passeggeriResult.success ? passeggeriResult.data : []
+          };
+
+        } catch (error) {
+          console.warn(`Errore nel recupero passeggeri per guidatore ${guidatore.id}:`, error.message);
+          return { ...guidatore, passeggeri: [] };
+        }
+      })
+    );
+
+    // 3. Recupera passeggeri senza guidatore
+    let passeggeriSenzaGuidatore = [];
+    try {
+      const passeggeriSenzaGuidatoreResponse = await fetch('/api/recuperaPasseggeri', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          eventId, 
+          guidatoreId: null 
         })
-      )
+      });
 
-      // Fetch anche i passeggeri senza guidatore (se esistono)
-      const { data: passeggeriSenzaGuidatore, error: passeggeriSenzaGuidatoreError } = await supabase
-        .from("passeggero")
-        .select("*")
-        .eq("id_evento_fk", eventId)
-        .is("id_guidatore_fk", null)
-
-      if (passeggeriSenzaGuidatoreError) {
-        console.warn("Errore nel recupero passeggeri senza guidatore:", passeggeriSenzaGuidatoreError.message)
+      if (passeggeriSenzaGuidatoreResponse.status === 401) {
+        throw new Error('Sessione scaduta durante il recupero passeggeri senza guidatore.');
       }
 
-      // Combina guidatori con passeggeri e passeggeri senza guidatore
-      const allRegistrations = [
-        ...registrationsWithPassengers,
-        ...(passeggeriSenzaGuidatore || [])
-      ]
+      if (passeggeriSenzaGuidatoreResponse.ok) {
+        const passeggeriSenzaGuidatoreResult = await passeggeriSenzaGuidatoreResponse.json();
+        if (passeggeriSenzaGuidatoreResult.success) {
+          passeggeriSenzaGuidatore = passeggeriSenzaGuidatoreResult.data;
+        }
+      }
 
-      setRegistrations(allRegistrations)
     } catch (error) {
-      console.error("Errore nel recupero delle iscrizioni:", error)
-      showErrorBanner("Errore nel recupero delle iscrizioni: " + error.message)
-      setRegistrations([])
-    } finally {
-      setLoadingRegistrations(false)
+      console.warn("Errore nel recupero passeggeri senza guidatore:", error.message);
     }
-  }, [])
+
+    // 4. Combina tutti i risultati
+    const allRegistrations = [
+      ...registrationsWithPassengers,
+      ...passeggeriSenzaGuidatore
+    ];
+
+    setRegistrations(allRegistrations);
+
+  } catch (error) {
+    console.error("Errore nel recupero delle iscrizioni:", error);
+
+    if (error.message.includes('Sessione scaduta') || error.message.includes('non autenticato')) {
+      localStorage.removeItem("adminLoggedIn");
+      localStorage.removeItem("adminLoginTime");
+      await supabase.auth.signOut();
+      router.push('/admin/login');
+    }
+
+    showErrorBanner("Errore nel recupero delle iscrizioni: " + error.message);
+    setRegistrations([]);
+  } finally {
+    setLoadingRegistrations(false);
+  }
+}, []);
+
 
   const handleOpenRegistrationsModal = (event) => {
     setSelectedEventForRegistrations(event)
