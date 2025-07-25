@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
   try {
     const data = await resend.emails.send({
-      from: 'onboarding@resend.dev', // deve essere un dominio verificato
+      from: 'Fattura AldebaranDrive <info@mail.aldebarandrive.com>',
       to,
       subject: subject || 'Fattura evento',
       html: htmlBody,

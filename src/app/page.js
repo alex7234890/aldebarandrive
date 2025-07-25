@@ -990,6 +990,8 @@ const handleSubmitRegistration = async () => {
     const guidatoreData = await guidatoreRes.json();
     const guidatoreId = guidatoreData.id;
 
+    
+
     // Inserimento passeggeri
     for (let i = 0; i < passeggeri.length; i++) {
       const p = passeggeri[i];

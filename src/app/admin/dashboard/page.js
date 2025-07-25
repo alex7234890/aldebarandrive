@@ -769,7 +769,7 @@ const RegistrationsModal = ({
                 const totalPartecipanti = 1 + (reg.passeggeri ? reg.passeggeri.length : 0);
                 const fatturaInviata = reg.verificato || false;
                 const isExpanded = expandedRegistrations.has(reg.id);
-                
+
                 return (
                   <Card key={reg.id} className="shadow-sm border border-gray-200 bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                     <CardContent className="p-3 sm:p-4">
@@ -2175,7 +2175,7 @@ const fetchRegistrations = useCallback(async (eventId) => {
 
     // 3. Recupera passeggeri senza guidatore
     let passeggeriSenzaGuidatore = [];
-    try {
+    /*try {
       const passeggeriSenzaGuidatoreResponse = await fetch('/api/recuperaPasseggeri', {
         method: 'POST',
         headers: {
@@ -2201,7 +2201,7 @@ const fetchRegistrations = useCallback(async (eventId) => {
 
     } catch (error) {
       console.warn("Errore nel recupero passeggeri senza guidatore:", error.message);
-    }
+    }*/
 
     // 4. Combina tutti i risultati
     const allRegistrations = [
@@ -2656,10 +2656,10 @@ yPos += 8
     }
   
     try {
-      const filePath = `fatture/${selectedRegistration.id_evento_fk}/${selectedRegistration.id}_${invoiceFile.name}`;
+      const filePath = `${selectedRegistration.id_evento_fk}/${selectedRegistration.id}_${invoiceFile.name}`;
   
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("doc")
+        .from("fatture")
         .upload(filePath, invoiceFile, {
           cacheControl: "3600",
           upsert: true,
@@ -2671,7 +2671,7 @@ yPos += 8
   
       // Scarica il file appena caricato (come Blob)
       const { data: fileBlob, error: downloadError } = await supabase.storage
-        .from("doc")
+        .from("fatture")
         .download(filePath);
   
       if (downloadError || !fileBlob) {
@@ -2731,7 +2731,7 @@ yPos += 8
       setShowInvoiceUpload(false);
       setInvoiceFile(null);
       setSelectedRegistration(null);
-  
+
       // Settare a true verificato
       const { data, error } = await supabase
         .from('guidatore')
@@ -2759,7 +2759,7 @@ yPos += 8
       return;
     }
 
-    try {      const fullPath = documentPath;      const { data, error } = await supabase.storage.from("doc").createSignedUrl(fullPath, 3600); // URL valido per 1 ora
+    try {      const fullPath = documentPath;      const { data, error } = await supabase.storage.from("partecipanti").createSignedUrl(fullPath, 3600); // URL valido per 1 ora
 
       if (error) {
         throw new Error(`Errore nella generazione dell'URL firmato: ${error.message}`);

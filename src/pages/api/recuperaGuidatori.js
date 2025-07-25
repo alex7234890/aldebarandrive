@@ -70,6 +70,9 @@ export default async function handler(req, res) {
             Patente: decrypt(guidatore.Patente),
             PatenteS: decrypt(guidatore.PatenteS),
             indirizzo: decrypt(guidatore.indirizzo),
+            documento_fronte: decrypt(guidatore.documento_fronte),
+            documento_retro: decrypt(guidatore.documento_retro),
+            verificato: guidatore.verificato,
         };
       } catch (err) {
         console.error(`Errore decrittazione guidatore ${guidatore.id}:`, err);

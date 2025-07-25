@@ -1,5 +1,9 @@
 import { supabase } from "@/lib/supabaseClient";
 import { encrypt } from "@/lib/crypto";
+import { v4 as uuidv4 } from 'uuid';
+
+const newId = uuidv4();
+
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -34,19 +38,25 @@ export default async function handler(req, res) {
       quota: data.quota,
       documento_fronte: encrypt(data.documento_fronte) || null,
       documento_retro: encrypt(data.documento_retro) || null,
-      verificato: false
+      verificato: false,
+      id: newId
     };
 
     const { error } = await supabase
-      .from("guidatore")
-      .insert(encryptedGuidatore);
+    .from("guidatore")
+    .insert(encryptedGuidatore)
+  
 
     if (error) {
       console.error("Errore Supabase:", error.message);
       return res.status(500).json({ error: "Errore Supabase: " + error.message });
     }
+    
+    
+    res.status(201).json({ success: true, id: newId });
+    
 
-    res.status(201).json({ success: true });
+    res.status(201).json({ success: true , });
   } catch (err) {
     console.error("Errore API:", err);
     res.status(500).json({ error: "Errore interno server" });
