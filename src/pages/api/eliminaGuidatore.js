@@ -1,16 +1,49 @@
-import { supabase } from "@/lib/supabaseClient";
-import { decrypt } from "@/lib/crypto";
+import { createClient } from '@supabase/supabase-js';
+import { decrypt } from '@/lib/crypto';
 
 export default async function handler(req, res) {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "Method not allowed" });
+  console.log('=== API ELIMINA GUIDATORE DEBUG ===');
+  console.log('Method:', req.method);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+
+  if (req.method !== 'DELETE') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({ error: 'Configurazione Supabase mancante' });
+    }
+
+    // Leggi il token dall'header Authorization
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Token non fornito' });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
+
+    // Verifica che la sessione sia valida
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return res.status(401).json({ error: 'Utente non autenticato' });
+    }
+
     const { eventId } = req.body;
 
     if (!eventId) {
-      return res.status(400).json({ error: "ID evento mancante" });
+      return res.status(400).json({ error: 'ID evento mancante' });
     }
 
     // Prima recuperiamo tutti i guidatori dell'evento per ottenere i path dei documenti
@@ -21,14 +54,13 @@ export default async function handler(req, res) {
 
     if (fetchError) {
       console.error("Errore recupero guidatori:", fetchError.message);
-      return res.status(500).json({ 
-        error: "Errore durante il recupero dei guidatori: " + fetchError.message 
+      return res.status(500).json({
+        error: "Errore durante il recupero dei guidatori: " + fetchError.message
       });
     }
 
     // Raccogliamo tutti i path dei documenti da eliminare
     const documentiDaEliminare = [];
-    
     if (guidatori && guidatori.length > 0) {
       guidatori.forEach(guidatore => {
         if (guidatore.documento_fronte) {
@@ -41,7 +73,7 @@ export default async function handler(req, res) {
             console.warn("Errore decifratura path documento fronte:", decryptError);
           }
         }
-        
+
         if (guidatore.documento_retro) {
           try {
             const decryptedRetroPath = decrypt(guidatore.documento_retro);
@@ -82,21 +114,24 @@ export default async function handler(req, res) {
 
     if (deleteGuidatoriError) {
       console.error("Errore eliminazione guidatori:", deleteGuidatoriError.message);
-      return res.status(500).json({ 
-        error: "Errore durante l'eliminazione dei guidatori: " + deleteGuidatoriError.message 
+      return res.status(500).json({
+        error: "Errore durante l'eliminazione dei guidatori: " + deleteGuidatoriError.message
       });
     }
 
-    return res.status(200).json({ 
-      success: true, 
-      message: `Guidatori per l'evento ${eventId} eliminati con successo`,
-      deletedDocuments: documentiDaEliminare.length
+    return res.status(200).json({
+      success: true,
+      data: {
+        message: `Guidatori per l'evento ${eventId} eliminati con successo`,
+        deletedDocuments: documentiDaEliminare.length
+      }
     });
 
-  } catch (err) {
-    console.error("Errore generale eliminazione guidatori:", err);
-    return res.status(500).json({ 
-      error: "Errore interno server durante eliminazione guidatori" 
+  } catch (error) {
+    console.error('Errore server:', error);
+    return res.status(500).json({
+      error: 'Errore interno del server',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 }

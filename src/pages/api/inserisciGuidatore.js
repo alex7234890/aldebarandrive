@@ -2,10 +2,10 @@ import { supabase } from "@/lib/supabaseClient";
 import { encrypt } from "@/lib/crypto";
 import { v4 as uuidv4 } from 'uuid';
 
-const newId = uuidv4();
 
 
 export default async function handler(req, res) {
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -16,6 +16,8 @@ export default async function handler(req, res) {
     if (!data || !data.nome || !data.cognome) {
       return res.status(400).json({ error: "Dati mancanti nel body" });
     }
+
+    const newId = uuidv4();
 
     const encryptedGuidatore = {
       nome: encrypt(data.nome),

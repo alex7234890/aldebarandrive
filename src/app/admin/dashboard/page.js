@@ -1726,42 +1726,27 @@ export default function AdminDashboard() {
         try {
           let overallSuccess = true;
   
-          // Step 1: Delete associated registrations from guidatore table via API
-          try {
-            const deleteGuidatoriResponse = await fetch("/api/eliminaGuidatore", {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ eventId }),
-            });
-  
-            if (!deleteGuidatoriResponse.ok) {
-              const error = await deleteGuidatoriResponse.text();
-              throw new Error(`Errore durante l'eliminazione dei guidatori: ${error}`);
-            }
-  
-            const guidatoriResult = await deleteGuidatoriResponse.json();
-            console.log(`Guidatori per l'evento ${eventId} eliminati con successo.`, guidatoriResult);
-          } catch (error) {
-            overallSuccess = false;
-            console.error(`Errore critico durante l'eliminazione dei guidatori per l'evento ${eventId}:`, error.message);
-            showErrorBanner(`Errore critico durante l'eliminazione dei guidatori. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
+          // Ottieni il token di autenticazione
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session || !session.access_token) {
+            showErrorBanner("Utente non autenticato.");
+            return;
           }
   
-          // Step 2: Delete associated registrations from passeggero table via API
+          // Step 1: Delete associated registrations from passeggero table via API
           try {
             const deletePasseggeriResponse = await fetch("/api/eliminaPasseggero", {
               method: "DELETE",
               headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.access_token}`
               },
               body: JSON.stringify({ eventId }),
             });
   
             if (!deletePasseggeriResponse.ok) {
-              const error = await deletePasseggeriResponse.text();
-              throw new Error(`Errore durante l'eliminazione dei passeggeri: ${error}`);
+              const errorData = await deletePasseggeriResponse.json();
+              throw new Error(errorData.error || `Errore durante l'eliminazione dei passeggeri`);
             }
   
             const passeggeriResult = await deletePasseggeriResponse.json();
@@ -1771,23 +1756,49 @@ export default function AdminDashboard() {
             console.error(`Errore critico durante l'eliminazione dei passeggeri per l'evento ${eventId}:`, error.message);
             showErrorBanner(`Errore critico durante l'eliminazione dei passeggeri. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
           }
+
+        
+          // Step 2: Delete associated registrations from guidatore table via API
+          try {
+            const deleteGuidatoriResponse = await fetch("/api/eliminaGuidatore", {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.access_token}`
+              },
+              body: JSON.stringify({ eventId }),
+            });
   
-          /* Step 3: Delete associated images from storage (mantengo la logica esistente)
+            if (!deleteGuidatoriResponse.ok) {
+              const errorData = await deleteGuidatoriResponse.json();
+              throw new Error(errorData.error || `Errore durante l'eliminazione dei guidatori`);
+            }
+  
+            const guidatoriResult = await deleteGuidatoriResponse.json();
+            console.log(`Guidatori per l'evento ${eventId} eliminati con successo.`, guidatoriResult);
+          } catch (error) {
+            overallSuccess = false;
+            console.error(`Errore critico durante l'eliminazione dei guidatori per l'evento ${eventId}:`, error.message);
+            showErrorBanner(`Errore critico durante l'eliminazione dei guidatori. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
+          }
+
+  
+          // Step 3: Delete associated images from storage (mantengo la logica esistente)
           try {
             const { data: imagesList, error: listError } = await supabase.storage
-              .from("doc")
-              .list(`eventi/${eventId}`);
+              .from("eventi")
+              .list(eventId);
   
             if (listError && listError.message !== "The resource was not found") { // Ignore if folder doesn't exist
               console.warn(`Could not list images for event ${eventId}, might not exist or error occurred:`, listError.message);
             } else if (imagesList && imagesList.length > 0) {
               const imagePathsToDelete = imagesList
                 .filter(item => item.name !== ".emptyFolderPlaceholder")
-                .map(item => `eventi/${eventId}/${item.name}`);
+                .map(item => `${eventId}/${item.name}`);
   
               if (imagePathsToDelete.length > 0) {
                 const { error: deleteImagesError } = await supabase.storage
-                  .from("doc")
+                  .from("eventi")
                   .remove(imagePathsToDelete);
   
                 if (deleteImagesError) {
@@ -1800,7 +1811,7 @@ export default function AdminDashboard() {
             overallSuccess = false;
             console.error(`Errore durante l'eliminazione delle immagini per l'evento ${eventId}:`, error.message);
             showErrorBanner(`Errore durante l'eliminazione delle immagini dell'evento. L'evento potrebbe non essere completamente rimosso. Dettagli: ${error.message}`);
-          }*/
+          }
   
           // Step 4: Delete the event itself (mantengo la logica esistente)
           try {
@@ -2656,42 +2667,80 @@ yPos += 8
     }
   
     try {
-      const filePath = `${selectedRegistration.id_evento_fk}/${selectedRegistration.id}_${invoiceFile.name}`;
-  
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("fatture")
-        .upload(filePath, invoiceFile, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-  
-      if (uploadError) {
-        throw new Error(`Errore durante il caricamento della fattura: ${uploadError.message}`);
+      // Ottieni il token di autenticazione
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.access_token) {
+        showErrorBanner("Utente non autenticato.");
+        return;
       }
   
-      // Scarica il file appena caricato (come Blob)
-      const { data: fileBlob, error: downloadError } = await supabase.storage
-        .from("fatture")
-        .download(filePath);
+      // Prepara il file path come nella funzione originale
+      const filePath = `${selectedRegistration.id}_${invoiceFile.name}`;
+      
+      // Converti il file in base64 per inviarlo all'API
+      const fileBase64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1]; // Rimuovi il prefisso data:
+          resolve(base64);
+        };
+        reader.readAsDataURL(invoiceFile);
+      });
   
-      if (downloadError || !fileBlob) {
-        throw new Error("Impossibile scaricare la fattura per allegarla.");
+      // 1. Upload della fattura tramite API
+      const uploadResponse = await fetch('/api/uploadFattura', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          filePath: filePath,
+          fileBase64: fileBase64
+        })
+      });
+  
+      if (!uploadResponse.ok) {
+        const uploadError = await uploadResponse.json();
+        throw new Error(uploadError.error || 'Errore durante il caricamento della fattura');
       }
   
-      // Converte il Blob in base64
-      const arrayBuffer = await fileBlob.arrayBuffer();
-      const base64String = btoa(
-        String.fromCharCode(...new Uint8Array(arrayBuffer))
-      );
+      const uploadResult = await uploadResponse.json();
+      
+      if (!uploadResult.success) {
+        throw new Error('Upload fattura non riuscito');
+      }
+  
+      // 2. Recupera la fattura come base64 per l'email
+      const retrieveResponse = await fetch('/api/recuperaFattura', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          filePath: filePath
+        })
+      });
+  
+      if (!retrieveResponse.ok) {
+        const retrieveError = await retrieveResponse.json();
+        throw new Error(retrieveError.error || 'Errore durante il recupero della fattura');
+      }
+  
+      const retrieveResult = await retrieveResponse.json();
+      
+      if (!retrieveResult.success || !retrieveResult.data.base64String) {
+        throw new Error('Impossibile recuperare la fattura per allegarla');
+      }
   
       const email = selectedRegistration.indirizzo_email;
       if (!email) {
         throw new Error("Email non presente nella registrazione selezionata.");
       }
   
-      // Costruisci soggetto e corpo personalizzati
+      // 3. Costruisci soggetto e corpo personalizzati (identico all'originale)
       const subject = `Fattura per ${selectedRegistration.nome} ${selectedRegistration.cognome} - Evento: ${selectedEventForRegistrations.titolo}`;
-  
       const htmlBody = `
         <p>Ciao <strong>${selectedRegistration.nome} ${selectedRegistration.cognome}</strong>,</p>
         <p>Grazie per aver partecipato all'evento <strong>${selectedEventForRegistrations.titolo}</strong>.</p>
@@ -2701,7 +2750,7 @@ yPos += 8
         <p>Il team di AldebaranDrive</p>
       `;
   
-      // Invia email con allegato
+      // 4. Invia email con allegato (identico all'originale)
       const emailResponse = await fetch('/api/resendFatturaApi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2710,7 +2759,7 @@ yPos += 8
           subject,
           htmlBody,
           filename: invoiceFile.name,
-          base64: base64String,
+          base64: retrieveResult.data.base64String,
         }),
       });
   
@@ -2727,22 +2776,31 @@ yPos += 8
         throw new Error(emailResult?.error || "Errore durante l'invio dell'email");
       }
   
+      // 5. Aggiorna il guidatore come verificato
+      const updateResponse = await fetch('/api/updateGuidatoreVerificato', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          registrationId: selectedRegistration.id,
+          verificato: true
+        })
+      });
+  
+      if (!updateResponse.ok) {
+        const updateError = await updateResponse.json();
+        console.error('Errore aggiornamento guidatore:', updateError);
+      } else {
+        const updateResult = await updateResponse.json();
+        console.log('Guidatore aggiornato:', updateResult.data);
+      }
+  
       showSuccessBanner("Fattura inviata via email con successo!");
       setShowInvoiceUpload(false);
       setInvoiceFile(null);
       setSelectedRegistration(null);
-
-      // Settare a true verificato
-      const { data, error } = await supabase
-        .from('guidatore')
-        .update({ verificato: true })
-        .eq('id', selectedRegistration.id);
-  
-      if (error) {
-        console.error('Errore aggiornamento guidatore:', error);
-      } else {
-        console.log('Guidatore aggiornato:', data);
-      }
   
     } catch (error) {
       console.error("Errore invio fattura:", error);
@@ -2758,16 +2816,42 @@ yPos += 8
       showErrorBanner("URL del documento non valido.");
       return;
     }
-
-    try {      const fullPath = documentPath;      const { data, error } = await supabase.storage.from("partecipanti").createSignedUrl(fullPath, 3600); // URL valido per 1 ora
-
-      if (error) {
-        throw new Error(`Errore nella generazione dell'URL firmato: ${error.message}`);
+  
+    try {
+      // Ottieni il token di autenticazione
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.access_token) {
+        showErrorBanner("Utente non autenticato.");
+        return;
       }
-
-      setCurrentDocumentUrl(data.signedUrl);
+  
+      // Chiama l'API backend
+      const response = await fetch('/api/recuperaDocumento', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          documentPath: documentPath
+        })
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Errore nella richiesta');
+      }
+  
+      const result = await response.json();
+      
+      if (!result.success || !result.data.signedUrl) {
+        throw new Error('Risposta API non valida');
+      }
+  
+      setCurrentDocumentUrl(result.data.signedUrl);
       setCurrentDocumentType(type);
       setShowDocumentModal(true);
+  
     } catch (error) {
       console.error("Errore nell'apertura del documento:", error);
       showErrorBanner("Errore nell'apertura del documento: " + error.message);

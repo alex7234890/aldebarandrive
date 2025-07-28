@@ -79,6 +79,7 @@ export default async function handler(req, res) {
             documento_fronte: decrypt(guidatore.documento_fronte),
             documento_retro: decrypt(guidatore.documento_retro),
             verificato: guidatore.verificato,
+            intolleranze: guidatore.intolleranze ? decrypt(guidatore.intolleranze) : null,
         };
       } catch (err) {
         console.error(`Errore decrittazione guidatore ${guidatore.id}:`, err);
