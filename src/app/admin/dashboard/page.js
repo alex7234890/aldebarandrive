@@ -2742,7 +2742,7 @@ yPos += 8
       const subject = `Fattura per ${selectedRegistration.nome} ${selectedRegistration.cognome} - Evento: ${selectedEventForRegistrations.titolo}`;
       const htmlBody = `
         <p>Ciao <strong>${selectedRegistration.nome} ${selectedRegistration.cognome}</strong>,</p>
-        <p>Grazie per esserti iscritto all'evento <strong>${selectedEventForRegistrations.titolo}</strong>.</p>
+        <p>Grazie per esserti iscritto all'evento <strong>${selectedEventForRegistrations.titolo}</strong></p>
         <p>In allegato trovi la tua fattura <strong>${invoiceFile.name}</strong>.</p>
         <p>Per qualsiasi domanda, non esitare a contattarci.</p>
         <p>Buona giornata!</p>
