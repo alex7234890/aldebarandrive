@@ -1369,22 +1369,18 @@ const handleSubmitRegistration = async () => {
                   esclusiva
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square rounded-xl overflow-hidden bg-gray-800 hover:scale-105 transition-transform duration-300"
-                  >
-                    <Image
-                      src="/hero.png"
-                      alt={`Chi Siamo ${i + 1}`}
-                      width={300}
-                      height={300}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                ))}
-              </div>
+             <div className="w-full max-w-xl mx-auto">
+  <div className="aspect-square rounded-xl overflow-hidden bg-gray-800 hover:scale-105 transition-transform duration-300">
+    <Image
+      src="/chi_siamo.png"
+      alt="Chi Siamo"
+      width={600}
+      height={600}
+      className="object-cover w-full h-full"
+    />
+  </div>
+</div>
+
             </div>
           </div>
         </section>
