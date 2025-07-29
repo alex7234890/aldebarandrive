@@ -48,7 +48,6 @@ import { supabase } from "@/lib/supabaseClient"
 
 // Helper per mostrare notifiche all'utente - RIMOSSO, ora usiamo i banner
 
-// Modal per nuovo/modifica evento
 const EventFormModal = ({
   isEditMode,
   newEvent,
@@ -190,7 +189,7 @@ const EventFormModal = ({
     placeholder="Descrivi l'evento in dettaglio. Usa **grassetto** per evidenziare."
   />
 
-  {/* ANTEPRIMA */}
+  {/* ANTEPRIMA DESCRIZIONE */}
  {newEvent.descrizione && (
   <div className="mt-4 p-4 border rounded-lg bg-gray-50">
     <h4 className="font-semibold mb-2 text-sm text-gray-600">Anteprima:</h4>
@@ -315,13 +314,86 @@ const EventFormModal = ({
                   Programma (opzionale)
                 </Label>
                 <Textarea
-                  id="programma"
-                  name="programma"
-                  value={newEvent.programma || ""}
-                  onChange={handleNewEventChange}
-                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 min-h-[100px] transition-colors"
-                  placeholder="Descrivi il programma dell'evento"
-                />
+  id="programma"
+  name="programma"
+  value={newEvent.programma || ""}
+  onChange={handleNewEventChange}
+  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 min-h-[100px] transition-colors"
+  placeholder={`SABATO 25
+9:00 - colazione
+12:00 - pranzo
+DOMENICA 26
+9:00 - colazione
+12:00 - pranzo`}
+/>
+
+                {/* ANTEPRIMA PROGRAMMA */}
+                {newEvent.programma && newEvent.programma.trim() && (
+                  <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+                    <h4 className="font-semibold mb-2 text-sm text-gray-600">Anteprima programma:</h4>
+                    <div className="space-y-8">
+                      {(() => {
+                        // Parsing del programma
+                        const lines = newEvent.programma.split('\n').filter(line => line.trim());
+                        const days = [];
+                        let currentDay = null;
+                        
+                        lines.forEach(line => {
+                          const trimmedLine = line.trim();
+                          
+                          // Controlla se la riga è un giorno (non contiene orario)
+                          if (!trimmedLine.match(/^\d{1,2}[:\.]?\d{0,2}\s*[-–—]\s*/)) {
+                            // È un nuovo giorno
+                            currentDay = {
+                              day: trimmedLine,
+                              events: []
+                            };
+                            days.push(currentDay);
+                          } else if (currentDay) {
+                            // È un evento con orario
+                            const match = trimmedLine.match(/^(\d{1,2}[:\.]?\d{0,2})\s*[-–—]\s*(.+)$/);
+                            if (match) {
+                              currentDay.events.push({
+                                time: match[1],
+                                description: match[2]
+                              });
+                            }
+                          }
+                        });
+                        
+                        return days.map((day, dayIndex) => (
+                          <div key={dayIndex} className="border-l-4 border-black pl-6 relative">
+                            {/* Pallino indicatore */}
+                            <div className="absolute -left-3 top-2 w-6 h-6 bg-black rounded-full flex items-center justify-center z-10">
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            </div>
+                            
+                            {/* Nome del giorno */}
+                            <h3 className="text-xl font-bold text-black mb-4 uppercase tracking-wide">
+                              {day.day}
+                            </h3>
+                            
+                            {/* Eventi del giorno */}
+                            <div className="space-y-3 ml-2">
+                              {day.events.map((event, eventIndex) => (
+                                <div key={eventIndex} className="flex items-start gap-3">
+                                  <div className="bg-gray-100 px-2 py-1 rounded-full min-w-fit">
+                                    <span className="text-xs font-bold text-gray-800">
+                                      {event.time}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 leading-relaxed pt-1 text-sm">
+                                    {event.description}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -589,6 +661,8 @@ const ImageUploadModal = ({
 
 // Modal per l'upload di fatture
 const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile, handleInvoiceUpload, onClose, showErrorBanner }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const validateInvoiceUpload = () => {
     if (!invoiceFile) {
       showErrorBanner("Seleziona un file fattura da caricare.")
@@ -610,7 +684,13 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
     if (!validateInvoiceUpload()) {
       return;
     }
-    await handleInvoiceUpload();
+    setIsLoading(true);
+    try {
+      await handleInvoiceUpload();
+    } catch (error) {
+      // Gestione errore se necessario
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -629,11 +709,21 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
             size="icon"
             onClick={onClose}
             className="rounded-full text-white hover:bg-gray-800 transition-colors"
+            disabled={isLoading}
           >
             <XIcon className="w-6 h-6" />
           </Button>
         </CardHeader>
         <CardContent className="p-6">
+          {isLoading && (
+            <div className="mb-6 flex items-center justify-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                <span className="text-base font-semibold text-blue-800">Caricamento...</span>
+              </div>
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-300">
               <p className="text-base font-semibold text-black mb-2 flex items-center gap-2">
@@ -667,6 +757,7 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
                   onChange={(e) => setInvoiceFile(e.target.files[0])}
                   accept=".pdf"
                   className="hidden"
+                  disabled={isLoading}
                 />
               </label>
             </div>
@@ -678,8 +769,8 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
                   File selezionato
                 </p>
                 <div className="flex items-center gap-2 text-sm text-black bg-white px-3 py-2 rounded-lg border border-gray-300">
-                  <FileTextIcon className="w-4 h-4" />
-                  {invoiceFile.name}
+                  <FileTextIcon className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{invoiceFile.name}</span>
                 </div>
               </div>
             )}
@@ -689,17 +780,20 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
                 variant="outline"
                 onClick={onClose}
                 className="text-base font-semibold border-gray-400 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg transition-colors bg-transparent order-2 sm:order-1"
+                disabled={isLoading}
               >
                 Annulla
               </Button>
-              <Button
-                type="submit"
-                disabled={!invoiceFile}
-                className="text-base font-semibold bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
-              >
-                <SendIcon className="mr-2 h-5 w-5" />
-                Carica e Invia Email
-              </Button>
+              {!isLoading && (
+                <Button
+                  type="submit"
+                  disabled={!invoiceFile}
+                  className="text-base font-semibold bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
+                >
+                  <SendIcon className="mr-2 h-5 w-5" />
+                  Carica e Invia Email
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
