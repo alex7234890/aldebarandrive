@@ -977,13 +977,16 @@ const handleSubmitRegistration = async () => {
     // =====================================================================
     // INVIO EMAIL DI CONFERMA
     // =====================================================================
+    
     try {
+      let prezzo = selectedEvent.quote[formData.quotaSelezionata]["prezzo"];
       await handleConfirmationMail(
         0,
         formData.guidatoreEmail,
         formData,
         passeggeri,
         selectedEvent,
+        prezzo,
       );
     } catch (emailError) {
       console.warn("Errore invio email di conferma:", emailError);
