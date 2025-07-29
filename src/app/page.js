@@ -758,138 +758,103 @@ const handleSubmitRegistration = async () => {
     return;
   }
 
-  // Imposta immediatamente lo stato di caricamento per disabilitare il pulsante
   setIsSubmitting(true);
   setValidationErrors({});
 
   try {
-    // Validazione completa guidatore (mantengo la validazione esistente)
+    // =====================================================================
+    // VALIDAZIONE COMPLETA (mantieni la tua logica esistente)
+    // =====================================================================
     const guidatoreErrors = {};
-    const cognomeValidation = validateRequiredField(
-      formData.guidatoreCognome,
-      "Cognome",
-    );
-    if (!cognomeValidation.valid)
-      guidatoreErrors.guidatoreCognome = cognomeValidation.message;
-    const nomeValidation = validateRequiredField(
-      formData.guidatoreNome,
-      "Nome",
-    );
-    if (!nomeValidation.valid)
-      guidatoreErrors.guidatoreNome = nomeValidation.message;
-    const cfValidation = validateCodiceFiscale(
-      formData.guidatoreCodiceFiscale,
-    );
-    if (!cfValidation.valid)
-      guidatoreErrors.guidatoreCodiceFiscale = cfValidation.message;
+    
+    // Validazione guidatore
+    const cognomeValidation = validateRequiredField(formData.guidatoreCognome, "Cognome");
+    if (!cognomeValidation.valid) guidatoreErrors.guidatoreCognome = cognomeValidation.message;
+    
+    const nomeValidation = validateRequiredField(formData.guidatoreNome, "Nome");
+    if (!nomeValidation.valid) guidatoreErrors.guidatoreNome = nomeValidation.message;
+    
+    const cfValidation = validateCodiceFiscale(formData.guidatoreCodiceFiscale);
+    if (!cfValidation.valid) guidatoreErrors.guidatoreCodiceFiscale = cfValidation.message;
+    
     const phoneValidation = validatePhone(formData.guidatoreCellulare);
-    if (!phoneValidation.valid)
-      guidatoreErrors.guidatoreCellulare = phoneValidation.message;
+    if (!phoneValidation.valid) guidatoreErrors.guidatoreCellulare = phoneValidation.message;
+    
     const emailValidation = validateEmail(formData.guidatoreEmail);
-    if (!emailValidation.valid)
-      guidatoreErrors.guidatoreEmail = emailValidation.message;
-    const dataNascitaValidation = validateDate(
-      formData.guidatoreDataNascita,
-      "Data di Nascita",
-    );
-    if (!dataNascitaValidation.valid)
-      guidatoreErrors.guidatoreDataNascita = dataNascitaValidation.message;
-    const patenteScadenzaValidation = validateDate(
-      formData.guidatorePatenteScadenza,
-      "Scadenza Patente",
-    );
-    if (!patenteScadenzaValidation.valid)
-      guidatoreErrors.guidatorePatenteScadenza =
-        patenteScadenzaValidation.message;
-    const indirizzoValidation = validateRequiredField(
-      formData.guidatoreIndirizzo,
-      "Indirizzo",
-    );
-    if (!indirizzoValidation.valid)
-      guidatoreErrors.guidatoreIndirizzo = indirizzoValidation.message;
-    if (!formData.guidatoreAutorizzaTrattamento)
-      guidatoreErrors.guidatoreAutorizzaTrattamento =
-        "Obbligatorio autorizzare trattamento dati";
+    if (!emailValidation.valid) guidatoreErrors.guidatoreEmail = emailValidation.message;
+    
+    const dataNascitaValidation = validateDate(formData.guidatoreDataNascita, "Data di Nascita");
+    if (!dataNascitaValidation.valid) guidatoreErrors.guidatoreDataNascita = dataNascitaValidation.message;
+    
+    const patenteScadenzaValidation = validateDate(formData.guidatorePatenteScadenza, "Scadenza Patente");
+    if (!patenteScadenzaValidation.valid) guidatoreErrors.guidatorePatenteScadenza = patenteScadenzaValidation.message;
+    
+    const indirizzoValidation = validateRequiredField(formData.guidatoreIndirizzo, "Indirizzo");
+    if (!indirizzoValidation.valid) guidatoreErrors.guidatoreIndirizzo = indirizzoValidation.message;
+    
+    if (!formData.guidatoreAutorizzaTrattamento) {
+      guidatoreErrors.guidatoreAutorizzaTrattamento = "Obbligatorio autorizzare trattamento dati";
+    }
 
     // Validazione dati auto
     const targaValidation = validateTarga(formData.autoTarga);
-    if (!targaValidation.valid)
-      guidatoreErrors.autoTarga = targaValidation.message;
-    const marcaValidation = validateRequiredField(
-      formData.autoMarca,
-      "Marca Auto",
-    );
-    if (!marcaValidation.valid)
-      guidatoreErrors.autoMarca = marcaValidation.message;
-    const modelloValidation = validateRequiredField(
-      formData.autoModello,
-      "Modello Auto",
-    );
-    if (!modelloValidation.valid)
-      guidatoreErrors.autoModello = modelloValidation.message;
-    const coloreValidation = validateRequiredField(
-      formData.autoColore,
-      "Colore Auto",
-    );
-    if (!coloreValidation.valid)
-      guidatoreErrors.autoColore = coloreValidation.message;
-    const immatricolazioneValidation = validateRequiredField(
-      formData.autoImmatricolazione,
-      "Anno Immatricolazione",
-    );
-    if (!immatricolazioneValidation.valid)
-      guidatoreErrors.autoImmatricolazione =
-        immatricolazioneValidation.message;
+    if (!targaValidation.valid) guidatoreErrors.autoTarga = targaValidation.message;
+    
+    const marcaValidation = validateRequiredField(formData.autoMarca, "Marca Auto");
+    if (!marcaValidation.valid) guidatoreErrors.autoMarca = marcaValidation.message;
+    
+    const modelloValidation = validateRequiredField(formData.autoModello, "Modello Auto");
+    if (!modelloValidation.valid) guidatoreErrors.autoModello = modelloValidation.message;
+    
+    const coloreValidation = validateRequiredField(formData.autoColore, "Colore Auto");
+    if (!coloreValidation.valid) guidatoreErrors.autoColore = coloreValidation.message;
+    
+    const immatricolazioneValidation = validateRequiredField(formData.autoImmatricolazione, "Anno Immatricolazione");
+    if (!immatricolazioneValidation.valid) guidatoreErrors.autoImmatricolazione = immatricolazioneValidation.message;
 
-    if (!formData.quotaSelezionata)
-      guidatoreErrors.quotaSelezionata =
-        "Seleziona un pacchetto di partecipazione";
-    if (!formData.guidatoreDocumentoFronte)
-      guidatoreErrors.guidatoreDocumentoFronte =
-        "Documento fronte obbligatorio";
-    if (!formData.guidatoreDocumentoRetro)
-      guidatoreErrors.guidatoreDocumentoRetro =
-        "Documento retro obbligatorio";
+    if (!formData.quotaSelezionata) {
+      guidatoreErrors.quotaSelezionata = "Seleziona un pacchetto di partecipazione";
+    }
+    if (!formData.guidatoreDocumentoFronte) {
+      guidatoreErrors.guidatoreDocumentoFronte = "Documento fronte obbligatorio";
+    }
+    if (!formData.guidatoreDocumentoRetro) {
+      guidatoreErrors.guidatoreDocumentoRetro = "Documento retro obbligatorio";
+    }
 
-    // Validazione passeggeri (mantengo la validazione esistente)
+    // Validazione passeggeri
     const passeggeriErrors = {};
     passeggeri.forEach((p, i) => {
       const pCognomeValidation = validateRequiredField(p.cognome, "Cognome");
-      if (!pCognomeValidation.valid)
-        passeggeriErrors[`cognome_${i}`] = pCognomeValidation.message;
+      if (!pCognomeValidation.valid) passeggeriErrors[`cognome_${i}`] = pCognomeValidation.message;
+      
       const pNomeValidation = validateRequiredField(p.nome, "Nome");
-      if (!pNomeValidation.valid)
-        passeggeriErrors[`nome_${i}`] = pNomeValidation.message;
+      if (!pNomeValidation.valid) passeggeriErrors[`nome_${i}`] = pNomeValidation.message;
+      
       const pCfValidation = validateCodiceFiscale(p.codiceFiscale);
-      if (!pCfValidation.valid)
-        passeggeriErrors[`codiceFiscale_${i}`] = pCfValidation.message;
+      if (!pCfValidation.valid) passeggeriErrors[`codiceFiscale_${i}`] = pCfValidation.message;
+      
       const pPhoneValidation = validatePhone(p.cellulare);
-      if (!pPhoneValidation.valid)
-        passeggeriErrors[`cellulare_${i}`] = pPhoneValidation.message;
+      if (!pPhoneValidation.valid) passeggeriErrors[`cellulare_${i}`] = pPhoneValidation.message;
+      
       const pEmailValidation = validateEmail(p.email);
-      if (!pEmailValidation.valid)
-        passeggeriErrors[`email_${i}`] = pEmailValidation.message;
-      const pDataNascitaValidation = validateDate(
-        p.dataNascita,
-        "Data di Nascita",
-      );
-      if (!pDataNascitaValidation.valid)
-        passeggeriErrors[`dataNascita_${i}`] = pDataNascitaValidation.message;
-      const pIndirizzoValidation = validateRequiredField(
-        p.indirizzo,
-        "Indirizzo",
-      );
-      if (!pIndirizzoValidation.valid)
-        passeggeriErrors[`indirizzo_${i}`] = pIndirizzoValidation.message;
-      if (!p.autorizzaTrattamento)
-        passeggeriErrors[`autorizzaTrattamento_${i}`] =
-          `Il passeggero ${i + 1} deve autorizzare GDPR`;
-      if (!p.documentoFronte)
-        passeggeriErrors[`documentoFronte_${i}`] =
-          `Documento fronte passeggero ${i + 1} obbligatorio`;
-      if (!p.documentoRetro)
-        passeggeriErrors[`documentoRetro_${i}`] =
-          `Documento retro passeggero ${i + 1} obbligatorio`;
+      if (!pEmailValidation.valid) passeggeriErrors[`email_${i}`] = pEmailValidation.message;
+      
+      const pDataNascitaValidation = validateDate(p.dataNascita, "Data di Nascita");
+      if (!pDataNascitaValidation.valid) passeggeriErrors[`dataNascita_${i}`] = pDataNascitaValidation.message;
+      
+      const pIndirizzoValidation = validateRequiredField(p.indirizzo, "Indirizzo");
+      if (!pIndirizzoValidation.valid) passeggeriErrors[`indirizzo_${i}`] = pIndirizzoValidation.message;
+      
+      if (!p.autorizzaTrattamento) {
+        passeggeriErrors[`autorizzaTrattamento_${i}`] = `Il passeggero ${i + 1} deve autorizzare GDPR`;
+      }
+      if (!p.documentoFronte) {
+        passeggeriErrors[`documentoFronte_${i}`] = `Documento fronte passeggero ${i + 1} obbligatorio`;
+      }
+      if (!p.documentoRetro) {
+        passeggeriErrors[`documentoRetro_${i}`] = `Documento retro passeggero ${i + 1} obbligatorio`;
+      }
     });
 
     const allErrors = { ...guidatoreErrors, ...passeggeriErrors };
@@ -898,58 +863,35 @@ const handleSubmitRegistration = async () => {
       showErrorBanner(
         `Errore di validazione: ${Object.values(allErrors)[0]}\nTotale errori: ${Object.keys(allErrors).length}`
       );
-      setIsSubmitting(false);
       return;
     }
 
-    // Upload documenti guidatore tramite API
-    let guidatoreFrontePath = null;
-    let guidatoreRetroPath = null;
-
+    // =====================================================================
+    // PREPARAZIONE DATI PER API UNIFICATA
+    // =====================================================================
+    
+    // Prepara documenti guidatore
+    let guidatoreDocumenti = null;
     if (formData.guidatoreDocumentoFronte && formData.guidatoreDocumentoRetro) {
-      try {
-        // Converti i file in base64
-        const fronteBase64 = await convertFileToBase64(formData.guidatoreDocumentoFronte);
-        const retroBase64 = await convertFileToBase64(formData.guidatoreDocumentoRetro);
-
-        // Imposto nomi per i documenti
-        
-
-        const uploadResponse = await fetch("/api/uploadDocumentoGuidatore", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            codiceFiscale: formData.guidatoreCodiceFiscale,
-            documentoFronte: {
-              data: fronteBase64,
-              name: formData.guidatoreDocumentoFronte.name,
-              type: formData.guidatoreDocumentoFronte.type
-            },
-            documentoRetro: {
-              data: retroBase64,
-              name: formData.guidatoreDocumentoRetro.name,
-              type: formData.guidatoreDocumentoRetro.type
-            }
-          }),
-        });
-
-        if (!uploadResponse.ok) {
-          const error = await uploadResponse.text();
-          throw new Error("Errore upload documenti guidatore: " + error);
+      const fronteBase64 = await convertFileToBase64(formData.guidatoreDocumentoFronte);
+      const retroBase64 = await convertFileToBase64(formData.guidatoreDocumentoRetro);
+      
+      guidatoreDocumenti = {
+        fronte: {
+          data: fronteBase64,
+          name: formData.guidatoreDocumentoFronte.name,
+          type: formData.guidatoreDocumentoFronte.type
+        },
+        retro: {
+          data: retroBase64,
+          name: formData.guidatoreDocumentoRetro.name,
+          type: formData.guidatoreDocumentoRetro.type
         }
-
-        const uploadData = await uploadResponse.json();
-        guidatoreFrontePath = uploadData.frontePath;
-        guidatoreRetroPath = uploadData.retroPath;
-      } catch (uploadError) {
-        throw new Error("Errore durante l'upload dei documenti del guidatore: " + uploadError.message);
-      }
+      };
     }
 
-    // Preparazione dati guidatore
-    const guidatorePayload = {
+    // Prepara dati guidatore
+    const guidatoreData = {
       nome: formData.guidatoreNome.trim(),
       cognome: formData.guidatoreCognome.trim(),
       data_nascita: formData.guidatoreDataNascita,
@@ -965,82 +907,37 @@ const handleSubmitRegistration = async () => {
       auto_modello: formData.autoModello.trim(),
       auto_targa: formData.autoTarga.toUpperCase().trim(),
       posti_auto: formData.postiAuto,
-      intolleranze: formData.guidatoreEsigenzeAlimentari
-        ? formData.guidatoreIntolleranze.trim()
-        : "",
-      id_evento_fk: selectedEvent.id,
+      intolleranze: formData.guidatoreEsigenzeAlimentari ? formData.guidatoreIntolleranze.trim() : "",
       quota: formData.quotaSelezionata,
-      documento_fronte: guidatoreFrontePath || null,
-      documento_retro: guidatoreRetroPath || null,
+      documenti: guidatoreDocumenti
     };
 
-    const guidatoreRes = await fetch("/api/inserisciGuidatore", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(guidatorePayload),
-    });
-
-    if (!guidatoreRes.ok) {
-      const error = await guidatoreRes.text();
-      throw new Error("Errore inserimento guidatore: " + error);
-    }
-
-    const guidatoreData = await guidatoreRes.json();
-    const guidatoreId = guidatoreData.id;
-
-    
-
-    // Inserimento passeggeri
+    // Prepara dati passeggeri
+    const passeggeriData = [];
     for (let i = 0; i < passeggeri.length; i++) {
       const p = passeggeri[i];
-      let passeggeroFrontePath = null;
-      let passeggeroRetroPath = null;
-
-      // Upload documenti passeggero tramite API
+      
+      // Prepara documenti passeggero
+      let passeggeroDocumenti = null;
       if (p.documentoFronte && p.documentoRetro) {
-        try {
-          // Converti i file in base64
-          const fronteBase64 = await convertFileToBase64(p.documentoFronte);
-          const retroBase64 = await convertFileToBase64(p.documentoRetro);
-
-          const uploadPasseggeroResponse = await fetch("/api/uploadDocumentoPasseggero", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              codiceFiscale: p.codiceFiscale,
-              passeggeroIndex: i + 1,
-              documentoFronte: {
-                data: fronteBase64,
-                name: p.documentoFronte.name,
-                type: p.documentoFronte.type
-              },
-              documentoRetro: {
-                data: retroBase64,
-                name: p.documentoRetro.name,
-                type: p.documentoRetro.type
-              }
-            }),
-          });
-
-          if (!uploadPasseggeroResponse.ok) {
-            const error = await uploadPasseggeroResponse.text();
-            throw new Error(`Errore upload documenti passeggero ${i + 1}: ${error}`);
+        const fronteBase64 = await convertFileToBase64(p.documentoFronte);
+        const retroBase64 = await convertFileToBase64(p.documentoRetro);
+        
+        passeggeroDocumenti = {
+          fronte: {
+            data: fronteBase64,
+            name: p.documentoFronte.name,
+            type: p.documentoFronte.type
+          },
+          retro: {
+            data: retroBase64,
+            name: p.documentoRetro.name,
+            type: p.documentoRetro.type
           }
-
-          const uploadPasseggeroData = await uploadPasseggeroResponse.json();
-          passeggeroFrontePath = uploadPasseggeroData.frontePath;
-          passeggeroRetroPath = uploadPasseggeroData.retroPath;
-        } catch (uploadError) {
-          throw new Error(`Errore durante l'upload dei documenti del passeggero ${i + 1}: ${uploadError.message}`);
-        }
+        };
       }
 
-      // Preparazione payload JSON passeggero
-      const passeggeroPayload = {
+      passeggeriData.push({
         nome: p.nome.trim(),
         cognome: p.cognome.trim(),
         data_nascita: p.dataNascita,
@@ -1048,38 +945,48 @@ const handleSubmitRegistration = async () => {
         indirizzo: p.indirizzo.trim(),
         indirizzo_email: p.email.toLowerCase().trim(),
         telefono: p.cellulare.replace(/\s+/g, ""),
-        documento_fronte: passeggeroFrontePath || null,
-        documento_retro: passeggeroRetroPath || null,
         intolleranze: p.esigenzeAlimentari ? p.intolleranze.trim() : "",
-        id_guidatore_fk: guidatoreId,
-        id_evento_fk: selectedEvent.id,
-        verificato: false,
-      };
-
-      const passeggeroRes = await fetch("/api/inserisciPasseggero", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(passeggeroPayload),
+        documenti: passeggeroDocumenti
       });
-
-      if (!passeggeroRes.ok) {
-        const error = await passeggeroRes.text();
-        throw new Error(`Errore inserimento passeggero ${i + 1}: ${error}`);
-      }
-
-      const passeggeroData = await passeggeroRes.json();
     }
 
-    // Invia mail di conferma
+    // =====================================================================
+    // CHIAMATA API UNIFICATA
+    // =====================================================================
+    const registrationPayload = {
+      guidatore: guidatoreData,
+      passeggeri: passeggeriData,
+      evento_id: selectedEvent.id
+    };
+
+    const response = await fetch("/api/registrazione-completa", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(registrationPayload),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error("Errore durante la registrazione: " + error);
+    }
+
+    const result = await response.json();
+
+    // =====================================================================
+    // INVIO EMAIL DI CONFERMA
+    // =====================================================================
+    
     try {
+      let prezzo = selectedEvent.quote[formData.quotaSelezionata]["prezzo"];
       await handleConfirmationMail(
         0,
         formData.guidatoreEmail,
         formData,
         passeggeri,
         selectedEvent,
+        prezzo,
       );
     } catch (emailError) {
       console.warn("Errore invio email di conferma:", emailError);
@@ -1115,6 +1022,7 @@ const handleSubmitRegistration = async () => {
     });
     setPasseggeri([]);
     setValidationErrors({});
+
   } catch (err) {
     console.error("Errore durante la registrazione:", err);
     showErrorBanner(
