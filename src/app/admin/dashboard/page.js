@@ -707,7 +707,6 @@ const InvoiceUploadModal = ({ selectedRegistration, invoiceFile, setInvoiceFile,
     </div>
   )
 }
-
 // Modal per visualizzare le iscrizioni
 const RegistrationsModal = ({
   selectedEventForRegistrations,
