@@ -46,6 +46,63 @@ import ReactMarkdown from 'react-markdown';
 import { supabase } from "@/lib/supabaseClient"
 
 
+//generatore pdf combinato
+
+const generateCombinedPdf = async (documentoFronteUrl, documentoRetroUrl, registrationName, registrationSurname) => {
+  try {
+    const doc = new jsPDF();
+
+    const addImageToPdf = async (imageUrl, doc, pageNumber) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = imageUrl;
+
+        img.onload = () => {
+          const imgWidth = img.width;
+          const imgHeight = img.height;
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const pageHeight = doc.internal.pageSize.getHeight();
+
+          const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+          const scaledWidth = imgWidth * ratio;
+          const scaledHeight = imgHeight * ratio;
+
+          const x = (pageWidth - scaledWidth) / 2;
+          const y = (pageHeight - scaledHeight) / 2;
+
+          if (pageNumber > 1) {
+            doc.addPage();
+          }
+          doc.addImage(img, 'JPEG', x, y, scaledWidth, scaledHeight);
+          resolve();
+        };
+
+        img.onerror = (error) => {
+          console.error(`Errore nel caricamento dell'immagine ${imageUrl}:`, error);
+          reject(error);
+        };
+      });
+    };
+
+    if (documentoFronteUrl) {
+      await addImageToPdf(documentoFronteUrl, doc, 1);
+    }
+
+    if (documentoRetroUrl) {
+      await addImageToPdf(documentoRetroUrl, doc, documentoFronteUrl ? 2 : 1);
+    }
+
+    const filename = `documento_${registrationName}_${registrationSurname}.pdf`;
+    doc.save(filename);
+    console.log(`PDF ${filename} generato con successo.`);
+
+  } catch (error) {
+    console.error("Errore durante la generazione del PDF combinato:", error);
+  }
+};
+
+
 // Helper per mostrare notifiche all'utente - RIMOSSO, ora usiamo i banner
 
 const EventFormModal = ({
@@ -1020,28 +1077,38 @@ const RegistrationsModal = ({
                           </div>
 
                           {/* Documenti Guidatore */}
-                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
-                            {reg.documento_fronte && (
-                              <Button
-                                variant="outline"
-                                onClick={() => openDocumentInModal(reg.documento_fronte, "jpg", false)}
-                                className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm flex-1 sm:flex-none"
-                                size="sm"
-                              >
-                                <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
-                              </Button>
-                            )}
-                            {reg.documento_retro && (
-                              <Button
-                                variant="outline"
-                                onClick={() => openDocumentInModal(reg.documento_retro, "jpg", false)}
-                                className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm flex-1 sm:flex-none"
-                                size="sm"
-                              >
-                                <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
-                              </Button>
-                            )}
-                          </div>
+                           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
+      {reg.documento_fronte && (
+        <Button
+          variant="outline"
+          onClick={() => openDocumentInModal(reg.documento_fronte, "jpg", false)} // openDocumentInModal deve essere disponibile qui
+          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm flex-1 sm:flex-none"
+          size="sm"
+        >
+          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Fronte
+        </Button>
+      )}
+      {reg.documento_retro && (
+        <Button
+          variant="outline"
+          onClick={() => openDocumentInModal(reg.documento_retro, "jpg", false)} // openDocumentInModal deve essere disponibile qui
+          className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-sm flex-1 sm:flex-none"
+          size="sm"
+        >
+          <ExternalLinkIcon className="mr-2 h-4 w-4" /> Documento Retro
+        </Button>
+      )}
+      {(reg.documento_fronte || reg.documento_retro) && (
+        <Button
+          variant="outline"
+          onClick={() => generateCombinedPdf(reg.documento_fronte, reg.documento_retro, reg.nome, reg.cognome)}
+          className="bg-blue-500 hover:bg-blue-600 text-white border-blue-700 transition-colors text-sm flex-1 sm:flex-none"
+          size="sm"
+        >
+          <DownloadIcon className="mr-2 h-4 w-4" /> Scarica PDF Combinato
+        </Button>
+      )}
+    </div>
 
                           {/* Informazioni Auto */}
                           {reg.auto_marca && (
@@ -2355,7 +2422,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     // Formattazione in formato "gg/mm/aaaa"
     const formattedEventDate = `${eventDate.getDate().toString().padStart(2, '0')}/${(eventDate.getMonth() + 1).toString().padStart(2, '0')}/${eventDate.getFullYear()}`
         
-    // Funzione per controllare se serve una nuova pagina
+    // Funzione per controllare se serve una nuova pagina, con logica migliorata
     const checkNewPage = (neededSpace = 10) => {
       if (yPos + neededSpace > pageHeight - 20) {
         // Aggiungi numero pagina corrente prima di passare alla prossima
@@ -2373,10 +2440,11 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     // Funzione per testo con wrap
     const addWrappedText = (text, x, y, maxWidth, lineHeight = 7) => {
       const lines = doc.splitTextToSize(text, maxWidth)
+      let currentY = y
       lines.forEach((line, index) => {
         checkNewPage(lineHeight)
-        doc.text(line, x, y + (index * lineHeight))
-        yPos = y + ((index + 1) * lineHeight)
+        doc.text(line, x, currentY + (index * lineHeight))
+        yPos = currentY + ((index + 1) * lineHeight)
       })
       return yPos
     }
@@ -2409,14 +2477,14 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     doc.text(`e-mail: ${registration.indirizzo_email}`, margin + 90, yPos)
     yPos += 10
     
-    // Dati anagrafici del passeggero
-    checkNewPage(50)
-    doc.setFont(undefined, 'bold')
-    doc.text('DATI ANAGRAFICI DEL PASSEGGERO', margin, yPos)
-    yPos += 8
-    
-    doc.setFont(undefined, 'normal')
+    // Dati anagrafici del passeggero (condizionale)
     if (registration.passeggeri && registration.passeggeri.length > 0) {
+      checkNewPage(50)
+      doc.setFont(undefined, 'bold')
+      doc.text('DATI ANAGRAFICI DEL PASSEGGERO', margin, yPos)
+      yPos += 8
+      
+      doc.setFont(undefined, 'normal')
       const firstPassenger = registration.passeggeri[0]
       doc.text(`Cognome: ${firstPassenger.cognome || ''}`, margin, yPos)
       doc.text(`Nome: ${firstPassenger.nome || ''}`, margin + 90, yPos)
@@ -2425,14 +2493,8 @@ const handleGenerateIndividualPdf = async (registration, event) => {
       yPos += 8
       doc.text(`Cellulare: ${firstPassenger.telefono || '________________________'}`, margin, yPos)
       doc.text(`e-mail: ${firstPassenger.indirizzo_email || '___________________________________'}`, margin + 90, yPos)
-    } else {
-      yPos = addWrappedText('Cognome: ___________________  Nome: _____________________', margin, yPos, maxWidth)
-      yPos += 3
-      yPos = addWrappedText('Codice Fiscale: ___________________________________________________', margin, yPos, maxWidth)
-      yPos += 3
-      yPos = addWrappedText('Cellulare: ____________________________________  e-mail: ___________________________________', margin, yPos, maxWidth)
+      yPos += 10
     }
-    yPos += 10
     
     // Dati autovettura
     checkNewPage(30)
@@ -2454,42 +2516,42 @@ const handleGenerateIndividualPdf = async (registration, event) => {
     yPos = addWrappedText('di poter partecipare all\'evento in epigrafe a proprio rischio e pericolo, senza esclusiva, con l\'autovettura sopra identificata, coperta da assicurazione RCA in corso di validità.', margin, yPos, maxWidth)
     yPos += 10
     
-checkNewPage(60)
-doc.setFont(undefined, 'bold')
-doc.text('PACCHETTO/SOLUZIONE DI PARTECIPAZIONE', margin, yPos)
-yPos += 8
+    checkNewPage(60)
+    doc.setFont(undefined, 'bold')
+    doc.text('PACCHETTO/SOLUZIONE DI PARTECIPAZIONE', margin, yPos)
+    yPos += 8
 
-doc.setFont(undefined, 'normal')
+    doc.setFont(undefined, 'normal')
 
-// Ottieni i dati quote (stringa o oggetto)
-let quoteData = event.quote
+    // Ottieni i dati quote (stringa o oggetto)
+    let quoteData = event.quote
 
-if (typeof quoteData === 'string') {
-  try {
-    quoteData = JSON.parse(quoteData)
-  } catch (e) {
-    console.error('Errore nel parsing del JSON:', e)
-    quoteData = {}
-  }
-}
+    if (typeof quoteData === 'string') {
+      try {
+        quoteData = JSON.parse(quoteData)
+      } catch (e) {
+        console.error('Errore nel parsing del JSON:', e)
+        quoteData = {}
+      }
+    }
 
-// Scorri le quote mantenendo sia chiave che oggetto
-Object.entries(quoteData).forEach(([key, quotaObj]) => {
-  checkNewPage(7)
+    // Scorri le quote mantenendo sia chiave che oggetto
+    Object.entries(quoteData).forEach(([key, quotaObj]) => {
+      checkNewPage(7)
 
-  // Metti la spunta se il nome della quota corrisponde (es. 'quota2')
-  const isSelected = registration.quota === key
+      // Metti la spunta se il nome della quota corrisponde (es. 'quota2')
+      const isSelected = registration.quota === key
 
-  doc.text(isSelected ? '[X]' : '[ ]', margin, yPos)
-  doc.text(quotaObj.titolo || key, margin + 15, yPos)
+      doc.text(isSelected ? '[X]' : '[ ]', margin, yPos)
+      doc.text(quotaObj.titolo || key, margin + 15, yPos)
 
-  yPos += 7
-})
+      yPos += 7
+    })
 
-yPos += 8
+    yPos += 8
 
 
-    // Esigenze alimentari
+    // Esigenze alimentari guidatore
     checkNewPage(30)
     const hasIntolleranze = registration.intolleranze && registration.intolleranze.trim() !== ''
     doc.text(`ESIGENZE ALIMENTARI GUIDATORE: SI ${hasIntolleranze ? '[X]' : '[ ]'}         NO ${hasIntolleranze ? '[ ]' : '[X]'}`, margin, yPos)
@@ -2497,17 +2559,19 @@ yPos += 8
     yPos = addWrappedText(`Intolleranze/Allergie: ${registration.intolleranze || '____________________________________'}`, margin, yPos, maxWidth)
     yPos += 8
     
-    // Esigenze alimentari passeggero
-    let passengerIntolleranze = ''
-    if (registration.passeggeri && registration.passeggeri.length > 0 && registration.passeggeri[0].intolleranze) {
-      passengerIntolleranze = registration.passeggeri[0].intolleranze
+    // Esigenze alimentari passeggero (condizionale)
+    if (registration.passeggeri && registration.passeggeri.length > 0) {
+      let passengerIntolleranze = ''
+      if (registration.passeggeri[0].intolleranze) {
+        passengerIntolleranze = registration.passeggeri[0].intolleranze
+      }
+      const hasPassengerIntolleranze = passengerIntolleranze && passengerIntolleranze.trim() !== ''
+      
+      doc.text(`ESIGENZE ALIMENTARE PASSEGGERO: Intolleranze: SI ${hasPassengerIntolleranze ? '[X]' : '[ ]'}         NO ${hasPassengerIntolleranze ? '[ ]' : '[X]'}`, margin, yPos)
+      yPos += 4
+      yPos = addWrappedText(`Intolleranze/Allergie: ${passengerIntolleranze || '______________________________'}`, margin, yPos, maxWidth)
+      yPos += 10
     }
-    const hasPassengerIntolleranze = passengerIntolleranze && passengerIntolleranze.trim() !== ''
-    
-    doc.text(`ESIGENZE ALIMENTARE PASSEGGERO: Intolleranze: SI ${hasPassengerIntolleranze ? '[X]' : '[ ]'}         NO ${hasPassengerIntolleranze ? '[ ]' : '[X]'}`, margin, yPos)
-    yPos += 4
-    yPos = addWrappedText(`Intolleranze/Allergie: ${passengerIntolleranze || '_______________________________'}`, margin, yPos, maxWidth)
-    yPos += 10
     
     checkNewPage(20)
     yPos = addWrappedText(`Il sottoscritto (guidatore) ${registration.nome} ${registration.cognome}`, margin, yPos, maxWidth)
@@ -2516,8 +2580,15 @@ yPos += 8
     if (registration.passeggeri && registration.passeggeri.length > 0) {
       passengerName = `${registration.passeggeri[0].nome || ''} ${registration.passeggeri[0].cognome || ''}`.trim()
     }
-    yPos = addWrappedText(` e il sottoscritto (passeggero) ${passengerName || '_____________________________________________'}`, margin, yPos, maxWidth)
-    yPos += 10
+    
+    // Modifica: Aggiungi la riga del passeggero solo se presente, altrimenti omettila completamente
+    if (passengerName) {
+      yPos = addWrappedText(` e il sottoscritto (passeggero) ${passengerName}`, margin, yPos, maxWidth)
+      yPos += 10
+    } else {
+      // Se non c'è passeggero, non aggiungere la riga, ma mantieni lo spazio per coerenza di layout se necessario
+      // In questo caso, la riga non viene aggiunta, quindi non c'è bisogno di incrementare yPos per essa.
+    }
     
     checkNewPage(15)
     doc.setFont(undefined, 'bold')
@@ -2544,7 +2615,7 @@ yPos += 8
     ]
     
     dichiarazioni.forEach(dichiarazione => {
-      checkNewPage(32)
+      checkNewPage(32) // Aumentato lo spazio per evitare righe isolate
       yPos = addWrappedText(dichiarazione, margin, yPos, maxWidth)
       yPos += 5
     })
@@ -2569,39 +2640,33 @@ yPos += 8
     doc.text('Firma _________________', margin + 90, yPos)
     yPos += 12
     
-    // Sezione PASSEGGERO
-    checkNewPage(60)
+    // Sezione PASSEGGERO (condizionale)
     if (registration.passeggeri && registration.passeggeri.length > 0) {
+      checkNewPage(60)
       const firstPassenger = registration.passeggeri[0]
       yPos = addWrappedText(`IL PASSEGGERO: ${firstPassenger.cognome || ''} ${firstPassenger.nome || ''}`, margin, yPos, maxWidth)
-    } else {
-      yPos = addWrappedText('IL PASSEGGERO (inserire Cognome e nome): __________________________________', margin, yPos, maxWidth)
-    }
-    yPos += 8
-    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
-    doc.text('Firma ______________________', margin + 90, yPos)
-    yPos += 12
-    
-    // Aggiungi nome e cognome del passeggero dopo "Il/La sottoscritto/a"
-    let passengerFullName = '___________________________________________'
-    if (registration.passeggeri && registration.passeggeri.length > 0) {
-      const firstPassenger = registration.passeggeri[0]
+      yPos += 8
+      doc.text(`Lì ${formattedEventDate}`, margin, yPos)
+      doc.text('Firma ______________________', margin + 90, yPos)
+      yPos += 12
+      
+      let passengerFullName = ''
       if (firstPassenger.nome && firstPassenger.cognome) {
         passengerFullName = `${firstPassenger.nome} ${firstPassenger.cognome} `
       }
+      
+      yPos = addWrappedText(`Il/La sottoscritto/a ${passengerFullName}dichiara di aver preso visione consapevole e di approvare le clausole di cui ai punti 5) Responsabilità, 6) Pretese, 7) Esonero, 9) Rinuncia, 11) Allontanamento e 13) Azioni legali.`, margin, yPos, maxWidth)
+      yPos += 8
+      doc.text(`Lì ${formattedEventDate}`, margin, yPos)
+      doc.text('Firma ____________________', margin + 90, yPos)
+      yPos += 12
+      
+      yPos = addWrappedText(`Il/La sottoscritto/a ${passengerFullName}dichiara ai sensi del DPR n.445 del 28/12/2000 la veridicità dei dati trasmessi, conferma espressamente tutto quanto sopra precede ad ogni e qualsiasi effetto di legge ed autorizza il trattamento dei dati personali ai sensi del D.lgs. 196 del 30 giugno 2003 e s.m.i.`, margin, yPos, maxWidth)
+      yPos += 8
+      doc.text(`Lì ${formattedEventDate}`, margin, yPos)
+      doc.text('Firma ___________________', margin + 90, yPos)
+      yPos += 15
     }
-    
-    yPos = addWrappedText(`Il/La sottoscritto/a ${passengerFullName}dichiara di aver preso visione consapevole e di approvare le clausole di cui ai punti 5) Responsabilità, 6) Pretese, 7) Esonero, 9) Rinuncia, 11) Allontanamento e 13) Azioni legali.`, margin, yPos, maxWidth)
-    yPos += 8
-    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
-    doc.text('Firma ____________________', margin + 90, yPos)
-    yPos += 12
-    
-    yPos = addWrappedText(`Il/La sottoscritto/a ${passengerFullName}dichiara ai sensi del DPR n.445 del 28/12/2000 la veridicità dei dati trasmessi, conferma espressamente tutto quanto sopra precede ad ogni e qualsiasi effetto di legge ed autorizza il trattamento dei dati personali ai sensi del D.lgs. 196 del 30 giugno 2003 e s.m.i.`, margin, yPos, maxWidth)
-    yPos += 8
-    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
-    doc.text('Firma ___________________', margin + 90, yPos)
-    yPos += 15
     
     // AUTORIZZAZIONI
     checkNewPage(120)
@@ -2627,15 +2692,13 @@ yPos += 8
     if (registration.passeggeri && registration.passeggeri.length > 0) {
       const firstPassenger = registration.passeggeri[0]
       yPos = addWrappedText(`IL PASSEGGERO: ${firstPassenger.cognome || ''} ${firstPassenger.nome || ''}`, margin, yPos, maxWidth)
-    } else {
-      yPos = addWrappedText('IL PASSEGGERO (inserire Cognome e nome): ____________________________', margin, yPos, maxWidth)
+      yPos += 8
+      doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
+      yPos += 8
+      doc.text(`Lì ${formattedEventDate}`, margin, yPos)
+      doc.text('Firma ____________________', margin + 90, yPos)
+      yPos += 12
     }
-    yPos += 8
-    doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
-    yPos += 8
-    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
-    doc.text('Firma ____________________', margin + 90, yPos)
-    yPos += 12
     
     // Seconda autorizzazione
     checkNewPage(120)
@@ -2658,16 +2721,14 @@ yPos += 8
     if (registration.passeggeri && registration.passeggeri.length > 0) {
       const firstPassenger = registration.passeggeri[0]
       yPos = addWrappedText(`IL PASSEGGERO: ${firstPassenger.cognome || ''} ${firstPassenger.nome || ''}`, margin, yPos, maxWidth)
-    } else {
-      yPos = addWrappedText('IL PASSEGGERO (inserire Cognome e nome): _____________________________________________________', margin, yPos, maxWidth)
+      yPos += 8
+      doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
+      yPos += 8
+      doc.text(`Lì ${formattedEventDate}`, margin, yPos)
+      doc.text('Firma ____________________', margin + 90, yPos)
     }
-    yPos += 8
-    doc.text('[X] Acconsento [ ] Non acconsento', margin, yPos)
-    yPos += 8
-    doc.text(`Lì ${formattedEventDate}`, margin, yPos)
-    doc.text('Firma _____________________', margin + 90, yPos)
     
-    // Gestione passeggeri aggiuntivi (dal secondo in poi)
+    // Gestione passeggeri aggiuntivi (dal secondo in poi) (condizionale)
     if (registration.passeggeri && registration.passeggeri.length > 1) {
       for (let i = 1; i < registration.passeggeri.length; i++) {
         const passenger = registration.passeggeri[i]
@@ -2748,6 +2809,10 @@ yPos += 8
     showErrorBanner("Errore durante la generazione del PDF: " + error.message)
   }
 }
+
+
+
+
   const handleOpenInvoiceUpload = (registration) => {
     setSelectedRegistration(registration)
     setShowInvoiceUpload(true)

@@ -131,6 +131,8 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showProgramModal, setShowProgramModal] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [expandedEvents, setExpandedEvents] = useState({});
 
   // Stati per il caricamento e la categorizzazione degli eventi
   const [eventi, setEventi] = useState([]);
@@ -1236,24 +1238,25 @@ const handleSubmitRegistration = async () => {
         )}
 
         {/* SEZIONE HERO */}
-        <section
-          className="text-center px-4 py-20 bg-cover bg-center text-white relative"
-          style={{ backgroundImage: "url('/11.jpg')" }}
-        >
-          <div className="absolute inset-0 bg-black opacity-60"></div>
-          <div className="relative z-10">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Vivi la Passione
-            </h1>
-            <p className="text-gray-200 max-w-3xl mx-auto mb-8 text-lg md:text-xl">
-              Un’esperienza riservata a chi vive la strada come un privilegio.
-            </p>
-            <Button className="bg-white text-black hover:bg-gray-200 px-8 py-4 text-lg font-semibold relative group overflow-hidden">
-              <span className="relative z-10">Scopri i Prossimi Eventi</span>
-              <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
-            </Button>
-          </div>
-        </section>
+   <section
+  className="px-4 py-20 bg-cover bg-center text-white relative h-[500px] flex items-center"
+  style={{ backgroundImage: "url('/11.jpg')" }}
+>
+  <div className="absolute inset-0 bg-black opacity-30"></div>
+  <div className="relative z-10 w-full h-full flex items-start">
+    <div className="max-w-lg ml-8 md:ml-16 text-left">
+      <h1 className="text-3xl md:text-5xl font-bold mb-6">
+        La strada è solo l'inizio
+      </h1>
+      <p className="text-gray-100 mb-8 text-base md:text-lg">
+        Un'esperienza riservata a chi vive la strada come un privilegio.
+      </p>
+      {/* Bottone opzionale */}
+    </div>
+  </div>
+</section>
+
+
 
         {/* SEZIONE PROSSIMI EVENTI */}
         <section id="prossimi-eventi" className="px-6 py-20 bg-gray-100">
@@ -1374,7 +1377,7 @@ const handleSubmitRegistration = async () => {
     <Image
       src="/chi_siamo.png"
       alt="Chi Siamo"
-      width={600}
+      width={590}
       height={600}
       className="object-cover w-full h-full"
     />
@@ -1392,179 +1395,270 @@ const handleSubmitRegistration = async () => {
         >
           {/* Sfondo rimosso: niente racing stripe */}
           {/* Nessuna decorazione racing qui */}
+<div className="container mx-auto relative z-10">
+ <div className="text-center mb-12">
+   <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+     🏁 Galleria Generale 🏁
+   </h2>
+   <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+     I momenti più emozionanti dei nostri eventi motoristici
+   </p>
+   <div className="w-24 h-1 bg-white mx-auto mt-4 rounded-full"></div>
+ </div>
 
-          <div className="container mx-auto relative z-10">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-                🏁 Galleria Generale 🏁
-              </h2>
-              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                I momenti più emozionanti dei nostri eventi motoristici
-              </p>
-              <div className="w-24 h-1 bg-white mx-auto mt-4 rounded-full"></div>
-            </div>
+ {loadingGalleria ? (
+   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+     {[...Array(6)].map((_, index) => (
+       <div
+         key={index}
+         className="aspect-square rounded-xl bg-gray-800 animate-pulse relative overflow-hidden"
+       >
+         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
+         <div className="absolute inset-0 flex items-center justify-center">
+           <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+         </div>
+       </div>
+     ))}
+   </div>
+ ) : images.length === 0 ? (
+   <div className="text-center py-16">
+     <div className="text-6xl mb-4">🏎️</div>
+     <p className="text-gray-300 text-xl">
+       Nessuna immagine disponibile al momento
+     </p>
+     <p className="text-gray-400 text-sm mt-2">
+       Le foto degli eventi verranno caricate presto!
+     </p>
+   </div>
+ ) : (
+   <>
+     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+       {(showAll ? images : images.slice(0, 6)).map((url, index) => (
+         <div
+           key={index}
+           className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer transform transition-all duration-500 hover:scale-105 hover:z-10"
+           onClick={() => handleImageClick(url)}
+         >
+           <img
+             src={url || "/placeholder.svg"}
+             alt={`Galleria foto ${index + 1}`}
+             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+             loading="lazy"
+             onLoad={(e) => {
+               e.target.classList.add("loaded");
+             }}
+             style={{
+               filter: "brightness(0.9) contrast(1.1)",
+             }}
+           />
 
-            {loadingGalleria ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {[...Array(15)].map((_, index) => (
-                  <div
-                    key={index}
-                    className="aspect-square rounded-xl bg-gray-800 animate-pulse relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : images.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-4">🏎️</div>
-                <p className="text-gray-300 text-xl">
-                  Nessuna immagine disponibile al momento
-                </p>
-                <p className="text-gray-400 text-sm mt-2">
-                  Le foto degli eventi verranno caricate presto!
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {images.map((url, index) => (
-                  <div
-                    key={index}
-                    className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer transform transition-all duration-500 hover:scale-105 hover:z-10"
-                    onClick={() => handleImageClick(url)}
-                  >
-                    <img
-                      src={url || "/placeholder.svg"}
-                      alt={`Galleria foto ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      loading="lazy"
-                      onLoad={(e) => {
-                        e.target.classList.add("loaded");
-                      }}
-                      style={{
-                        filter: "brightness(0.9) contrast(1.1)",
-                      }}
-                    />
+           {/* Overlay gradiente sempre visibile ma sottile */}
+           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
 
-                    {/* Overlay gradiente sempre visibile ma sottile */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+           {/* Icona zoom su hover */}
+           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
+             <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
+               <span className="text-2xl">🔍</span>
+             </div>
+           </div>
 
-                    {/* Icona zoom su hover */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
-                      <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
-                        <span className="text-2xl">🔍</span>
-                      </div>
-                    </div>
+           {/* Numero foto in basso */}
+           <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+             #{index + 1}
+           </div>
 
-                    {/* Numero foto in basso */}
-                    <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      #{index + 1}
-                    </div>
+           {/* Effetto riflesso racing */}
+           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                    {/* Effetto riflesso racing */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+           {/* Bordo su hover */}
+           <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/50 rounded-xl transition-all duration-300"></div>
+         </div>
+       ))}
+     </div>
 
-                    {/* Bordo su hover */}
-                    <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/50 rounded-xl transition-all duration-300"></div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Sezione finale racing rimossa */}
-          </div>
+     {/* Pulsante "Vedi di più" / "Vedi meno" */}
+     {images.length > 6 && (
+       <div className="text-center mt-12">
+         <button
+           onClick={() => setShowAll(!showAll)}
+           className="bg-white text-black hover:bg-gray-200 px-8 py-4 text-lg font-semibold rounded-full relative group overflow-hidden transition-all duration-300 transform hover:scale-105"
+         >
+           <span className="relative z-10 flex items-center gap-2">
+             {showAll ? (
+               <>
+                 <span>Vedi meno</span>
+                 <span className="text-xl">⬆️</span>
+               </>
+             ) : (
+               <>
+                 <span>Vedi di più ({images.length - 6} foto)</span>
+                 <span className="text-xl">⬇️</span>
+               </>
+             )}
+           </span>
+           <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
+         </button>
+       </div>
+     )}
+   </>
+ )}
+</div>
         </section>
 
         {/* SEZIONE GALLERIA EVENTI PASSATI MIGLIORATA */}
         <section id="galleria-eventi" className="px-6 py-20 bg-gray-100">
-          <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">
-              Galleria Eventi Passati
-            </h2>
-            <p className="text-center text-gray-600 mb-12 text-lg">
-              Rivivi le emozioni dei nostri eventi precedenti
-            </p>
+       <div className="container mx-auto">
+ <div className="text-center mb-12">
+   <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-gray-800 via-black to-gray-800 bg-clip-text text-transparent">
+     🏆 Eventi Passati 🏆
+   </h2>
+   <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
+     Rivivi l'adrenalina e le emozioni dei nostri eventi più spettacolari
+   </p>
+   <div className="w-24 h-1 bg-gradient-to-r from-red-500 via-white to-green-500 mx-auto mt-4 rounded-full"></div>
+ </div>
 
-            {loadingEventiPassatiImmagini ? (
-              <div className="text-center text-gray-700 text-lg">
-                Caricamento gallerie eventi...
-              </div>
-            ) : Object.keys(eventiPassatiImmagini).length === 0 ||
-              Object.values(eventiPassatiImmagini).every(
-                (arr) => arr.length === 0,
-              ) ? (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-4">🏎️</div>
-                <p className="text-gray-600 text-xl">
-                  Nessuna galleria eventi disponibile al momento
-                </p>
-                <p className="text-gray-500 text-sm mt-2">
-                  Le foto degli eventi passati verranno caricate presto!
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-16">
-                {eventiPassati
-                  .filter(
-                    (evento) =>
-                      eventiPassatiImmagini[evento.id] &&
-                      eventiPassatiImmagini[evento.id].length > 0,
-                  )
-                  .map((evento) => (
-                    <div
-                      key={evento.id}
-                      className="bg-white rounded-2xl p-8 shadow-lg"
-                    >
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="w-2 h-12 bg-gradient-to-b from-red-500 via-white to-green-500 rounded-full"></div>
-                        <div>
-                          <h3 className="text-2xl font-semibold text-black">
-                            {evento.titolo}
-                          </h3>
-                          <p className="text-gray-600">
-                            {new Date(evento.data).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                        {eventiPassatiImmagini[evento.id].map(
-                          (immagine, index) => (
-                            <div
-                              key={immagine.id}
-                              className="group relative aspect-square overflow-hidden rounded-xl bg-gray-200 hover:shadow-xl transition-all duration-500 cursor-pointer"
-                              onClick={() => handleImageClick(immagine.url)}
-                            >
-                              <img
-                                src={immagine.url}
-                                alt={immagine.alt}
-                                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
-                                loading="lazy"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="absolute bottom-4 left-4 text-white">
-                                  <p className="text-sm font-medium">
-                                    Foto {index + 1}
-                                  </p>
-                                </div>
-                              </div>
-                              {/* Icona zoom su hover */}
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
-                                <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
-                                  <span className="text-xl">🔍</span>
-                                </div>
-                              </div>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
+ {loadingEventiPassatiImmagini ? (
+   <div className="text-center py-16">
+     <div className="inline-flex items-center gap-3 text-gray-700 text-lg">
+       <div className="w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
+       <span>Caricamento gallerie eventi...</span>
+     </div>
+   </div>
+ ) : Object.keys(eventiPassatiImmagini).length === 0 ||
+   Object.values(eventiPassatiImmagini).every((arr) => arr.length === 0) ? (
+   <div className="text-center py-16">
+     <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 max-w-lg mx-auto shadow-md">
+       <div className="text-6xl mb-4 animate-bounce">🏎️</div>
+       <p className="text-gray-700 text-xl font-semibold mb-2">
+         Nessuna galleria eventi disponibile
+       </p>
+       <p className="text-gray-500">
+         Le foto degli eventi passati verranno caricate presto!
+       </p>
+     </div>
+   </div>
+ ) : (
+   <div className="space-y-8">
+     {eventiPassati
+       .filter(
+         (evento) =>
+           eventiPassatiImmagini[evento.id] &&
+           eventiPassatiImmagini[evento.id].length > 0
+       )
+       .map((evento) => {
+         const isExpanded = expandedEvents[evento.id] || false;
+         const immagini = eventiPassatiImmagini[evento.id];
+         const displayedImages = isExpanded ? immagini : immagini.slice(0, 2);
+
+         const toggleExpanded = () => {
+           setExpandedEvents((prev) => ({
+             ...prev,
+             [evento.id]: !prev[evento.id],
+           }));
+         };
+
+         return (
+           <div
+             key={evento.id}
+             className="bg-gradient-to-br from-white to-gray-50 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 max-w-4xl mx-auto"
+           >
+             {/* Header dell'evento */}
+             <div className="bg-gradient-to-r from-black via-gray-800 to-black p-6 text-white relative overflow-hidden">
+               <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-green-500/10"></div>
+               <div className="relative z-10 flex items-center gap-4">
+                 <div className="w-1 h-12 bg-gradient-to-b from-red-500 via-white to-green-500 rounded-full shadow-lg"></div>
+                 <div>
+                   <h3 className="text-xl md:text-2xl font-bold mb-1">
+                     {evento.titolo}
+                   </h3>
+                   <div className="flex items-center gap-2 text-gray-300">
+                     <span className="text-sm">📅</span>
+                     <p className="text-sm font-medium">
+                       {new Date(evento.data).toLocaleDateString('it-IT', {
+                         weekday: 'long',
+                         year: 'numeric',
+                         month: 'long',
+                         day: 'numeric',
+                       })}
+                     </p>
+                   </div>
+                 </div>
+               </div>
+               {/* Decorazione racing stripes */}
+               <div className="absolute top-0 right-0 w-24 h-full bg-gradient-to-l from-white/5 to-transparent transform skew-x-12"></div>
+             </div>
+
+             {/* Galleria foto */}
+             <div className="p-6">
+               <div className="grid grid-cols-2 gap-4 mb-6">
+                 {displayedImages.map((immagine, index) => (
+                   <div
+                     key={immagine.id}
+                     className="group relative aspect-square overflow-hidden rounded-xl bg-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02]"
+                     onClick={() => handleImageClick(immagine.url)}
+                   >
+                     <img
+                       src={immagine.url}
+                       alt={immagine.alt}
+                       className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                       loading="lazy"
+                     />
+
+                     {/* Overlay gradiente */}
+                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                       <div className="absolute bottom-3 left-3 text-white">
+                         <p className="text-sm font-bold flex items-center gap-1">
+                           <span>📸</span>
+                           Foto {index + 1}
+                         </p>
+                       </div>
+                     </div>
+
+                     {/* Icona zoom su hover */}
+                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
+                       <div className="w-12 h-12 bg-white/95 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
+                         <span className="text-lg">🔍</span>
+                       </div>
+                     </div>
+
+                     {/* Bordo racing su hover */}
+                     <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/60 rounded-xl transition-all duration-300"></div>
+                   </div>
+                 ))}
+               </div>
+
+               {/* Pulsante Vedi di più */}
+               {immagini.length > 2 && (
+                 <div className="text-center">
+                   <button
+                     onClick={toggleExpanded}
+                     className="bg-gradient-to-r from-gray-800 to-black text-white hover:from-black hover:to-gray-800 px-6 py-3 text-base font-semibold rounded-full relative group overflow-hidden transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                   >
+                     <span className="relative z-10 flex items-center gap-2">
+                       {isExpanded ? (
+                         <>
+                           <span>Mostra meno</span>
+                           <span className="text-lg">⬆️</span>
+                         </>
+                       ) : (
+                         <>
+                           <span>Vedi tutte le foto ({immagini.length})</span>
+                           <span className="text-lg">⬇️</span>
+                         </>
+                       )}
+                     </span>
+                     <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-red-500 via-white to-green-500 group-hover:w-full transition-all duration-400"></span>
+                   </button>
+                 </div>
+               )}
+             </div>
+           </div>
+         );
+       })}
+   </div>
+ )}
+</div>
         </section>
 
         {/* MODAL PROGRAMMA EVENTO */}

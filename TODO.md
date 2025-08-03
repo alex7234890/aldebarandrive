@@ -1,18 +1,5 @@
-# To-Do List
 
-## 🖼️ Gestione Eventi
-
-- [ ] **Modifica evento**: Aggiungere la possibilità di caricare un'immagine di copertina per l'evento
-- [ ] **Dashboard**: Aggiornare layout per visualizzare anche l’immagine di sfondo dell’evento
-- [ ] **Caricamento immagini**: Integrare immagini degli eventi passati prelevandole dal database
-
-## 👤 Sezione Utente
-
-- [ ] **Sezione "Chi siamo"**: Inserire immagini rappresentative
-
-## 🖥️ Interfaccia Utente
-
-- [ ] **Dashboard - lista iscritti**: 
-- [ ] **Responsive mobile**: Disabilitare zoom e scale su dispositivi mobili
-
-guardare grandezza logo
+-mettere limite a iscrizioni (50 per supercar for passion e 50 anche per l'altro) //valerio
+-mandare mail all'avvenuta iscrizione anche ad aldebaran
+-mettere tasto per scaricare pdf documenti (fatto ma c'è errore nel caricamento dei documenti)
+-migliorare creazione pdf
