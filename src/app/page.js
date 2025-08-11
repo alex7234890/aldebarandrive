@@ -1071,6 +1071,7 @@ const handleSubmitRegistration = async () => {
     formData,
     passeggeri,
     selectedEvent,
+    prezzo
   ) {
     try {
       const res = await fetch("/api/resendApi", {
@@ -1081,6 +1082,7 @@ const handleSubmitRegistration = async () => {
           formData,
           passeggeri,
           selectedEvent,
+          prezzo
         }),
       });
 
