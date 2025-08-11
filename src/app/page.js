@@ -211,261 +211,289 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // useEffect per il caricamento degli eventi futuri e passati all'avvio della pagina
-  useEffect(() => {
-    const fetchEventi = async () => {
-      setLoadingEventi(true);
-      setLoadingEventiPassati(true);
-      try {
-        const { data, error } = await supabase
-          .from("evento")
-          .select("*")
-          .order("data", { ascending: true });
+// useEffect ottimizzato per il caricamento degli eventi e immagini
+useEffect(() => {
+  // Funzione helper per validare i path delle immagini
+  const isValidImagePath = (path) => {
+    if (!path || typeof path !== 'string') return false;
+    
+    const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+    const lowerPath = path.toLowerCase();
+    
+    return (
+      validExtensions.some((ext) => lowerPath.endsWith(ext)) &&
+      !lowerPath.includes("placeholder") &&
+      !lowerPath.includes("immagine1") &&
+      !lowerPath.startsWith(".") &&
+      path !== ".emptyFolderPlaceholder"
+    );
+  };
 
-        if (error) {
-          console.error("Errore durante il fetch degli eventi:", error);
-          return;
-        }
-
-        const now = new Date();
-        const futuri = [];
-        const passati = [];
-
-        data.forEach((evento) => {
-          if (evento.passato) {
-            passati.push(evento);
-          } else {
-            // Parse the 'quote' JSON string if it exists
-            if (evento.quote && typeof evento.quote === "string") {
-              try {
-                evento.quote = JSON.parse(evento.quote);
-              } catch (jsonError) {
-                console.error(
-                  `Error parsing quote JSON for event ${evento.id}:`,
-                  jsonError,
-                );
-                evento.quote = {}; // Set to empty object if parsing fails
-              }
-            } else if (!evento.quote) {
-              evento.quote = {}; // Ensure it's an object even if null/undefined
-            }
-            futuri.push(evento);
-          }
-        });
-
-        setEventiPassati(passati);
-        setEventi(futuri);
-
-        // Caricamento delle immagini di copertina degli eventi
-        const fetchImagesEvents = async () => {
-          try {
-            // Crea un oggetto per mappare gli eventi con le loro immagini di copertina
-            const coverImages = {};
-            
-            // Per ogni evento, genera il signed URL della copertina se esiste
-            for (const evento of data) {
-              if (evento.copertina) {
-                const validExtensions = [
-                  ".jpg",
-                  ".jpeg",
-                  ".png",
-                  ".gif",
-                  ".webp",
-                ];
-                const lower = evento.copertina.toLowerCase();
-              
-                // Verifica se il path della copertina è valido
-                if (
-                  validExtensions.some((ext) => lower.endsWith(ext)) &&
-                  !lower.includes("placeholder") &&
-                  !lower.includes("immagine1") &&
-                  !lower.startsWith(".")
-                ) {
-                  try {
-                    // Usa il bucket "eventi" e il path relativo della copertina
-                    const { data: signedUrl, error: urlError } =
-                      await supabase.storage
-                        .from("eventi") // Bucket corretto per gli eventi
-                        .createSignedUrl(evento.copertina, 60 * 60); // validità 1h
-                        
-                    if (!urlError && signedUrl?.signedUrl) {
-                      coverImages[evento.id] = signedUrl.signedUrl;
-                      console.log(`URL copertina generato per evento ${evento.id}: eventi/${evento.copertina}`);
-                    } else if (urlError) {
-                      console.error(`Errore nella generazione URL per evento ${evento.id}:`, urlError);
-                    }
-                  } catch (urlError) {
-                    console.error(
-                      `Errore URL per evento ${evento.id}:`,
-                      urlError,
-                    );
-                  }
-                }
-              }
-            }
-            
-            setCover(coverImages);
-          } catch (error) {
-            console.error("Errore nel caricamento delle copertine:", error);
-          }
-        };
-
-        // Chiama la funzione per caricare le immagini di copertina
-        await fetchImagesEvents();
-      } catch (error) {
-        console.error("Errore nel caricamento degli eventi:", error);
-      } finally {
-        setLoadingEventi(false);
-        setLoadingEventiPassati(false);
+  // Funzione helper per creare signed URL con gestione errori migliorata
+  const createSafeSignedUrl = async (bucket, path, expiresIn = 3600) => {
+    try {
+      if (!isValidImagePath(path)) {
+        console.warn(`Path immagine non valido: ${path}`);
+        return null;
       }
-    };
 
-    const fetchImages = async () => {
-      setLoadingGalleria(true);
-      try {
-        const { data, error } = await supabase.storage
-          .from("galleria")
-          .list("", {
-            limit: 100,
-            offset: 0,
-            sortBy: { column: "name", order: "asc" },
-          });
-
-        if (error) {
-          console.error("Errore durante il caricamento delle immagini:", error);
-          return;
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(path, expiresIn);
+        
+      if (signedUrlError) {
+        // Gestione più specifica degli errori
+        if (signedUrlError.message?.includes('JSON.parse')) {
+          console.warn(`Errore parsing JSON per ${path}, probabilmente file non trovato`);
+        } else {
+          console.error(`Errore URL per ${path}:`, signedUrlError.message || signedUrlError);
         }
-
-        const validExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-
-        const validImageFiles = data.filter(({ name, metadata }) => {
-          if (!name || metadata === null) return false;
-          const lowerName = name.toLowerCase();
-          return (
-            validExtensions.some((ext) => lowerName.endsWith(ext)) &&
-            !lowerName.includes("placeholder") &&
-            !lowerName.includes("immagine1") &&
-            !lowerName.startsWith(".") &&
-            name !== ".emptyFolderPlaceholder"
-          );
-        });
-
-        const urls = await Promise.all(
-          validImageFiles.map(async ({ name }) => {
-            const { data: signedUrl, error: urlError } = await supabase.storage
-              .from("galleria")
-              .createSignedUrl(name, 60 * 60);
-            if (urlError) {
-              console.error(`Errore URL per ${name}:`, urlError);
-              return null;
-            }
-            return signedUrl?.signedUrl ?? null;
-          }),
-        );
-
-        setImages(urls.filter(Boolean));
-      } catch (error) {
-        console.error("Errore nel caricamento della galleria:", error);
-      } finally {
-        setLoadingGalleria(false);
+        return null;
       }
-    };
-
-    const fetchEventiPassatiImmagini = async () => {
-      setLoadingEventiPassatiImmagini(true);
       
-      try {
-        // Prima ottieni tutti gli eventi passati
-        const { data: eventiPassatiData, error: eventiError } = await supabase
-          .from("evento")
-          .select("*")
-          .eq("passato", true)
-          .order("data", { ascending: false });
-          
-        if (eventiError) {
-          console.error("Errore nel recupero eventi passati:", eventiError);
-          return;
-        }
-        
-        const immaginiPerEvento = {};
-        
-        // Per ogni evento passato, recupera le immagini dalla tabella eventoimmagine
-        for (const evento of eventiPassatiData) {
-          try {
-            const { data: immaginiData, error: immaginiError } = await supabase
-              .from("eventoimmagine")
-              .select("*")
-              .eq("id_evento_fk", evento.id)
-              .order("id", { ascending: true });
-              
-            if (immaginiError) {
-              console.warn(
-                `Errore nel recupero immagini per evento ${evento.id}:`,
-                immaginiError.message,
-              );
-              immaginiPerEvento[evento.id] = [];
-              continue;
-            }
-            
-            // Genera signed URLs per ogni immagine
-            const immaginiConUrl = await Promise.all(
-              immaginiData.map(async (immagine) => {
-                try {
-                  // Usa il bucket "eventi" con il path relativo dell'immagine
-                  // Il path nel database dovrebbe essere nel formato: id_evento/immagine.jpg
-                  const { data: signedUrlData, error: signedUrlError } =
-                    await supabase.storage
-                      .from("eventi") // Bucket corretto per gli eventi
-                      .createSignedUrl(immagine.path, 3600); // 1 ora di validità
-                      
-                  if (signedUrlError) {
-                    console.error(
-                      `Errore generazione URL per ${immagine.path}:`,
-                      signedUrlError.message,
-                    );
-                    return null;
-                  }
-                  
-                  return {
-                    id: immagine.id,
-                    url: signedUrlData.signedUrl,
-                    alt: immagine.descrizione || immagine.path.split("/").pop(),
-                    path: immagine.path,
-                  };
-                } catch (urlError) {
-                  console.error(
-                    `Errore nel processare l'immagine ${immagine.id}:`,
-                    urlError,
-                  );
-                  return null;
-                }
-              }),
-            );
-            
-            // Filtra le immagini valide
-            immaginiPerEvento[evento.id] = immaginiConUrl.filter(Boolean);
-            console.log(`Caricate ${immaginiConUrl.filter(Boolean).length} immagini per evento ${evento.id}`);
-          } catch (eventoError) {
-            console.error(
-              `Errore nel processare l'evento ${evento.id}:`,
-              eventoError,
-            );
-            immaginiPerEvento[evento.id] = [];
-          }
-        }
-        
-        setEventiPassatiImmagini(immaginiPerEvento);
-      } catch (error) {
-        console.error("Errore nel caricamento immagini eventi passati:", error);
-      } finally {
-        setLoadingEventiPassatiImmagini(false);
-      }
-    };
+      return signedUrlData?.signedUrl || null;
+    } catch (error) {
+      console.error(`Errore nella creazione URL per ${path}:`, error);
+      return null;
+    }
+  };
 
-    fetchEventi();
-    fetchImages();
-    fetchEventiPassatiImmagini();
-  }, []);
+  const fetchEventi = async () => {
+    setLoadingEventi(true);
+    setLoadingEventiPassati(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from("evento")
+        .select("*")
+        .order("data", { ascending: true });
+
+      if (error) {
+        console.error("Errore durante il fetch degli eventi:", error);
+        return;
+      }
+
+      const futuri = [];
+      const passati = [];
+
+      // Processamento più efficiente degli eventi
+      data.forEach((evento) => {
+        // Parse sicuro del JSON quote
+        if (evento.quote && typeof evento.quote === "string") {
+          try {
+            evento.quote = JSON.parse(evento.quote);
+          } catch (jsonError) {
+            console.warn(`Error parsing quote JSON for event ${evento.id}:`, jsonError);
+            evento.quote = {};
+          }
+        } else if (!evento.quote) {
+          evento.quote = {};
+        }
+
+        if (evento.passato) {
+          passati.push(evento);
+        } else {
+          futuri.push(evento);
+        }
+      });
+
+      setEventiPassati(passati);
+      setEventi(futuri);
+
+      // Caricamento ottimizzato delle copertine
+      await fetchCoverImages(data);
+      
+    } catch (error) {
+      console.error("Errore nel caricamento degli eventi:", error);
+    } finally {
+      setLoadingEventi(false);
+      setLoadingEventiPassati(false);
+    }
+  };
+
+  // Funzione separata e ottimizzata per le copertine
+  const fetchCoverImages = async (eventi) => {
+    try {
+      const coverImages = {};
+      
+      // Elaborazione in parallelo con limite di concorrenza
+      const concurrencyLimit = 5;
+      const chunks = [];
+      
+      for (let i = 0; i < eventi.length; i += concurrencyLimit) {
+        chunks.push(eventi.slice(i, i + concurrencyLimit));
+      }
+      
+      for (const chunk of chunks) {
+        await Promise.all(
+          chunk.map(async (evento) => {
+            if (!evento.copertina) return;
+            
+            const signedUrl = await createSafeSignedUrl("eventi", evento.copertina, 3600);
+            if (signedUrl) {
+              coverImages[evento.id] = signedUrl;
+              console.log(`URL copertina generato per evento ${evento.id}`);
+            }
+          })
+        );
+      }
+      
+      setCover(coverImages);
+    } catch (error) {
+      console.error("Errore nel caricamento delle copertine:", error);
+    }
+  };
+
+  // Caricamento ottimizzato della galleria
+  const fetchImages = async () => {
+    setLoadingGalleria(true);
+    
+    try {
+      const { data, error } = await supabase.storage
+        .from("galleria")
+        .list("", {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: "name", order: "asc" },
+        });
+
+      if (error) {
+        console.error("Errore durante il caricamento delle immagini:", error);
+        return;
+      }
+
+      // Filtraggio più efficiente
+      const validImageFiles = data.filter(({ name, metadata }) => {
+        return metadata !== null && isValidImagePath(name);
+      });
+
+      // Elaborazione in batch per evitare troppe richieste simultanee
+      const batchSize = 10;
+      const allUrls = [];
+      
+      for (let i = 0; i < validImageFiles.length; i += batchSize) {
+        const batch = validImageFiles.slice(i, i + batchSize);
+        
+        const batchUrls = await Promise.allSettled(
+          batch.map(async ({ name }) => {
+            return await createSafeSignedUrl("galleria", name, 3600);
+          })
+        );
+        
+        const validUrls = batchUrls
+          .filter(result => result.status === 'fulfilled' && result.value)
+          .map(result => result.value);
+          
+        allUrls.push(...validUrls);
+      }
+
+      setImages(allUrls);
+    } catch (error) {
+      console.error("Errore nel caricamento della galleria:", error);
+    } finally {
+      setLoadingGalleria(false);
+    }
+  };
+
+  // Caricamento molto più efficiente delle immagini eventi passati
+  const fetchEventiPassatiImmagini = async () => {
+    setLoadingEventiPassatiImmagini(true);
+    
+    try {
+      // Query più efficiente: join diretto invece di query separate
+      const { data: eventiConImmagini, error: eventiError } = await supabase
+        .from("evento")
+        .select(`
+          id,
+          titolo,
+          data,
+          eventoimmagine (
+            id,
+            path,
+            descrizione
+          )
+        `)
+        .eq("passato", true)
+        .order("data", { ascending: false });
+        
+      if (eventiError) {
+        console.error("Errore nel recupero eventi passati:", eventiError);
+        return;
+      }
+      
+      const immaginiPerEvento = {};
+      
+      // Elaborazione batch per le immagini
+      const batchSize = 3; // Ridotto per eventi con molte immagini
+      
+      for (const evento of eventiConImmagini) {
+        if (!evento.eventoimmagine || evento.eventoimmagine.length === 0) {
+          immaginiPerEvento[evento.id] = [];
+          continue;
+        }
+        
+        const immaginiValidate = evento.eventoimmagine.filter(img => 
+          isValidImagePath(img.path)
+        );
+        
+        const immaginiConUrl = [];
+        
+        // Elaborazione in batch delle immagini per singolo evento
+        for (let i = 0; i < immaginiValidate.length; i += batchSize) {
+          const batch = immaginiValidate.slice(i, i + batchSize);
+          
+          const batchResults = await Promise.allSettled(
+            batch.map(async (immagine) => {
+              const signedUrl = await createSafeSignedUrl("eventi", immagine.path, 3600);
+              
+              if (!signedUrl) return null;
+              
+              return {
+                id: immagine.id,
+                url: signedUrl,
+                alt: immagine.descrizione || immagine.path.split("/").pop(),
+                path: immagine.path,
+              };
+            })
+          );
+          
+          const validResults = batchResults
+            .filter(result => result.status === 'fulfilled' && result.value)
+            .map(result => result.value);
+            
+          immaginiConUrl.push(...validResults);
+        }
+        
+        immaginiPerEvento[evento.id] = immaginiConUrl;
+        console.log(`Caricate ${immaginiConUrl.length} immagini per evento ${evento.id}`);
+      }
+      
+      setEventiPassatiImmagini(immaginiPerEvento);
+    } catch (error) {
+      console.error("Errore nel caricamento immagini eventi passati:", error);
+    } finally {
+      setLoadingEventiPassatiImmagini(false);
+    }
+  };
+
+  // Esecuzione delle funzioni con gestione errori
+  const loadAllData = async () => {
+    try {
+      // Carica eventi prima (più importante)
+      await fetchEventi();
+      
+      // Poi carica immagini in parallelo (meno critico)
+      await Promise.allSettled([
+        fetchImages(),
+        fetchEventiPassatiImmagini()
+      ]);
+    } catch (error) {
+      console.error("Errore nel caricamento generale:", error);
+    }
+  };
+
+  loadAllData();
+}, []);
 
   // useEffect per la gestione della fotocamera basato sull'esempio funzionante
   useEffect(() => {

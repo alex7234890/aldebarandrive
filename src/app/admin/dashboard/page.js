@@ -1507,12 +1507,10 @@ export default function AdminDashboard() {
         throw new Error(`Errore nel recupero eventi: ${eventiError.message}`)
       }
 
-      const now = new Date()
       const futuri = []
       const passati = []
       eventiData.forEach((event) => {
-        const eventDate = new Date(`${event.data}T${event.orario}`)
-        if (event.passato || eventDate < now) {
+        if (event.passato) {
           passati.push(event)
         } else {
           futuri.push(event)
