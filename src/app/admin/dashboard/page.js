@@ -48,55 +48,98 @@ import { supabase } from "@/lib/supabaseClient"
 
 //generatore pdf combinato
 
-const generateCombinedPdf = async (documentoFronteUrl, documentoRetroUrl, registrationName, registrationSurname) => {
+// generatore pdf combinato — FIX: usa recuperaDocumento per firmare i path e converte in DataURL
+const generateCombinedPdf = async (documentoFrontePath, documentoRetroPath, registrationName, registrationSurname) => {
   try {
-    const doc = new jsPDF();
+    // 1) sessione supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.access_token) {
+      throw new Error("Utente non autenticato.");
+    }
 
-    const addImageToPdf = async (imageUrl, doc, pageNumber) => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.src = imageUrl;
-
-        img.onload = () => {
-          const imgWidth = img.width;
-          const imgHeight = img.height;
-          const pageWidth = doc.internal.pageSize.getWidth();
-          const pageHeight = doc.internal.pageSize.getHeight();
-
-          const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
-          const scaledWidth = imgWidth * ratio;
-          const scaledHeight = imgHeight * ratio;
-
-          const x = (pageWidth - scaledWidth) / 2;
-          const y = (pageHeight - scaledHeight) / 2;
-
-          if (pageNumber > 1) {
-            doc.addPage();
-          }
-          doc.addImage(img, 'JPEG', x, y, scaledWidth, scaledHeight);
-          resolve();
-        };
-
-        img.onerror = (error) => {
-          console.error(`Errore nel caricamento dell'immagine ${imageUrl}:`, error);
-          reject(error);
-        };
+    // 2) helper per ottenere signed URL dal backend (stessa logica di openDocumentInModal)
+    const getSignedUrl = async (path) => {
+      if (!path) return null;
+      const resp = await fetch('/api/recuperaDocumento', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ documentPath: path }),
       });
+      if (!resp.ok) {
+        let err = {};
+        try { err = await resp.json(); } catch {}
+        throw new Error(err.error || 'Errore nella richiesta URL firmato');
+      }
+      const result = await resp.json();
+      if (!result.success || !result.data?.signedUrl) {
+        throw new Error('URL firmato non disponibile');
+      }
+      return result.data.signedUrl;
     };
 
-    if (documentoFronteUrl) {
-      await addImageToPdf(documentoFronteUrl, doc, 1);
+    const signedFronte = await getSignedUrl(documentoFrontePath);
+    const signedRetro  = await getSignedUrl(documentoRetroPath);
+
+    // 3) scarica immagine e ritorna DataURL + dimensioni + formato
+    const fetchImageAsDataUrl = async (url) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Impossibile scaricare immagine (${res.status})`);
+      const contentType = res.headers.get('content-type') || '';
+      const format = contentType.includes('png') ? 'PNG' : 'JPEG';
+      const blob = await res.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      // misura dimensioni reali dall’immagine in DataURL (no CORS)
+      const dims = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ w: img.naturalWidth || img.width, h: img.naturalHeight || img.height });
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+      return { dataUrl, format, width: dims.w, height: dims.h };
+    };
+
+    const doc = new jsPDF();
+
+    const addImageToPdf = async (url, pageNumber) => {
+      const img = await fetchImageAsDataUrl(url);
+      const pageWidth  = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      const ratio = Math.min(pageWidth / img.width, pageHeight / img.height);
+      const scaledWidth  = img.width  * ratio;
+      const scaledHeight = img.height * ratio;
+
+      const x = (pageWidth  - scaledWidth)  / 2;
+      const y = (pageHeight - scaledHeight) / 2;
+
+      if (pageNumber > 1) doc.addPage();
+      doc.addImage(img.dataUrl, img.format, x, y, scaledWidth, scaledHeight);
+    };
+
+    // 4) costruisce le pagine (1 o 2)
+    let pageNumber = 1;
+    if (signedFronte) {
+      await addImageToPdf(signedFronte, pageNumber);
+      pageNumber++;
+    }
+    if (signedRetro) {
+      await addImageToPdf(signedRetro, pageNumber);
     }
 
-    if (documentoRetroUrl) {
-      await addImageToPdf(documentoRetroUrl, doc, documentoFronteUrl ? 2 : 1);
-    }
-
-    const filename = `documento_${registrationName}_${registrationSurname}.pdf`;
+    // 5) salva con nome sicuro
+    const safeName = `${registrationName || 'nome'}_${registrationSurname || 'cognome'}`
+      .replace(/[^\p{L}\p{N}_-]+/gu, '_');
+    const filename = `documento_${safeName}.pdf`;
     doc.save(filename);
     console.log(`PDF ${filename} generato con successo.`);
-
   } catch (error) {
     console.error("Errore durante la generazione del PDF combinato:", error);
   }
@@ -301,6 +344,22 @@ const EventFormModal = ({
                   name="orario"
                   type="time"
                   value={newEvent.orario}
+                  onChange={handleNewEventChange}
+                  required
+                  className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="limite" className="text-base font-semibold text-black flex items-center gap-2">
+                  <UsersIcon className="w-4 h-4" />
+                  Limite iscritti
+                </Label>
+                <Input
+                  id="limite"
+                  name="limite"
+                  type="number"
+                  value={newEvent.limite}
                   onChange={handleNewEventChange}
                   required
                   className="text-base border-gray-400 focus:border-black focus:ring-black rounded-lg p-3 mt-2 transition-colors"
@@ -1392,6 +1451,7 @@ export default function AdminDashboard() {
     orario: "",
     luogo: "",
     programma: "",
+    limite: 50,
     quote: [{ titolo: "", descrizione: "", prezzo: "" }],
     copertina: null,
   })
@@ -1692,6 +1752,7 @@ export default function AdminDashboard() {
           orario: newEvent.orario,
           luogo: newEvent.luogo.trim(),
           passato: false,
+          limite: newEvent.limite,
           quote: quotesJson,
           programma: newEvent.programma.trim() || null,
         })
@@ -1750,6 +1811,7 @@ export default function AdminDashboard() {
         orario: "",
         luogo: "",
         programma: "",
+        limite: 50,
         quote: [{ titolo: "", descrizione: "", prezzo: "" }],
         copertina: null,
       });
@@ -1777,6 +1839,7 @@ export default function AdminDashboard() {
       orario: event.orario,
       luogo: event.luogo,
       programma: event.programma || "",
+      limite: event.limite,
       quote: quotesArray,
       copertina: null, // Reset file input for editing
     })
@@ -1839,6 +1902,7 @@ export default function AdminDashboard() {
           data: newEvent.data,
           fine: newEvent.fine,
           orario: newEvent.orario,
+          limite: newEvent.limite,
           luogo: newEvent.luogo.trim(),
           programma: newEvent.programma.trim() || null,
           quote: quotesJson,
@@ -3381,6 +3445,10 @@ const handleGenerateIndividualPdf = async (registration, event) => {
                           <ClockIcon className="w-4 h-4 text-gray-500" />
                           <span>{event.orario}</span>
                         </div>
+                        <div className="flex items-center gap-2">
+                          <UsersIcon className="w-4 h-4 text-gray-500" />
+                          <span>{event.limite}</span>
+                        </div>
                         
       
                       </div>
@@ -3469,7 +3537,7 @@ const handleGenerateIndividualPdf = async (registration, event) => {
                           <span>{event.fine}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <ClockIcon className="w-4 h-4 text-gray-500" />
+                          <UsersIcon className="w-4 h-4 text-gray-500" />
                           <span>{event.orario}</span>
                         </div>
                       </div>
