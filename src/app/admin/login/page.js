@@ -80,7 +80,7 @@ export default function AdminLogin() {
         <Card className="bg-neutral-900 text-white shadow-2xl border border-neutral-800 rounded-xl">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-3xl text-white flex items-center justify-center gap-3 font-bold">
-              <LogInIcon className="w-7 h-7 text-green-400" />
+              <LogInIcon className="w-7 h-7 text-white" />
               Accesso Admin
             </CardTitle>
             <CardDescription className="text-neutral-400 text-base mt-2">
@@ -137,7 +137,7 @@ export default function AdminLogin() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-green-600 text-white hover:bg-green-700 font-semibold py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                className="w-full bg-white text-black hover:bg-gray-200 font-semibold py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
