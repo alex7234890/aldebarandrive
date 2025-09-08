@@ -2850,7 +2850,7 @@ const handleSubmitRegistration = async () => {
                       <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
                         <p className="text-sm text-green-800">
                           📞 Per qualsiasi informazione o supporto, contatta il
-                          numero <strong>344 685 3979</strong>.
+                          numero <strong>329 019 1272 (stefano) - 344 685 3979 (alan)</strong>.
                         </p>
                       </div>
                     </div>
@@ -3106,7 +3106,7 @@ const handleSubmitRegistration = async () => {
 
             {/* Copyright */}
             <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
-              <p>&copy; 2025 AldebaranDrive. Tutti i diritti riservati.</p>
+              <p>&copy; 2025 AldebaranDrive by Marlan srl. Tutti i diritti riservati.</p>
             </div>
           </div>
         </footer>
