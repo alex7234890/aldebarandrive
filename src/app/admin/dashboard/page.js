@@ -446,69 +446,84 @@ DOMENICA 26
                 {/* ANTEPRIMA PROGRAMMA */}
                 {newEvent.programma && newEvent.programma.trim() && (
                   <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-                    <h4 className="font-semibold mb-2 text-sm text-gray-600">Anteprima programma:</h4>
-                    <div className="space-y-8">
-                      {(() => {
-                        // Parsing del programma
-                        const lines = newEvent.programma.split('\n').filter(line => line.trim());
-                        const days = [];
-                        let currentDay = null;
-                        
-                        lines.forEach(line => {
-                          const trimmedLine = line.trim();
-                          
-                          // Controlla se la riga è un giorno (non contiene orario)
-                          if (!trimmedLine.match(/^\d{1,2}[:\.]?\d{0,2}\s*[-–—]\s*/)) {
-                            // È un nuovo giorno
-                            currentDay = {
-                              day: trimmedLine,
-                              events: []
-                            };
-                            days.push(currentDay);
-                          } else if (currentDay) {
-                            // È un evento con orario
-                            const match = trimmedLine.match(/^(\d{1,2}[:\.]?\d{0,2})\s*[-–—]\s*(.+)$/);
-                            if (match) {
-                              currentDay.events.push({
-                                time: match[1],
-                                description: match[2]
-                              });
-                            }
-                          }
-                        });
-                        
-                        return days.map((day, dayIndex) => (
-                          <div key={dayIndex} className="border-l-4 border-black pl-6 relative">
-                            {/* Pallino indicatore */}
-                            <div className="absolute -left-3 top-2 w-6 h-6 bg-black rounded-full flex items-center justify-center z-10">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                            
-                            {/* Nome del giorno */}
-                            <h3 className="text-xl font-bold text-black mb-4 uppercase tracking-wide">
-                              {day.day}
-                            </h3>
-                            
-                            {/* Eventi del giorno */}
-                            <div className="space-y-3 ml-2">
-                              {day.events.map((event, eventIndex) => (
-                                <div key={eventIndex} className="flex items-start gap-3">
-                                  <div className="bg-gray-100 px-2 py-1 rounded-full min-w-fit">
-                                    <span className="text-xs font-bold text-gray-800">
-                                      {event.time}
-                                    </span>
-                                  </div>
-                                  <p className="text-gray-700 leading-relaxed pt-1 text-sm">
-                                    {event.description}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ));
-                      })()}
-                    </div>
-                  </div>
+  <h4 className="font-semibold mb-2 text-sm text-gray-600">Anteprima programma:</h4>
+  <div className="space-y-8">
+    {(() => {
+      // Parsing del programma migliorato
+      const lines = newEvent.programma.split('\n').filter(line => line.trim());
+      const days = [];
+      let currentDay = null;
+      
+      lines.forEach(line => {
+        const trimmedLine = line.trim();
+        
+        // Regex migliorata per riconoscere orari con possibile orario di fine
+        // Supporta formati come: "09:30", "9:30", "09.30", "9.30"
+        // E anche range come: "09:30-12:00", "9:30 - 12:00", "09:30 alle 12:00", etc.
+        const timeRegex = /^(\d{1,2}[:\.]?\d{0,2}(?:\s*[-–—]\s*\d{1,2}[:\.]?\d{0,2}|\s+alle\s+\d{1,2}[:\.]?\d{0,2})?)\s*[-–—]\s*(.+)$/;
+        
+        // Controlla se la riga contiene un orario
+        if (!timeRegex.test(trimmedLine)) {
+          // È un nuovo giorno
+          currentDay = {
+            day: trimmedLine,
+            events: []
+          };
+          days.push(currentDay);
+        } else if (currentDay) {
+          // È un evento con orario
+          const match = trimmedLine.match(timeRegex);
+          if (match) {
+            let timeString = match[1];
+            const description = match[2];
+            
+            // Normalizza la visualizzazione dell'orario
+            // Gestisce diversi separatori per i range di orari
+            timeString = timeString
+              .replace(/\s*[-–—]\s*/g, ' - ') // Normalizza i separatori di range
+              .replace(/\s+alle\s+/gi, ' - ') // Converte "alle" in "-"
+              .replace(/\./g, ':'); // Converte punti in due punti
+            
+            currentDay.events.push({
+              time: timeString,
+              description: description
+            });
+          }
+        }
+      });
+      
+      return days.map((day, dayIndex) => (
+        <div key={dayIndex} className="border-l-4 border-black pl-6 relative">
+          {/* Pallino indicatore */}
+          <div className="absolute -left-3 top-2 w-6 h-6 bg-black rounded-full flex items-center justify-center z-10">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
+          
+          {/* Nome del giorno */}
+          <h3 className="text-xl font-bold text-black mb-4 uppercase tracking-wide">
+            {day.day}
+          </h3>
+          
+          {/* Eventi del giorno */}
+          <div className="space-y-3 ml-2">
+            {day.events.map((event, eventIndex) => (
+              <div key={eventIndex} className="flex items-start gap-3">
+                <div className="bg-gray-100 px-2 py-1 rounded-full min-w-fit">
+                  <span className="text-xs font-bold text-gray-800">
+                    {event.time}
+                  </span>
+                </div>
+                <p className="text-gray-700 leading-relaxed pt-1 text-sm">
+                  {event.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ));
+    })()}
+  </div>
+</div>
                 )}
               </div>
             </div>
