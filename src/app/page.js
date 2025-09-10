@@ -1319,118 +1319,191 @@ useEffect(() => {
 
 
 
-       {/* Hook per detectare iPhone vecchi - da mettere all'inizio del componente */}
+{/* SEZIONE EVENTI FUTURI */}
+<section className="px-6 py-20 bg-black relative overflow-hidden">
+  
+  <div className="container mx-auto relative z-10">
+    <div className="text-center mb-16">
+      <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+        Eventi Futuri
+      </h2>
+      <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+        Scopri i prossimi eventi internazionali dedicati agli appassionati di motori
+      </p>
+    </div>
 
+    {/* Lista Eventi */}
+    <div className="space-y-16">
+      
+      {/* Evento: Generazione Z */}
+      <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10">
+        <div className="text-center mb-12">
+          <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Generazione <span className="text-green-500">"Z"</span>
+          </h3>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Eventi internazionali riservati ai club e proprietari di BMW Z1-Z3-Z4-Z8, 
+            tutti i modelli dal 1988 ad oggi
+          </p>
+        </div>
 
-{/* SEZIONE PROSSIMI EVENTI */}
-<section id="prossimi-eventi" className="px-6 py-20 bg-gray-100">
-  <div className="container mx-auto">
-    <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">
-      Prossimi Eventi
-    </h2>
-    <p className="text-center text-gray-700 mb-12 text-lg max-w-2xl mx-auto">
-      Scopri i nostri eventi esclusivi e iscriviti per vivere esperienze
-      indimenticabili
-    </p>
-    {loadingEventi ? (
-      <div className="text-center text-gray-700 text-lg">
-        Caricamento eventi...
-      </div>
-    ) : eventi.length === 0 ? (
-      <div className="text-center text-gray-700 text-lg">
-        Nessun evento futuro in programma.
-      </div>
-    ) : (
-      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {eventi.map((evento) => (
-          <div
-            key={evento.id}
-            className="bg-white border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:border-black group"
-          >
-            {/* Immagine evento */}
-            <div className="relative aspect-[3/2] bg-gray-200 overflow-hidden">
-              <Image
-                src={cover[evento.id] || "/hero.png"}
-                alt={evento.titolo}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
+        {/* Grid delle lingue per questo evento */}
+        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3 mb-12">
+          
+          {/* Versione Italiana */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-white rounded-full"></div>
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">
+              Raduno Internazionale "Generazione Z"
+            </h4>
+            <p className="text-gray-200 leading-relaxed">
+              Evento riservato a Club e possessori di auto BMW Z1-Z3-Z4-Z8 tutti i modelli 
+              dal 1988 ad oggi.
+            </p>
+          </div>
+
+          {/* Versione Inglese */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">
+              International Gathering "Generation Z"
+            </h4>
+            <p className="text-gray-200 leading-relaxed">
+              Event reserved for clubs and car owners BMW Z1-Z3-Z4-Z8 all models from 
+              1988 to the present.
+            </p>
+          </div>
+
+          {/* Versione Tedesca */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-black rounded-full"></div>
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">
+              Internationale Versammlung "Generation Z"
+            </h4>
+            <p className="text-gray-200 leading-relaxed">
+              Veranstaltung nur für Clubs und Besitzer von BMW Z1-Z3-Z4-Z8 alle Modelle 
+              von 1988 bis heute.
+            </p>
+          </div>
+
+          {/* Versione Francese */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+              <div className="w-3 h-3 bg-white rounded-full"></div>
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">
+              Rassemblement International "Génération Z"
+            </h4>
+            <p className="text-gray-200 leading-relaxed">
+              Événement réservé aux clubs et aux propriétaires de voitures BMW Z1-Z3-Z4-Z8 
+              tous les modèles de 1988 à aujourd'hui.
+            </p>
+          </div>
+
+          {/* Versione Spagnola */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">
+              Encuentro Internacional "Generación Z"
+            </h4>
+            <p className="text-gray-200 leading-relaxed">
+              Evento reservado para los clubes y propietarios de coches BMW Z1-Z3-Z4-Z8 
+              todos los modelos desde 1988 hasta hoy.
+            </p>
+          </div>
+
+          {/* Versione Portoghese */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+            </div>
+            <h4 className="text-xl font-bold text-white mb-3">
+              Encontro Internacional "Geração Z"
+            </h4>
+            <p className="text-gray-200 leading-relaxed">
+              Evento reservado para clubes e proprietários de automóveis BMW Z1-Z3-Z4-Z8 
+              todos os modelos de 1988 até hoje.
+            </p>
+          </div>
+        </div>
+
+        {/* Info section per Generazione Z */}
+        <div className="bg-gradient-to-r from-green-900/30 to-red-900/30 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-center md:text-left">
+            
+            <div className="space-y-3">
+              <h4 className="text-2xl font-bold text-white">Dove?</h4>
+              <p className="text-gray-300">Italia - Toscana.</p>
             </div>
 
-            <div className="p-6 flex flex-col">
-              <h3 className="text-xl font-bold mb-3 text-black">
-                {evento.titolo}
-              </h3>
+            <div className="space-y-3">
+              <h4 className="text-2xl font-bold text-white">Quando?</h4>
+              <p className="text-gray-300">La data è da definire.</p>
+            </div>
 
-              <div className="flex flex-col gap-3 text-sm text-gray-700 mb-6">
-                <p className="flex items-center gap-2">
-                  <CalendarDaysIcon className="w-4 h-4 text-black" />{" "}
-                  Dal {new Date(evento.data).toLocaleDateString()} al{" "}
-                  {new Date(evento.fine).toLocaleDateString()}
-                </p>
-                <p className="flex items-center gap-2">
-                  <MapPinIcon className="w-4 h-4 text-black" />{" "}
-                  {evento.luogo}
-                </p>
-              </div>
+            <div className="space-y-3">
+              <h4 className="text-2xl font-bold text-white">Come?</h4>
+              <p className="text-gray-300">
+                Semplice, iscrivendosi sul nostro sito{" "}
+                <span className="text-green-400 font-semibold">www.aldebarandrive.it</span>{" "}
+                appena sarà pronto il programma dettagliato dell'evento.
+              </p>
+            </div>
 
-              {/* Layout condizionale per iPhone vecchi */}
-              {isOldIPhone ? (
-                <>
-                  {/* Layout per iPhone vecchi: bottoni prima, descrizione completa dopo */}
-                  <div className="flex flex-col gap-3 mb-4">
-                    <Button
-                      onClick={() => handleShowProgram(evento)}
-                      className="bg-gray-600 text-white hover:bg-gray-700 py-3 font-semibold relative group overflow-hidden"
-                    >
-                      <FileTextIcon className="w-4 h-4 mr-2" />
-                      <span className="relative z-10">Vedi Programma</span>
-                    </Button>
-                    <Button
-                      onClick={() => handleIscriviti(evento)}
-                      className="bg-black text-white hover:bg-gray-800 py-3 font-semibold relative group overflow-hidden"
-                    >
-                      <span className="relative z-10">Iscriviti Ora</span>
-                      <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
-                    </Button>
-                  </div>
-                  
-                  {/* Descrizione completa senza espandibilità */}
-                  <div className="text-sm text-gray-700">
-                    <ReactMarkdown>{evento.descrizione}</ReactMarkdown>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Layout originale per tutti gli altri dispositivi */}
-                  <ExpandableText>
-                    <ReactMarkdown>{evento.descrizione}</ReactMarkdown>
-                  </ExpandableText>
-
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      onClick={() => handleShowProgram(evento)}
-                      className="bg-gray-600 text-white hover:bg-gray-700 py-3 font-semibold relative group overflow-hidden"
-                    >
-                      <FileTextIcon className="w-4 h-4 mr-2" />
-                      <span className="relative z-10">Vedi Programma</span>
-                    </Button>
-                    <Button
-                      onClick={() => handleIscriviti(evento)}
-                      className="bg-black text-white hover:bg-gray-800 py-3 font-semibold relative group overflow-hidden"
-                    >
-                      <span className="relative z-10">Iscriviti Ora</span>
-                      <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
-                    </Button>
-                  </div>
-                </>
-              )}
+            <div className="space-y-3">
+              <h4 className="text-2xl font-bold text-white">Perché?</h4>
+              <p className="text-gray-300">
+                Per ritrovarsi tutti insieme a condividere la passione per questi 
+                modelli di auto e passare un week end indimenticabile.
+              </p>
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Icona evento */}
+        <div className="mt-12 text-center">
+          <div className="inline-flex items-center gap-6 bg-white/10 backdrop-blur-lg rounded-full px-8 py-4 border border-white/20">
+            <div className="text-6xl">🏎️</div>
+            <h3 className="text-2xl font-bold text-white">
+              Generazione <span className="text-green-500">"Z"</span>
+            </h3>
+          </div>
+        </div>
       </div>
-    )}
+
+      {/* Placeholder per eventi futuri */}
+      <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10 border-dashed">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🚀</div>
+          <h3 className="text-2xl font-bold text-gray-400 mb-4">
+            Prossimi Eventi in Arrivo
+          </h3>
+          <p className="text-gray-500 max-w-md mx-auto">
+            Resta sintonizzato per scoprire i prossimi eventi BMW che organizzeremo!
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
         {/* SEZIONE CHI SIAMO */}
