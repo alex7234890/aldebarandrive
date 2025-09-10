@@ -1064,6 +1064,37 @@ const handleSubmitRegistration = async () => {
   }
 };
 
+
+//funzione per errore visualizzazione card prossimo evento rispetto a vecchi dispositivi
+const [isOldIPhone, setIsOldIPhone] = useState(false);
+
+useEffect(() => {
+  const detectOldIPhone = () => {
+    const userAgent = navigator.userAgent;
+    const isIPhone = /iPhone/i.test(userAgent);
+    
+    if (!isIPhone) return false;
+
+    const screenHeight = window.screen.height;
+    const screenWidth = window.screen.width;
+    const pixelRatio = window.devicePixelRatio;
+
+    const oldIPhoneScreens = [
+      { h: 568, w: 320, r: 2 }, // iPhone 5/5s/SE 1st gen
+      { h: 667, w: 375, r: 2 }, // iPhone 6/6s/7/8
+      { h: 736, w: 414, r: 3 }, // iPhone 6+/6s+/7+/8+
+      { h: 812, w: 375, r: 3 }  // iPhone X
+    ];
+
+    return oldIPhoneScreens.some(screen => 
+      (screenHeight === screen.h && screenWidth === screen.w && pixelRatio === screen.r) ||
+      (screenHeight === screen.w && screenWidth === screen.h && pixelRatio === screen.r)
+    );
+  };
+
+  setIsOldIPhone(detectOldIPhone());
+}, []);
+
   // Funzione per l'invio della mail conferma iscrizione
   async function handleConfirmationMail(
     type,
@@ -1288,85 +1319,120 @@ const handleSubmitRegistration = async () => {
 
 
 
-        {/* SEZIONE PROSSIMI EVENTI */}
-        <section id="prossimi-eventi" className="px-6 py-20 bg-gray-100">
-          <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">
-              Prossimi Eventi
-            </h2>
-            <p className="text-center text-gray-700 mb-12 text-lg max-w-2xl mx-auto">
-              Scopri i nostri eventi esclusivi e iscriviti per vivere esperienze
-              indimenticabili
-            </p>
-            {loadingEventi ? (
-              <div className="text-center text-gray-700 text-lg">
-                Caricamento eventi...
-              </div>
-            ) : eventi.length === 0 ? (
-              <div className="text-center text-gray-700 text-lg">
-                Nessun evento futuro in programma.
-              </div>
-            ) : (
-              <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {eventi.map((evento) => (
-                  <div
-                    key={evento.id}
-                    className="bg-white border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:border-black group"
-                  >
-                    {/* Immagine evento */}
-                    <div className="relative aspect-[3/2] bg-gray-200 overflow-hidden">
-                      <Image
-                        src={cover[evento.id] || "/hero.png"}
-                        alt={evento.titolo}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                      />
-                    </div>
+       {/* Hook per detectare iPhone vecchi - da mettere all'inizio del componente */}
 
-                    <div className="p-6 flex flex-col">
-                      <h3 className="text-xl font-bold mb-3 text-black">
-                        {evento.titolo}
-                      </h3>
-                     <ExpandableText>
-                        <ReactMarkdown>{evento.descrizione}</ReactMarkdown>
-                      </ExpandableText>
 
-                      <div className="flex flex-col gap-3 text-sm text-gray-700 mb-6">
-                        <p className="flex items-center gap-2">
-                          <CalendarDaysIcon className="w-4 h-4 text-black" />{" "}
-                          Dal {new Date(evento.data).toLocaleDateString()} al{" "}
-                          {new Date(evento.fine).toLocaleDateString()}
-                        </p>
-                        <p className="flex items-center gap-2">
-                          <MapPinIcon className="w-4 h-4 text-black" />{" "}
-                          {evento.luogo}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        <Button
-                          onClick={() => handleShowProgram(evento)}
-                          className="bg-gray-600 text-white hover:bg-gray-700 py-3 font-semibold relative group overflow-hidden"
-                        >
-                          <FileTextIcon className="w-4 h-4 mr-2" />
-                          <span className="relative z-10">Vedi Programma</span>
-                        </Button>
-                        <Button
-                          onClick={() => handleIscriviti(evento)}
-                          className="bg-black text-white hover:bg-gray-800 py-3 font-semibold relative group overflow-hidden"
-                        >
-                          <span className="relative z-10">Iscriviti Ora</span>
-                          <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
-                        </Button>
-                      </div>
-                    </div>
+{/* SEZIONE PROSSIMI EVENTI */}
+<section id="prossimi-eventi" className="px-6 py-20 bg-gray-100">
+  <div className="container mx-auto">
+    <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-black">
+      Prossimi Eventi
+    </h2>
+    <p className="text-center text-gray-700 mb-12 text-lg max-w-2xl mx-auto">
+      Scopri i nostri eventi esclusivi e iscriviti per vivere esperienze
+      indimenticabili
+    </p>
+    {loadingEventi ? (
+      <div className="text-center text-gray-700 text-lg">
+        Caricamento eventi...
+      </div>
+    ) : eventi.length === 0 ? (
+      <div className="text-center text-gray-700 text-lg">
+        Nessun evento futuro in programma.
+      </div>
+    ) : (
+      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {eventi.map((evento) => (
+          <div
+            key={evento.id}
+            className="bg-white border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:border-black group"
+          >
+            {/* Immagine evento */}
+            <div className="relative aspect-[3/2] bg-gray-200 overflow-hidden">
+              <Image
+                src={cover[evento.id] || "/hero.png"}
+                alt={evento.titolo}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+
+            <div className="p-6 flex flex-col">
+              <h3 className="text-xl font-bold mb-3 text-black">
+                {evento.titolo}
+              </h3>
+
+              <div className="flex flex-col gap-3 text-sm text-gray-700 mb-6">
+                <p className="flex items-center gap-2">
+                  <CalendarDaysIcon className="w-4 h-4 text-black" />{" "}
+                  Dal {new Date(evento.data).toLocaleDateString()} al{" "}
+                  {new Date(evento.fine).toLocaleDateString()}
+                </p>
+                <p className="flex items-center gap-2">
+                  <MapPinIcon className="w-4 h-4 text-black" />{" "}
+                  {evento.luogo}
+                </p>
+              </div>
+
+              {/* Layout condizionale per iPhone vecchi */}
+              {isOldIPhone ? (
+                <>
+                  {/* Layout per iPhone vecchi: bottoni prima, descrizione completa dopo */}
+                  <div className="flex flex-col gap-3 mb-4">
+                    <Button
+                      onClick={() => handleShowProgram(evento)}
+                      className="bg-gray-600 text-white hover:bg-gray-700 py-3 font-semibold relative group overflow-hidden"
+                    >
+                      <FileTextIcon className="w-4 h-4 mr-2" />
+                      <span className="relative z-10">Vedi Programma</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleIscriviti(evento)}
+                      className="bg-black text-white hover:bg-gray-800 py-3 font-semibold relative group overflow-hidden"
+                    >
+                      <span className="relative z-10">Iscriviti Ora</span>
+                      <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
+                    </Button>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+                  
+                  {/* Descrizione completa senza espandibilità */}
+                  <div className="text-sm text-gray-700">
+                    <ReactMarkdown>{evento.descrizione}</ReactMarkdown>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Layout originale per tutti gli altri dispositivi */}
+                  <ExpandableText>
+                    <ReactMarkdown>{evento.descrizione}</ReactMarkdown>
+                  </ExpandableText>
 
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      onClick={() => handleShowProgram(evento)}
+                      className="bg-gray-600 text-white hover:bg-gray-700 py-3 font-semibold relative group overflow-hidden"
+                    >
+                      <FileTextIcon className="w-4 h-4 mr-2" />
+                      <span className="relative z-10">Vedi Programma</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleIscriviti(evento)}
+                      className="bg-black text-white hover:bg-gray-800 py-3 font-semibold relative group overflow-hidden"
+                    >
+                      <span className="relative z-10">Iscriviti Ora</span>
+                      <span className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-green-500 via-white to-red-500 group-hover:w-full transition-all duration-300"></span>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
         {/* SEZIONE CHI SIAMO */}
         <section id="chi-siamo" className="px-6 py-20 bg-black text-white">
           <div className="container mx-auto">
