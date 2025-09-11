@@ -38,6 +38,7 @@ export default async function handler(req, res) {
       intolleranze: data.intolleranze ? encrypt(data.intolleranze) : null,
       id_evento_fk: data.id_evento_fk,
       quota: data.quota,
+      cro: encrypt(data.cro),
       documento_fronte: encrypt(data.documento_fronte) || null,
       documento_retro: encrypt(data.documento_retro) || null,
       verificato: false,

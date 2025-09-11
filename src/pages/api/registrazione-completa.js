@@ -96,6 +96,7 @@ export default async function handler(req, res) {
       intolleranze: guidatore.intolleranze ? encrypt(guidatore.intolleranze) : null,
       id_evento_fk: evento_id,
       quota: guidatore.quota,
+      cro: encrypt(guidatore.cro),
       documento_fronte: guidatoreFrontePath ? encrypt(guidatoreFrontePath) : null,
       documento_retro: guidatoreRetroPath ? encrypt(guidatoreRetroPath) : null,
       verificato: false,

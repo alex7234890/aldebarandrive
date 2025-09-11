@@ -187,6 +187,7 @@ export default function Home() {
     postiAuto: 4,
     // Pacchetto di partecipazione
     quotaSelezionata: "",
+    Gcro: null,
     // Esigenze alimentari del guidatore
     guidatoreEsigenzeAlimentari: false,
     guidatoreIntolleranze: "",
@@ -939,6 +940,7 @@ const handleSubmitRegistration = async () => {
       posti_auto: formData.postiAuto,
       intolleranze: formData.guidatoreEsigenzeAlimentari ? formData.guidatoreIntolleranze.trim() : "",
       quota: formData.quotaSelezionata,
+      cro: formData.Gcro,
       documenti: guidatoreDocumenti
     };
 
@@ -1045,6 +1047,7 @@ const handleSubmitRegistration = async () => {
       autoTarga: "",
       postiAuto: 4,
       quotaSelezionata: "",
+      Gcro: null,
       guidatoreEsigenzeAlimentari: false,
       guidatoreIntolleranze: "",
       guidatoreAutorizzaFoto: true,
@@ -3072,7 +3075,8 @@ useEffect(() => {
                       <div className="space-y-2 text-sm text-gray-700">
                         <p className="text-red-600 font-semibold">
                           ⚠️ Per poter confermare la propria iscrizione si prega
-                          di eseguire il prima possibile il pagamento (la
+                          di eseguire contemporaneamente all'iscrizione il pagamento tramite
+                          bonifico ISTANTANEO (la
                           fattura verrà ricevuta in seguito alla mail del
                           guidatore registrato)
                         </p>
@@ -3109,6 +3113,29 @@ useEffect(() => {
                         </p>
                       </div>
                     </div>
+                    <div className="mt-4 p-3 bg-white p-4 rounded-lg border border-blue-300">
+                        <p className="text-sm text-yellow-800">
+                          <strong>NEL CASO NON FOSSE POSSIBILE EFFETTUARE BONIFICO ISTANTANEO
+                          INDICARE CODICE CRO O TRN PRESENTI NELLA RICEVUTA DELL'INVIO DEL BONIFICO AFFINCHE' VENGA VALIDATA 
+                          L'ISCRIZIONE</strong>
+                        </p>
+                        <label
+                          htmlFor="guidatore-cro"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                       
+                        </label>
+                        <input
+                          id="guidatore-cro"
+                          type="text"
+                          name="Gcro"
+                          placeholder="es. TRN: EA24020312345678912345678912IT  es. CRO: 12345678912"
+                          value={formData.Gcro}
+                          onChange={handleInputChange}
+                          className="border-2 border-gray-300 p-3 rounded-lg focus:border-black focus:outline-none w-full"
+                        />
+                      </div>
+            
                   </div>
 
                   {/* SEZIONE AUTORIZZAZIONI GUIDATORE */}

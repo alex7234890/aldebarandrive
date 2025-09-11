@@ -954,6 +954,59 @@ const RegistrationsModal = ({
     setExpandedRegistrations(newExpanded);
   };
 
+  // Componente Alert Banconota
+  const PaymentAlert = ({ registration }) => {
+    const hasCro = registration.cro && registration.cro.trim() !== '';
+    
+   if (!hasCro) {
+  // Alert blu - nessun CRO (bonifico istantaneo)
+  return (
+    <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg mb-3">
+      <div className="flex-shrink-0">
+        <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M2 6h20v2H2V6zm0 4h20v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8zm4 6h8v-2H6v2z"/>
+          <circle cx="18" cy="15" r="1"/>
+        </svg>
+      </div>
+      <div className="flex-1">
+        <p className="text-base font-bold text-blue-800">Bonifico Istantaneo</p>
+        <p className="text-xs text-blue-600">Pagamento completato immediatamente</p>
+      </div>
+      <div className="flex-shrink-0">
+        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+} else {
+  // Alert celeste - CRO presente (bonifico ordinario)
+  return (
+    <div className="flex items-center gap-3 p-3 bg-sky-50 border border-sky-200 rounded-lg mb-3">
+      <div className="flex-shrink-0">
+        <svg className="w-6 h-6 text-sky-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M2 6h20v2H2V6zm0 4h20v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8zm4 6h8v-2H6v2z"/>
+          <circle cx="18" cy="15" r="1"/>
+        </svg>
+      </div>
+      <div className="flex-1">
+        <p className="text-base font-bold text-sky-800">Bonifico Ordinario</p>
+        <p className="text-xs text-sky-600">CRO: {registration.cro}</p>
+      </div>
+      <div className="flex-shrink-0">
+        <div className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center">
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 animate-fade-in">
       <Card className="w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto animate-scale-in bg-white text-black rounded-lg shadow-2xl border border-gray-300">
@@ -997,6 +1050,9 @@ const RegistrationsModal = ({
                 return (
                   <Card key={reg.id} className="shadow-sm border border-gray-200 bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                     <CardContent className="p-3 sm:p-4">
+                      {/* Alert Banconota - Aggiunto qui */}
+                      <PaymentAlert registration={reg} />
+                      
                       {/* Vista minimale - Layout mobile first */}
                       <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
                         
@@ -1121,6 +1177,13 @@ const RegistrationsModal = ({
                             <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
                               <AlertCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                               <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm text-gray-500">CRO/TRN</p>
+                                <p className="font-semibold text-sm">{reg.cro || "Nessuno"}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                              <AlertCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
                                 <p className="text-xs sm:text-sm text-gray-500">Intolleranze</p>
                                 <p className="font-semibold text-sm">{reg.intolleranze || "Nessuna"}</p>
                               </div>
@@ -1190,97 +1253,139 @@ const RegistrationsModal = ({
                               <div className="mb-4 sm:mb-6">
                                 <h4 className="text-base sm:text-lg lg:text-xl font-bold text-black mb-3 sm:mb-4 flex items-center gap-2">
                                   <CarIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
-                                  Dettagli Auto
+                                  Informazioni Auto
                                 </h4>
-                                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                                    <p className="text-xs sm:text-sm text-gray-500">Marca</p>
-                                    <p className="font-semibold text-sm break-words">{reg.auto_marca}</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <CarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs sm:text-sm text-gray-500">Marca</p>
+                                      <p className="font-semibold text-sm">{reg.auto_marca}</p>
+                                    </div>
                                   </div>
-                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                                    <p className="text-xs sm:text-sm text-gray-500">Modello</p>
-                                    <p className="font-semibold text-sm break-words">{reg.auto_modello}</p>
+                                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <CarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs sm:text-sm text-gray-500">Modello</p>
+                                      <p className="font-semibold text-sm">{reg.auto_modello}</p>
+                                    </div>
                                   </div>
-                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                                    <p className="text-xs sm:text-sm text-gray-500">Targa</p>
-                                    <p className="font-semibold text-sm break-all">{reg.auto_targa}</p>
+                                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs sm:text-sm text-gray-500">Anno</p>
+                                      <p className="font-semibold text-sm">{reg.auto_immatricolazione}</p>
+                                    </div>
                                   </div>
-                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                                    <p className="text-xs sm:text-sm text-gray-500">Posti Auto</p>
-                                    <p className="font-semibold text-sm">{reg.posti_auto}</p>
+                                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <FileTextIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs sm:text-sm text-gray-500">Targa</p>
+                                      <p className="font-semibold text-sm">{reg.auto_targa}</p>
+                                    </div>
                                   </div>
-                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                                    <p className="text-xs sm:text-sm text-gray-500">Colore</p>
-                                    <p className="font-semibold text-sm break-words">{reg.auto_colore}</p>
-                                  </div>
-                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-300">
-                                    <p className="text-xs sm:text-sm text-gray-500">Anno</p>
-                                    <p className="font-semibold text-sm">{reg.auto_immatricolazione}</p>
+                                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                                    <CarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs sm:text-sm text-gray-500">Colore</p>
+                                      <p className="font-semibold text-sm">{reg.auto_colore}</p>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </>
                           )}
 
-                          {/* Passeggeri */}
+                          {/* Informazioni Passeggeri */}
                           {reg.passeggeri && reg.passeggeri.length > 0 && (
-                            <div>
+                            <div className="mb-4 sm:mb-6">
                               <h4 className="text-base sm:text-lg lg:text-xl font-bold text-black mb-3 sm:mb-4 flex items-center gap-2">
                                 <UsersIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
                                 Passeggeri ({reg.passeggeri.length})
                               </h4>
-                              <div className="space-y-4">
-                                {reg.passeggeri.map((pass, pIndex) => (
-                                  <div key={pIndex} className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-300 shadow-sm">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-                                      <h5 className="font-bold text-sm sm:text-base lg:text-lg text-black break-words">
-                                        {pass.nome} {pass.cognome}
-                                      </h5>
-                                      <Badge variant="outline" className="bg-gray-200 self-start sm:self-auto text-xs">
-                                        #{pIndex + 1}
-                                      </Badge>
+                              <div className="space-y-3 sm:space-y-4">
+                                {reg.passeggeri.map((passeggero, passeggeroIndex) => (
+                                  <div key={passeggeroIndex} className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-300">
+                                    <h5 className="font-bold text-sm sm:text-base text-black mb-2 sm:mb-3">
+                                      Passeggero #{passeggeroIndex + 1}: {passeggero.nome} {passeggero.cognome}
+                                    </h5>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
+                                      <div className="flex items-start gap-2 sm:gap-3">
+                                        <MailIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-xs text-gray-500">Email</p>
+                                          <p className="font-semibold text-xs sm:text-sm break-all">{passeggero.indirizzo_email}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-start gap-2 sm:gap-3">
+                                        <PhoneIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-xs text-gray-500">Telefono</p>
+                                          <p className="font-semibold text-xs sm:text-sm">{passeggero.telefono}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-start gap-2 sm:gap-3">
+                                        <FileTextIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-xs text-gray-500">Codice Fiscale</p>
+                                          <p className="font-semibold text-xs break-all">{passeggero.codice_fiscale}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-start gap-2 sm:gap-3">
+                                        <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-xs text-gray-500">Data Nascita</p>
+                                          <p className="font-semibold text-xs sm:text-sm">{passeggero.data_nascita}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-start gap-2 sm:gap-3">
+                                        <AlertCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-xs text-gray-500">Intolleranze</p>
+                                          <p className="font-semibold text-xs sm:text-sm">{passeggero.intolleranze || "Nessuna"}</p>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
-                                      <div className="break-words">
-                                        <span className="text-gray-500">CF:</span>{" "}
-                                        <span className="font-semibold break-all">{pass.codice_fiscale}</span>
-                                      </div>
-                                      <div>
-                                        <span className="text-gray-500">Data Nascita:</span>{" "}
-                                        <span className="font-semibold">{pass.data_nascita}</span>
-                                      </div>
-                                      <div className="break-words">
-                                        <span className="text-gray-500">Email:</span>{" "}
-                                        <span className="font-semibold break-all">{pass.indirizzo_email}</span>
-                                      </div>
-                                      <div>
-                                        <span className="text-gray-500">Telefono:</span>{" "}
-                                        <span className="font-semibold">{pass.telefono}</span>
-                                      </div>
-                                      <div className="sm:col-span-2 break-words">
-                                        <span className="text-gray-500">Intolleranze:</span>{" "}
-                                        <span className="font-semibold">{pass.intolleranze || "Nessuna"}</span>
+                                    
+                                    {/* Indirizzo Passeggero - Elemento a larghezza piena */}
+                                    <div className="flex items-start gap-2 sm:gap-3 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                                      <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs text-gray-500">Indirizzo</p>
+                                        <p className="font-semibold text-xs sm:text-sm break-words">{passeggero.indirizzo}</p>
                                       </div>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                                      {pass.documento_fronte && (
+
+                                    {/* Documenti Passeggero */}
+                                    <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                                      {passeggero.documento_fronte && (
                                         <Button
                                           variant="outline"
-                                          size="sm"
+                                          onClick={() => openDocumentInModal(passeggero.documento_fronte, "jpg", false)}
                                           className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs flex-1 sm:flex-none"
-                                          onClick={() => openDocumentInModal(pass.documento_fronte, "jpg", true)}
+                                          size="sm"
                                         >
-                                          <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Fronte
+                                          <ExternalLinkIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Documento Fronte
                                         </Button>
                                       )}
-                                      {pass.documento_retro && (
+                                      {passeggero.documento_retro && (
                                         <Button
                                           variant="outline"
-                                          size="sm"
+                                          onClick={() => openDocumentInModal(passeggero.documento_retro, "jpg", false)}
                                           className="bg-gray-100 hover:bg-gray-200 text-black border-gray-400 transition-colors text-xs flex-1 sm:flex-none"
-                                          onClick={() => openDocumentInModal(pass.documento_retro, "jpg", true)}
+                                          size="sm"
                                         >
-                                          <ExternalLinkIcon className="mr-1 h-3 w-3" /> Doc. Retro
+                                          <ExternalLinkIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Documento Retro
+                                        </Button>
+                                      )}
+                                      {(passeggero.documento_fronte || passeggero.documento_retro) && (
+                                        <Button
+                                          variant="outline"
+                                          onClick={() => generateCombinedPdf(passeggero.documento_fronte, passeggero.documento_retro, passeggero.nome, passeggero.cognome)}
+                                          className="bg-blue-500 hover:bg-blue-600 text-white border-blue-700 transition-colors text-xs flex-1 sm:flex-none"
+                                          size="sm"
+                                        >
+                                          <DownloadIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> PDF Combinato
                                         </Button>
                                       )}
                                     </div>
@@ -1302,6 +1407,7 @@ const RegistrationsModal = ({
     </div>
   );
 };
+
 // Modal di conferma personalizzato
 const ConfirmationModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "Conferma", cancelText = "Annulla", type = "warning" }) => {
   if (!isOpen) return null;

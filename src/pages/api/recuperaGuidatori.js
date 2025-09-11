@@ -73,6 +73,7 @@ export default async function handler(req, res) {
             posti_auto: guidatore.posti_auto,
             auto_colore:decrypt(guidatore.auto_colore),
             quota: guidatore.quota,
+            cro: decrypt(guidatore.cro),
             Patente: decrypt(guidatore.Patente),
             PatenteS: decrypt(guidatore.PatenteS),
             indirizzo: decrypt(guidatore.indirizzo),
