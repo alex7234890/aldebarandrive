@@ -2327,7 +2327,7 @@ useEffect(() => {
                     <div className="mt-6 space-y-4">
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
-      Documento di Identità Guidatore - Fronte *
+      Patente Guidatore - Fronte *
     </label>
     <div className="flex flex-wrap gap-2">
       <input
@@ -2385,7 +2385,7 @@ useEffect(() => {
 
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
-      Documento di identità Guidatore - Retro *
+      Patente Guidatore - Retro *
     </label>
     <div className="flex flex-wrap gap-2">
       <input
