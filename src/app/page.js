@@ -3288,16 +3288,6 @@ useEffect(() => {
                 <h4 className="text-lg font-semibold mb-4">Contatti</h4>
                 <div className="space-y-3 text-gray-300">
                   <p className="flex items-center gap-2">
-                    <MapPinIcon className="w-4 h-4" />
-                    Via dell'acero, 17 - 56022 - Castelfranco di sotto (PI)
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="w-4 h-4 flex items-center justify-center">
-                      📞
-                    </span>
-                    +39 392.019.1272 +39 344.6853.979
-                  </p>
-                  <p className="flex items-center gap-2">
                     <span className="w-4 h-4 flex items-center justify-center">
                       📧
                     </span>
